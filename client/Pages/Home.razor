@@ -1,7 +1,50 @@
 ﻿@page "/"
+@using System.Net.Http.Json
+@using Client.Models
+@inject HttpClient Http
 
-<PageTitle>Home</PageTitle>
+<h2>Clubs (test)</h2>
 
-<h1>Hello, world!</h1>
+@if (error is not null)
+{
+    <p style="color:red">@error</p>
+}
+else if (clubs is null)
+{
+    <p>Loading...</p>
+}
+else if (clubs.Count == 0)
+{
+    <p>No clubs found.</p>
+}
+else
+{
+    <ul>
+        @foreach (var c in clubs)
+        {
+            <li><strong>@c.Name</strong> — @c.Description</li>
+        }
+    </ul>
+}
 
-Welcome to your new app.
+@code {
+    private List<Club>? clubs;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+#if DEBUG
+            var url = "http://localhost:7071/api/clubs"; // direct to Functions when running only the Blazor dev server
+#else
+            var url = "api/clubs"; // SWA proxy (and production)
+#endif
+            clubs = await Http.GetFromJsonAsync<List<Club>>(url);
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

@@ -2,25 +2,26 @@ using Azure.Core;
 using Azure.Identity;
 using Microsoft.Data.SqlClient;
 
-namespace CampusConnect.Api.Services
+namespace CampusConnect.Api.Services;
+
+public static class SqlService
 {
-    public static class SqlService
+    // Scope for Azure SQL
+    private static readonly string[] SqlScopes = new[] { "https://database.windows.net/.default" };
+
+    public static async Task<SqlConnection> OpenTokenConnectionAsync(string server, string database)
     {
-        public static async Task<SqlConnection> OpenTokenConnectionAsync(string server, string database)
-        {
-            var cs = $"Server=tcp:{server},1433;Database={database};Encrypt=True;TrustServerCertificate=False;";
+        // Minimal, valid base connection string (no auth details here)
+        var cs = $"Server=tcp:{server},1433;Database={database};Encrypt=True;TrustServerCertificate=False;";
 
-            var scopes = new[] { "https://database.windows.net/.default" };
-            var cred = new DefaultAzureCredential();
+        var conn = new SqlConnection(cs);
 
-            AccessToken token = await cred.GetTokenAsync(new TokenRequestContext(scopes));
+        // Acquire AAD token
+        var credential = new DefaultAzureCredential(); // uses VS/CLI login locally; Managed Identity in Azure
+        AccessToken token = await credential.GetTokenAsync(new TokenRequestContext(SqlScopes), default);
 
-            var conn = new SqlConnection(cs)
-            {
-                AccessToken = token.Token
-            };
-            await conn.OpenAsync();
-            return conn;
-        }
+        conn.AccessToken = token.Token;
+        await conn.OpenAsync();
+        return conn;
     }
 }
