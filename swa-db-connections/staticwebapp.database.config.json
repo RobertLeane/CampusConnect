@@ -1,0 +1,21 @@
+{
+  "$schema": "https://dataapibuilder.azureedge.net/schemas/v0.8.4/dab.draft.schema.json",
+  "data-source": {
+    "database-type": "mssql",
+    "connection-string": "@env('DB_CONN')"
+  },
+  "runtime": {
+    "rest": { "enabled": true, "path": "/data-api", "request-body-strict": true },
+    "graphql": { "enabled": true, "path": "/data-api/graphql", "allow-introspection": true }
+  },
+  "entities": {
+    "Clubs": {
+      "source": "dbo.Club",
+      "rest": true,
+      "graphql": true,
+      "permissions": [
+        { "role": "anonymous", "actions": [ "read" ] }
+      ]
+    }
+  }
+}
