@@ -1,21 +1,25 @@
 {
-  "$schema": "https://dataapibuilder.azureedge.net/schemas/v0.8.4/dab.draft.schema.json",
+  "$schema": "../.vscode/schemas/dab.v1.6.67.json",
   "data-source": {
     "database-type": "mssql",
     "connection-string": "@env('DB_CONN')"
   },
   "runtime": {
-    "rest": { "enabled": true, "path": "/data-api", "request-body-strict": true },
-    "graphql": { "enabled": true, "path": "/data-api/graphql", "allow-introspection": true }
+    "rest": { "enabled": true, "path": "/api" },
+    "graphql": { "enabled": false },
+    "host": {
+      "mode": "production",
+      "cors": { "origins": ["*"], "allow-credentials": false }
+    }
   },
   "entities": {
     "Clubs": {
-      "source": "dbo.Club",
-      "rest": true,
-      "graphql": true,
-      "permissions": [
-        { "role": "anonymous", "actions": [ "read" ] }
-      ]
+      "source": "Clubs",
+      "permissions": [ { "role": "anonymous", "actions": ["read"] } ]
+    },
+    "Events": {
+      "source": "Events",
+      "permissions": [ { "role": "anonymous", "actions": ["read"] } ]
     }
   }
 }

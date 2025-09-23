@@ -1,0 +1,38 @@
+# Build results
+bin/
+obj/
+out/
+
+# VS Code
+.vscode/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider / JetBrains
+.idea/
+*.iml
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Logs
+*.log
+
+# Azure Functions local settings
+local.settings.json
+
+# SWA emulator cache
+.swa/
+
+# Package restore folders
+**/node_modules/
+**/packages/
+*.nupkg
+*.snupkg
+
+# Others
+wwwroot/dist/
