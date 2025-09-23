@@ -1,0 +1,29 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.x'
+
+# (Optional) catch build errors early
+- script: |
+    dotnet restore ./client
+    dotnet build ./client -c Release
+  displayName: 'Build Blazor client'
+
+- task: AzureStaticWebApp@0
+  inputs:
+    app_location: 'client'
+    output_location: 'wwwroot'
+    api_location: ''
+    azure_static_web_apps_api_token: '$(SWA_TOKEN)'
