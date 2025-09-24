@@ -21,8 +21,7 @@ steps:
 - script: |
     dotnet restore ./client
     dotnet build ./client -c $(buildConfiguration) --no-restore
-    dotnet publish ./client -c $(buildConfiguration) --no-build -o ./client/dist
-  displayName: 'Build and publish Blazor client'
+  displayName: 'Build Blazor client'
 
 # Build the Azure Functions API
 - script: |
@@ -35,6 +34,6 @@ steps:
   displayName: 'Deploy to Azure Static Web Apps'
   inputs:
     app_location: 'client'
-    output_location: 'dist'
+    output_location: 'wwwroot'
     api_location: 'api'
     azure_static_web_apps_api_token: '$(SWA_TOKEN)'
