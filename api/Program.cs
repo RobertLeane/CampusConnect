@@ -11,10 +11,4 @@ builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
     .ConfigureFunctionsApplicationInsights();
 
-
-builder.Services.AddHttpClient("api", c =>
-{
-    c.BaseAddress = new Uri("https://jolly-forest-05a7e0503.2.azurestaticapps.net/api/");
-});
-
 builder.Build().Run();

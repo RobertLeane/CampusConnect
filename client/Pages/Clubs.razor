@@ -1,0 +1,174 @@
+@page "/clubs"
+
+<PageTitle>Clubs</PageTitle>
+
+<section class="hero">
+    <div class="container">
+        <h1>Discover Your <span>Campus Community</span></h1>
+        <p>Join clubs, attend events, and connect with fellow students. Your college experience starts here.</p>
+        <form class="hero-search">
+            <input type="search" placeholder="Search for clubs, events, or interests..." />
+            <button type="button">Search</button>
+        </form>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat__num">150+</div>
+                <div class="stat__label">Active Clubs</div>
+            </div>
+            <div class="stat">
+                <div class="stat__num">500+</div>
+                <div class="stat__label">Monthly Events</div>
+            </div>
+            <div class="stat">
+                <div class="stat__num">5k+</div>
+                <div class="stat__label">Active Members</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Content -->
+<main class="container layout">
+    <!-- Results only (filters removed) -->
+    <section class="results">
+        <div class="section-head">
+            <h2>Clubs</h2>
+            <NavLink href="/events" class="link-btn">View All Events</NavLink>
+        </div>
+
+        <div class="grid grid-3">
+            <!-- Card 1 -->
+            <article class="card">
+                <div class="card__media">
+                    <img src="https://picsum.photos/seed/club-photo/800/480" alt="Photography Club cover" />
+                </div>
+                <div class="card__body">
+                    <h3>Photography Club</h3>
+                    <p>Photo walks, studio sessions, and exhibitions. Beginners welcome.</p>
+                    <ul class="meta">
+                        <li>85 members</li>
+                        <li>Meets: Wed 6–8pm</li>
+                        <li>Next: Oct 20 · Portraits</li>
+                    </ul>
+                    <div class="tags">
+                        <span>Workshops</span><span>Creativity</span><span>Exhibitions</span>
+                    </div>
+                    <div class="actions">
+                        <a href="#" class="btn btn--primary">Join Club</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Card 2 -->
+            <article class="card">
+                <div class="card__media">
+                    <img src="https://picsum.photos/seed/club-cs/800/480" alt="Computer Science Society cover" />
+                </div>
+                <div class="card__body">
+                    <h3>Computer Science Society</h3>
+                    <p>Talks, hackathons, and career nights. Build your network.</p>
+                    <ul class="meta">
+                        <li>156 members</li>
+                        <li>Meets: Thu 7–9pm</li>
+                        <li>Next: Oct 18 · Hackathon</li>
+                    </ul>
+                    <div class="tags">
+                        <span>Coding</span><span>Careers</span><span>Projects</span>
+                    </div>
+                    <div class="actions">
+                        <a href="#" class="btn btn--primary">Join Club</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Card 3 -->
+            <article class="card">
+                <div class="card__media">
+                    <img src="https://picsum.photos/seed/club-vol/800/480" alt="Volunteer Corps cover" />
+                </div>
+                <div class="card__body">
+                    <h3>Volunteer Corps</h3>
+                    <p>Service projects and campus-wide charity initiatives.</p>
+                    <ul class="meta">
+                        <li>203 members</li>
+                        <li>Meets: Sat 10–12pm</li>
+                        <li>Next: Oct 22 · Food Drive</li>
+                    </ul>
+                    <div class="tags">
+                        <span>Outreach</span><span>Fundraising</span>
+                    </div>
+                    <div class="actions">
+                        <a href="#" class="btn">Join Club</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Card 4 -->
+            <article class="card">
+                <div class="card__media">
+                    <img src="https://picsum.photos/seed/club-sports/800/480" alt="Hiking & Outdoors Club cover" />
+                </div>
+                <div class="card__body">
+                    <h3>Hiking &amp; Outdoors</h3>
+                    <p>Weekend hikes, leave-no-trace, and adventure trips.</p>
+                    <ul class="meta">
+                        <li>120 members</li>
+                        <li>Meets: Sun 8–2pm</li>
+                        <li>Next: Oct 27 · Trail Day</li>
+                    </ul>
+                    <div class="tags">
+                        <span>Fitness</span><span>Nature</span>
+                    </div>
+                    <div class="actions">
+                        <a href="#" class="btn">Join Club</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Card 5 -->
+            <article class="card">
+                <div class="card__media">
+                    <img src="https://picsum.photos/seed/club-debate/800/480" alt="Debate Society cover" />
+                </div>
+                <div class="card__body">
+                    <h3>Debate Society</h3>
+                    <p>Sharpen your arguments and compete intervarsity.</p>
+                    <ul class="meta">
+                        <li>90 members</li>
+                        <li>Meets: Tue 6–8pm</li>
+                        <li>Next: Oct 21 · Open Night</li>
+                    </ul>
+                    <div class="tags">
+                        <span>Public Speaking</span><span>Competitions</span>
+                    </div>
+                    <div class="actions">
+                        <a href="#" class="btn">Join Club</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Card 6 -->
+            <article class="card">
+                <div class="card__media">
+                    <img src="https://picsum.photos/seed/club-green/800/480" alt="Sustainability Society cover" />
+                </div>
+                <div class="card__body">
+                    <h3>Sustainability Society</h3>
+                    <p>Campus garden, repair café, and climate advocacy.</p>
+                    <ul class="meta">
+                        <li>140 members</li>
+                        <li>Meets: Fri 4–6pm</li>
+                        <li>Next: Oct 24 · Repair Café</li>
+                    </ul>
+                    <div class="tags">
+                        <span>Green</span><span>Advocacy</span><span>Community</span>
+                    </div>
+                    <div class="actions">
+                        <a href="#" class="btn">Join Club</a>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</main>

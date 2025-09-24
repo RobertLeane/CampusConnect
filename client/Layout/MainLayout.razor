@@ -1,16 +1,54 @@
 ﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
+
+<header class="nav">
+  <div class="container nav__inner">
+    <div class="brand">CampusConnect</div>
+
+    <nav class="tabs">
+      <NavLink href="/" Match="NavLinkMatch.All">Home</NavLink>
+      <NavLink href="/clubs">Clubs</NavLink>
+      <NavLink href="/events">Events</NavLink>
+      <NavLink href="/dashboard">My Dashboard</NavLink>
+    </nav>
+
+    <form class="top-search">
+      <input type="search" placeholder="Search clubs and events..." />
+    </form>
+
+    <NavLink href="/login" class="login-link" aria-label="Login">
+      <!-- user-circle icon -->
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.42 0-8 2.24-8 5v.5a.5.5 0 0 0 .5.5h15a.5.5 0 0 0 .5-.5V19c0-2.76-3.58-5-8-5Z" />
+      </svg>
+      <span>Login</span>
+    </NavLink>
+ 
+  </div>
+</header>
+
+<main>
+</main>
+
+<footer class="footer">
+  <div class="container footer__grid">
+    <div>
+      <h4>CampusConnect</h4>
+      <p>Connecting students through clubs and events.</p>
     </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+    <div>
+      <h5>Quick Links</h5>
+      <ul>
+        <li><NavLink href="/clubs">Browse Clubs</NavLink></li>
+        <li><NavLink href="/events">Find Events</NavLink></li>
+        <li><NavLink href="/dashboard">My Dashboard</NavLink></li>
+      </ul>
+    </div>
+    <div>
+      <h5>Support</h5>
+      <ul>
+        <li><a href="#">Help Center</a></li>
+        <li><a href="#">Contact Us</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
