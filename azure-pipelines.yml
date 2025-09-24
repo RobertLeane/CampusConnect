@@ -1,7 +1,5 @@
-# ASP.NET Core (.NET Framework)
-# Build and test ASP.NET Core projects targeting the full .NET Framework.
-# Add steps that publish symbols, save build artifacts, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+# Azure Static Web Apps - CampusConnect
+# Build and deploy Blazor WebAssembly client and Azure Functions API
 
 trigger:
 - main
@@ -9,21 +7,34 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
+variables:
+  buildConfiguration: 'Release'
+
 steps:
 - task: UseDotNet@2
+  displayName: 'Install .NET 8 SDK'
   inputs:
     packageType: 'sdk'
     version: '8.x'
 
-# (Optional) catch build errors early
+# Build and test the Blazor client
 - script: |
     dotnet restore ./client
-    dotnet build ./client -c Release
-  displayName: 'Build Blazor client'
+    dotnet build ./client -c $(buildConfiguration) --no-restore
+    dotnet publish ./client -c $(buildConfiguration) --no-build -o ./client/dist
+  displayName: 'Build and publish Blazor client'
 
+# Build the Azure Functions API
+- script: |
+    dotnet restore ./api
+    dotnet build ./api -c $(buildConfiguration) --no-restore
+  displayName: 'Build Azure Functions API'
+
+# Deploy to Azure Static Web Apps
 - task: AzureStaticWebApp@0
+  displayName: 'Deploy to Azure Static Web Apps'
   inputs:
     app_location: 'client'
-    output_location: 'wwwroot'
-    api_location: ''
+    output_location: 'dist'
+    api_location: 'api'
     azure_static_web_apps_api_token: '$(SWA_TOKEN)'
