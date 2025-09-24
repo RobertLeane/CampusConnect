@@ -1,0 +1,30 @@
+@page "/login"
+
+<PageTitle>Login</PageTitle>
+
+ <section class="hero center">
+     <div class="container">
+         <h1>Welcome Back</h1>
+         <p>Log in to access your clubs, events, and dashboard.</p>
+     </div>
+ </section>
+
+ <!-- Login Form -->
+ <main class="container auth-container">
+     <form class="auth-card">
+         <h2>Login</h2>
+
+         <label>Email</label>
+         <input type="email" placeholder="you@example.com" required />
+
+         <label>Password</label>
+         <input type="password" placeholder="Enter your password" required />
+
+         <button type="submit" class="btn">Login</button>
+
+         <p class="auth-links">           
+             <NavLink href="/forgot-password">Forgot password?</NavLink>I
+            <NavLink href="/register">Create an account</NavLink>
+         </p>
+     </form>
+ </main>

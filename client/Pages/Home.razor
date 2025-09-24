@@ -1,50 +1,171 @@
 ﻿@page "/"
-@using System.Net.Http.Json
-@using Client.Models
-@inject HttpClient Http
 
-<h2>Clubs (test)</h2>
+<PageTitle>Home</PageTitle>
 
-@if (error is not null)
-{
-    <p style="color:red">@error</p>
-}
-else if (clubs is null)
-{
-    <p>Loading...</p>
-}
-else if (clubs.Count == 0)
-{
-    <p>No clubs found.</p>
-}
-else
-{
-    <ul>
-        @foreach (var c in clubs)
-        {
-            <li><strong>@c.Name</strong> — @c.Description</li>
-        }
-    </ul>
-}
+<!-- Hero -->
+<section class="hero">
+    <div class="container">
+        <h1>Discover Your <span>Campus Community</span></h1>
+        <p>Join clubs, attend events, and connect with fellow students. Your college experience starts here.</p>
+        <form class="hero-search">
+            <input type="search" placeholder="Search for clubs, events, or interests..." />
+            <button type="button">Search</button>
+        </form>
 
-@code {
-    private List<Club>? clubs;
-    private string? error;
+        <div class="stats">
+            <div class="stat">
+                <div class="stat__num">150+</div>
+                <div class="stat__label">Active Clubs</div>
+            </div>
+            <div class="stat">
+                <div class="stat__num">500+</div>
+                <div class="stat__label">Monthly Events</div>
+            </div>
+            <div class="stat">
+                <div class="stat__num">5k+</div>
+                <div class="stat__label">Active Members</div>
+            </div>
+        </div>
+    </div>
+</section>
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-#if DEBUG
-            var url = "http://localhost:7071/api/clubs"; // direct to Functions when running only the Blazor dev server
-#else
-            var url = "api/clubs"; // SWA proxy (and production)
-#endif
-            clubs = await Http.GetFromJsonAsync<List<Club>>(url);
-        }
-        catch (Exception ex)
-        {
-            error = ex.Message;
-        }
-    }
-}
+<!-- Featured Clubs -->
+<section class="container">
+    <div class="section-head">
+        <h2>Featured Clubs</h2>
+        <a href="club.html" class="link-btn">View All Clubs</a>
+    </div>
+
+    <div class="grid grid-3">
+        <!-- Card 1 -->
+        <article class="card">
+            <div class="card__media">
+                <img src="https://picsum.photos/seed/club1/800/480" alt="Photography Club" />
+            </div>
+            <div class="card__body">
+                <h3>Photography Club</h3>
+                <p>Capture moments, create memories. Join us for photo walks, workshops, and exhibitions.</p>
+                <ul class="meta">
+                    <li>85 members</li>
+                    <li>Oct 20 · Photo Walk</li>
+                    <li>Art Building</li>
+                </ul>
+                <div class="actions">
+                    <a href="#" class="btn">Join Club</a>
+                </div>
+            </div>
+        </article>
+
+        <!-- Card 2 -->
+        <article class="card">
+            <div class="card__media">
+                <img src="https://picsum.photos/seed/club2/800/480" alt="Computer Science Society" />
+            </div>
+            <div class="card__body">
+                <h3>Computer Science Society</h3>
+                <p>Coding competitions, talks, and networking events for future software engineers.</p>
+                <ul class="meta">
+                    <li>156 members</li>
+                    <li>Oct 18 · Hackathon</li>
+                    <li>Engineering Hall</li>
+                </ul>
+                <div class="actions">
+                    <a href="#" class="btn">Join Club</a>
+                </div>
+            </div>
+        </article>
+
+        <!-- Card 3 -->
+        <article class="card">
+            <div class="card__media">
+                <img src="https://picsum.photos/seed/club3/800/480" alt="Volunteer Corps" />
+            </div>
+            <div class="card__body">
+                <h3>Volunteer Corps</h3>
+                <p>Make a difference through service projects and charity events.</p>
+                <ul class="meta">
+                    <li>203 members</li>
+                    <li>Oct 22 · Food Drive</li>
+                    <li>Student Center</li>
+                </ul>
+                <div class="actions">
+                    <a href="#" class="btn">Join Club</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</section>
+
+<!-- Upcoming Events -->
+<section class="container">
+    <div class="section-head">
+        <h2>Upcoming Events</h2>
+        <a href="#" class="link-btn">View All Events</a>
+    </div>
+
+    <div class="grid grid-2">
+        <!-- Event 1 -->
+        <article class="card">
+            <div class="card__media card__media--wide">
+                <img src="https://picsum.photos/seed/event1/1100/480" alt="Tech Conference" />
+            </div>
+            <div class="card__body">
+                <h3>Annual Tech Conference</h3>
+                <p class="sub">by Computer Science Society</p>
+                <p>Keynotes, workshops, and networking opportunities in technology.</p>
+                <ul class="meta">
+                    <li>Oct 18, 2024</li>
+                    <li>9:00 AM – 5:00 PM</li>
+                    <li>Engineering Auditorium</li>
+                    <li>145/200 attending</li>
+                </ul>
+                <div class="actions">
+                    <a href="#" class="btn">Register</a>
+                </div>
+            </div>
+        </article>
+
+        <!-- Event 2 -->
+        <article class="card">
+            <div class="card__media card__media--wide">
+                <img src="https://picsum.photos/seed/event2/1100/480" alt="Photography Workshop" />
+            </div>
+            <div class="card__body">
+                <h3>Photography Workshop: Portrait Lighting</h3>
+                <p class="sub">by Photography Club</p>
+                <p>Learn professional portrait lighting techniques with hands-on practice.</p>
+                <ul class="meta">
+                    <li>Oct 20, 2024</li>
+                    <li>2:00 PM – 5:00 PM</li>
+                    <li>Art Studio 205</li>
+                    <li>12/15 attending</li>
+                </ul>
+                <div class="actions">
+                    <a href="#" class="btn">Register</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</section>
+
+<!-- Categories + CTA -->
+<section class="container">
+    <h2 class="center">Explore by Category</h2>
+    <div class="chips">
+        <span class="chip">Technology</span>
+        <span class="chip">Arts &amp; Culture</span>
+        <span class="chip">Sports</span>
+        <span class="chip">Community Service</span>
+        <span class="chip">Professional</span>
+        <span class="chip">Environment</span>
+    </div>
+
+    <div class="cta">
+        <h3>Ready to Get Involved?</h3>
+        <p>Join the vibrant campus community. Connect with students, develop new skills, and create lasting memories.</p>
+        <div class="cta-actions">
+            <NavLink href="/Dashboard" class="btn btn--primary">View My Dashboard</NavLink>
+            <NavLink href="/clubs" class="btn btn--light">Explore Clubs</NavLink>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,55 @@
+@page "/register"
+
+<PageTitle>Register</PageTitle>
+
+ <section class="hero center">
+     <div class="container">
+         <h1>Create Your Account</h1>
+         <p>Join clubs, RSVP to events, and build your campus profile.</p>
+     </div>
+ </section>
+
+ <!-- Register Form -->
+ <main class="container auth-container">
+     <form class="auth-card" action="#" method="post" novalidate>
+         <h2>Sign Up</h2>
+
+         <!-- Name row -->
+         <div class="auth-row">
+             <div class="auth-field">
+                 <label for="firstName">First name</label>
+                 <input id="firstName" name="firstName" type="text" placeholder="First name" required />
+             </div>
+             <div class="auth-field">
+                 <label for="lastName">Last name</label>
+                 <input id="lastName" name="lastName" type="text" placeholder="Last name" required />
+             </div>
+         </div>
+
+         <label for="email">Email</label>
+         <input id="email" name="email" type="email" placeholder="t00000000@mymtu.ie" required />
+
+         <label for="password">Password</label>
+         <input id="password" name="password" type="password" placeholder="At least 8 characters" minlength="8" required />
+
+         <label for="confirm">Confirm password</label>
+         <input id="confirm" name="confirm" type="password" placeholder="Repeat your password" minlength="8" required />
+
+         <label for="program">Program / Department (optional)</label>
+         <input id="program" name="program" type="text" placeholder="e.g., Computer Science" />
+
+         <label for="studentId">Student ID (optional)</label>
+         <input id="studentId" name="studentId" type="text" placeholder="e.g., t00000000" />
+
+         <label class="form-check">
+             <input type="checkbox" required />
+             <span>I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</span>
+         </label>
+
+         <button type="submit" class="btn">Create Account</button>
+
+         <p class="auth-links">
+             Already have an account? <NavLink href="/login">Log in</NavLink>
+         </p>
+     </form>
+ </main>
