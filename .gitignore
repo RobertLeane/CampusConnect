@@ -22,9 +22,6 @@ ScaffoldingReadMe.txt
 # Logs
 *.log
 
-# Azure Functions local settings
-local.settings.json
-
 # SWA emulator cache
 .swa/
 
