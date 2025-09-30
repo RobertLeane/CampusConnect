@@ -1,17 +1,13 @@
 using System.Net.Http.Json;
+using Client.Models;
 
 namespace Client.Services;
 
-public class ClubDto
-{
-    public int ClubId { get; set; }
-    public string ClubName { get; set; } = "";
-    public string? Description { get; set; }
-    public bool Active { get; set; }
-}
-
 public class ClubApi(HttpClient http)
 {
-    public async Task<List<ClubDto>> GetClubsAsync(CancellationToken ct = default)
-        => await http.GetFromJsonAsync<List<ClubDto>>("/api/clubs", ct) ?? [];
+    public async Task<List<Club>> GetClubsAsync(CancellationToken ct = default)
+        => await http.GetFromJsonAsync<List<Club>>("/api/clubs", ct) ?? [];
+
+    public async Task<Club?> GetClubByIdAsync(int clubId, CancellationToken ct = default)
+        => await http.GetFromJsonAsync<Club>($"/api/clubs/{clubId}", ct);
 }

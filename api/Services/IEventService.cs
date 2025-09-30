@@ -1,0 +1,15 @@
+using CampusConnect.Api.Models;
+
+namespace CampusConnect.Api.Services;
+
+public interface IEventService
+{
+    // TODO: Add method signatures for Event operations
+    // Examples:
+    // Task<List<EventDto>> GetAllEventsAsync();
+    // Task<List<EventDto>> GetEventsByClubIdAsync(int clubId);
+    // Task<EventDto?> GetEventByIdAsync(int eventId);
+    // Task<EventDto> CreateEventAsync(EventDto eventDto);
+    // Task<EventDto?> UpdateEventAsync(int eventId, EventDto eventDto);
+    // Task<bool> DeleteEventAsync(int eventId);
+}

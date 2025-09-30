@@ -1,0 +1,12 @@
+using CampusConnect.Api.Models;
+
+namespace CampusConnect.Api.Services;
+
+public interface IClubService
+{
+    Task<List<ClubDto>> GetActiveClubsAsync();
+    Task<ClubDto?> GetClubByIdAsync(int clubId);
+    Task<ClubDto> CreateClubAsync(ClubDto club);
+    Task<ClubDto?> UpdateClubAsync(int clubId, ClubDto club);
+    Task<bool> DeleteClubAsync(int clubId);
+}
