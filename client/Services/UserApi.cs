@@ -5,15 +5,25 @@ namespace Client.Services;
 
 public class UserApi(HttpClient http)
 {
-    // TODO: Implement methods to call the User API endpoints
-    // Examples:
-    // public async Task<List<User>> GetUsersAsync(CancellationToken ct = default)
-    // public async Task<User?> GetUserByIdAsync(int userId, CancellationToken ct = default)
-    // public async Task<User?> GetUserByEmailAsync(string email, CancellationToken ct = default)
-    // public async Task<User> CreateUserAsync(User user, CancellationToken ct = default)
-    // public async Task<User?> UpdateUserAsync(int userId, User user, CancellationToken ct = default)
-    // public async Task<bool> DeleteUserAsync(int userId, CancellationToken ct = default)
-    //
-    // Use ClubApi.cs as a reference for the structure
-    // Remember to use the correct HTTP methods (GET, POST, PUT, DELETE)
+    // Methods to call the User API endpoints
+
+    public async Task<List<User>> GetUsersAsync(CancellationToken ct = default)
+        => await http.GetFromJsonAsync<List<User>>("/api/users", ct) ?? [];
+
+    public async Task<User?> GetUserByIdAsync(int userId, CancellationToken ct = default)
+        => await http.GetFromJsonAsync<User?>($"/api/users/{userId}", ct);
+
+    public async Task<User?> GetUserByEmailAsync(string email, CancellationToken ct = default)
+        => await http.GetFromJsonAsync<User?>($"/api/users/email/{email}", ct);
+
+    public async Task<User> CreateUserAsync(User user, CancellationToken ct = default)
+    {
+        var response = await http.PostAsJsonAsync("/api/users", user, ct);
+        if (response.IsSuccessStatusCode)
+        {
+            var createdUser = await response.Content.ReadFromJsonAsync<User>(cancellationToken: ct);
+            return createdUser ?? new User();
+        }
+        return new User();
+    }
 }

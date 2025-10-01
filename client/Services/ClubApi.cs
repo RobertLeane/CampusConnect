@@ -3,6 +3,7 @@ using Client.Models;
 
 namespace Client.Services;
 
+
 public class ClubApi(HttpClient http)
 {
     public async Task<List<Club>> GetClubsAsync(CancellationToken ct = default)

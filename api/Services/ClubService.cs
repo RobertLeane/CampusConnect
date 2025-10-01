@@ -29,7 +29,7 @@ public class ClubService : IClubService
 
             await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
             await using var cmd = new SqlCommand(
-                "SELECT ClubId, ClubName, Description, Active FROM dbo.Club WHERE Active = 1", 
+                "SELECT ClubID, ClubName, Description, Active FROM dbo.Club", 
                 conn);
             await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -38,10 +38,9 @@ public class ClubService : IClubService
             {
                 clubs.Add(new ClubDto
                 {
-                    ClubId = reader.GetInt32(0),  // ClubId
+                    ClubID = reader.GetInt32(0),  // ClubId
                     ClubName = reader.GetString(1),  // ClubName
                     Description = reader.IsDBNull(2) ? null : reader.GetString(2),  // Description
-                    Active = reader.GetBoolean(3)  // Active
                 });
             }
 
@@ -66,7 +65,7 @@ public class ClubService : IClubService
 
             await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
             await using var cmd = new SqlCommand(
-                "SELECT ClubId, ClubName, Description, Active FROM dbo.Club WHERE ClubId = @clubId", 
+                "SELECT ClubID, ClubName, Description, Active FROM dbo.Club WHERE ClubID = @clubId", 
                 conn);
             cmd.Parameters.AddWithValue("@clubId", clubId);
             await using var reader = await cmd.ExecuteReaderAsync();
@@ -75,10 +74,9 @@ public class ClubService : IClubService
             {
                 return new ClubDto
                 {
-                    ClubId = reader.GetInt32(0),  // ClubId
+                    ClubID = reader.GetInt32(0),  // ClubId
                     ClubName = reader.GetString(1),  // ClubName
                     Description = reader.IsDBNull(2) ? null : reader.GetString(2),  // Description
-                    Active = reader.GetBoolean(3)  // Active
                 };
             }
 
