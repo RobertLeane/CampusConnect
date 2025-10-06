@@ -10,6 +10,4 @@ public interface IEventService
     // Task<List<EventDto>> GetEventsByClubIdAsync(int clubId);
     // Task<EventDto?> GetEventByIdAsync(int eventId);
     // Task<EventDto> CreateEventAsync(EventDto eventDto);
-    // Task<EventDto?> UpdateEventAsync(int eventId, EventDto eventDto);
-    // Task<bool> DeleteEventAsync(int eventId);
 }

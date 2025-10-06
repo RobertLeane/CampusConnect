@@ -23,8 +23,6 @@ public class EventFunctions
     // [Function("GetEventById")]
     // [Function("GetEventsByClub")]
     // [Function("CreateEvent")]
-    // [Function("UpdateEvent")]
-    // [Function("DeleteEvent")]
     // 
     // Use ClubFunctions.cs as a reference for the structure
     // Remember to:

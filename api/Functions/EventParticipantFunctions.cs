@@ -22,8 +22,6 @@ public class EventParticipantFunctions
     // [Function("GetEventParticipants")]
     // [Function("GetUserEventRegistrations")]
     // [Function("RegisterForEvent")]
-    // [Function("CancelEventRegistration")]
-    // [Function("UpdateParticipantStatus")]
     // 
     // Use ClubFunctions.cs as a reference for the structure
     // Remember to:

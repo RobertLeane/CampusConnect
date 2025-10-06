@@ -17,14 +17,6 @@ public class UserService : IUserService
         _database = Environment.GetEnvironmentVariable("Sql__Database")!;
     }
 
-    // TODO: Implement all methods from IUserService interface
-    // Use the ClubService.cs as a reference for database operations
-    // Remember to:
-    // 1. Check for null/empty server and database
-    // 2. Use SqlService.OpenTokenConnectionAsync for database connections
-    // 3. Use parameterized queries to prevent SQL injection
-    // 4. Handle exceptions and log errors
-    // 5. Return appropriate data types as defined in the interface
 
     public async Task<List<UserDto>> GetAllUsersAsync()
     {

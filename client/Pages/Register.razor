@@ -1,8 +1,4 @@
 @page "/register"
-@using Client.Models
-@using Client.Services
-@inject UserApi UserApi
-@inject NavigationManager Navigation
 
 <PageTitle>Register</PageTitle>
 
@@ -15,146 +11,45 @@
 
  <!-- Register Form -->
  <main class="container auth-container">
-     <EditForm Model="@newUser" OnValidSubmit="@HandleRegistration" class="auth-card" novalidate>
-         <DataAnnotationsValidator />
-         <ValidationSummary class="validation-summary" />
-
+     <form class="auth-card" action="#" method="post" novalidate>
          <h2>Sign Up</h2>
-
-         @if (!string.IsNullOrEmpty(errorMessage))
-         {
-             <div class="alert alert-danger">@errorMessage</div>
-         }
-
-         @if (!string.IsNullOrEmpty(successMessage))
-         {
-             <div class="alert alert-success">@successMessage</div>
-         }
 
          <!-- Name row -->
          <div class="auth-row">
              <div class="auth-field">
                  <label for="firstName">First name</label>
-                 <InputText id="firstName" @bind-Value="newUser.FirstName" placeholder="First name" class="form-control" />
-                 <ValidationMessage For="@(() => newUser.FirstName)" />
+                 <input id="firstName" name="firstName" type="text" placeholder="First name" required />
              </div>
              <div class="auth-field">
                  <label for="lastName">Last name</label>
-                 <InputText id="lastName" @bind-Value="newUser.LastName" placeholder="Last name" class="form-control" />
-                 <ValidationMessage For="@(() => newUser.LastName)" />
+                 <input id="lastName" name="lastName" type="text" placeholder="Last name" required />
              </div>
          </div>
 
          <label for="email">Email</label>
-         <InputText id="email" @bind-Value="newUser.Email" type="email" placeholder="t00000000@mymtu.ie" class="form-control" />
-         <ValidationMessage For="@(() => newUser.Email)" />
+         <input id="email" name="email" type="email" placeholder="t00000000@mymtu.ie" required />
 
          <label for="password">Password</label>
-         <InputText id="password" @bind-Value="newUser.Password" type="password" placeholder="At least 8 characters" class="form-control" />
-         <ValidationMessage For="@(() => newUser.Password)" />
+         <input id="password" name="password" type="password" placeholder="At least 8 characters" minlength="8" required />
 
          <label for="confirm">Confirm password</label>
-         <InputText id="confirm" @bind-Value="confirmPassword" type="password" placeholder="Repeat your password" class="form-control" />
+         <input id="confirm" name="confirm" type="password" placeholder="Repeat your password" minlength="8" required />
 
+         <label for="program">Program / Department (optional)</label>
+         <input id="program" name="program" type="text" placeholder="e.g., Computer Science" />
 
-         <button type="submit" class="btn" disabled="@isSubmitting">
-             @if (isSubmitting)
-             {
-                 <span>Creating Account...</span>
-             }
-             else
-             {
-                 <span>Create Account</span>
-             }
-         </button>
+         <label for="studentId">Student ID (optional)</label>
+         <input id="studentId" name="studentId" type="text" placeholder="e.g., t00000000" />
+
+         <label class="form-check">
+             <input type="checkbox" required />
+             <span>I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</span>
+         </label>
+
+         <button type="submit" class="btn">Create Account</button>
 
          <p class="auth-links">
              Already have an account? <NavLink href="/login">Log in</NavLink>
          </p>
-     </EditForm>
+     </form>
  </main>
-
-@code {
-    private UserRegistration newUser = new UserRegistration();
-    private string confirmPassword = string.Empty;
-    private bool agreeToTerms = false;
-    private bool showValidation = false;
-    private bool isSubmitting = false;
-    private string errorMessage = string.Empty;
-    private string successMessage = string.Empty;
-
-    private async Task HandleRegistration()
-    {
-        showValidation = true;
-        errorMessage = string.Empty;
-        successMessage = string.Empty;
-
-        // Validate agreement to terms
-        if (!agreeToTerms)
-        {
-            errorMessage = "You must agree to the terms and privacy policy.";
-            return;
-        }
-
-        // Validate password confirmation
-        if (newUser.Password != confirmPassword)
-        {
-            errorMessage = "Passwords do not match.";
-            return;
-        }
-
-        // Basic validation
-        if (string.IsNullOrWhiteSpace(newUser.FirstName) || 
-            string.IsNullOrWhiteSpace(newUser.LastName) || 
-            string.IsNullOrWhiteSpace(newUser.Email) || 
-            string.IsNullOrWhiteSpace(newUser.Password))
-        {
-            errorMessage = "Please fill in all required fields.";
-            return;
-        }
-
-        if (newUser.Password.Length < 8)
-        {
-            errorMessage = "Password must be at least 8 characters long.";
-            return;
-        }
-
-        try
-        {
-            isSubmitting = true;
-            
-            // Convert registration to User for API call
-            var userToCreate = newUser.ToUser();
-            
-            // Call the API to create the user
-            var createdUser = await UserApi.CreateUserAsync(userToCreate);
-            
-            if (createdUser != null && !string.IsNullOrEmpty(createdUser.Email))
-            {
-                successMessage = "Account created successfully! You can now log in.";
-                
-                // Reset form
-                newUser = new UserRegistration();
-                confirmPassword = string.Empty;
-                agreeToTerms = false;
-                showValidation = false;
-                
-                // Optionally redirect to login page after a delay
-                await Task.Delay(2000);
-                Navigation.NavigateTo("/login");
-            }
-            else
-            {
-                errorMessage = "Failed to create account. Please try again.";
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"An error occurred: {ex.Message}";
-        }
-        finally
-        {
-            isSubmitting = false;
-        }
-    }
-}

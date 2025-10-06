@@ -10,13 +10,13 @@ This document outlines the file structure and provides guidance for team members
 api/
 ├── Functions/
 │   ├── ClubFunctions.cs          ✅ COMPLETED
-│   ├── UserFunctions.cs          📝 TODO
+│   ├── UserFunctions.cs          ✅ COMPLETED
 │   ├── EventFunctions.cs         📝 TODO
 │   ├── MemberFunctions.cs        📝 TODO
 │   └── EventParticipantFunctions.cs 📝 TODO
 ├── Models/
 │   ├── ClubDto.cs                ✅ COMPLETED
-│   ├── UserDto.cs                📝 TODO
+│   ├── UserDto.cs                ✅ COMPLETED
 │   ├── EventDto.cs               📝 TODO
 │   ├── MemberDto.cs              📝 TODO
 │   └── EventParticipantDto.cs    📝 TODO
@@ -24,8 +24,8 @@ api/
 │   ├── SqlService.cs             ✅ COMPLETED (shared)
 │   ├── IClubService.cs           ✅ COMPLETED
 │   ├── ClubService.cs            ✅ COMPLETED
-│   ├── IUserService.cs           📝 TODO
-│   ├── UserService.cs            📝 TODO
+│   ├── IUserService.cs           ✅ COMPLETED
+│   ├── UserService.cs            ✅ COMPLETED
 │   ├── IEventService.cs          📝 TODO
 │   ├── EventService.cs           📝 TODO
 │   ├── IMemberService.cs         📝 TODO
@@ -37,13 +37,13 @@ api/
 client/
 ├── Models/
 │   ├── Club.cs                   ✅ COMPLETED
-│   ├── User.cs                   📝 TODO
+│   ├── User.cs                   ✅ COMPLETED
 │   ├── Event.cs                  📝 TODO
 │   ├── Member.cs                 📝 TODO
 │   └── EventParticipant.cs       📝 TODO
 └── Services/
     ├── ClubApi.cs                ✅ COMPLETED
-    ├── UserApi.cs                📝 TODO
+    ├── UserApi.cs                ✅ COMPLETED
     ├── EventApi.cs               📝 TODO
     ├── MemberApi.cs              📝 TODO
     └── EventParticipantApi.cs    📝 TODO

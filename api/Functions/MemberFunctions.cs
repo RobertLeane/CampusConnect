@@ -22,8 +22,6 @@ public class MemberFunctions
     // [Function("GetClubMembers")]
     // [Function("GetUserMemberships")]
     // [Function("AddMemberToClub")]
-    // [Function("RemoveMemberFromClub")]
-    // [Function("UpdateMemberRole")]
     // 
     // Use ClubFunctions.cs as a reference for the structure
     // Remember to:

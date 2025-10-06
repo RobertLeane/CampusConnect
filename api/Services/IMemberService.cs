@@ -10,6 +10,4 @@ public interface IMemberService
     // Task<List<MemberDto>> GetMembersByUserIdAsync(int userId);
     // Task<MemberDto?> GetMemberByIdAsync(int memberId);
     // Task<MemberDto> AddMemberToClubAsync(int userId, int clubId, string role);
-    // Task<bool> RemoveMemberFromClubAsync(int memberId);
-    // Task<MemberDto?> UpdateMemberRoleAsync(int memberId, string newRole);
 }
