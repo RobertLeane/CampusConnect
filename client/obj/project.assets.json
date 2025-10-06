@@ -1845,23 +1845,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\StudentRobertLeane(T\\.nuget\\packages\\": {},
+    "C:\\Users\\Samantha Lyons\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\StudentRobertLeane(T\\Documents\\CampusConnect\\client\\Client.csproj",
+      "projectUniqueName": "C:\\Users\\Samantha Lyons\\Downloads\\CampusConnect\\client\\Client.csproj",
       "projectName": "Client",
-      "projectPath": "C:\\Users\\StudentRobertLeane(T\\Documents\\CampusConnect\\client\\Client.csproj",
-      "packagesPath": "C:\\Users\\StudentRobertLeane(T\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\StudentRobertLeane(T\\Documents\\CampusConnect\\client\\obj\\",
+      "projectPath": "C:\\Users\\Samantha Lyons\\Downloads\\CampusConnect\\client\\Client.csproj",
+      "packagesPath": "C:\\Users\\Samantha Lyons\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Samantha Lyons\\Downloads\\CampusConnect\\client\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\StudentRobertLeane(T\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Samantha Lyons\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
