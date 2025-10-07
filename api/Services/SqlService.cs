@@ -12,17 +12,25 @@ public static class SqlService
 
     public static async Task<SqlConnection> OpenTokenConnectionAsync(string server, string database)
     {
-        // Minimal, valid base connection string (no auth details here)
-        var cs = $"Server=tcp:{server},1433;Database={database};Encrypt=True;TrustServerCertificate=False;";
+        // For local development, try connection string first
+        var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            var conn = new SqlConnection(connectionString);
+            await conn.OpenAsync();
+            return conn;
+        }
 
-        var conn = new SqlConnection(cs);
+        // Fallback to token authentication for Azure
+        var cs = $"Server=tcp:{server},1433;Database={database};Encrypt=True;TrustServerCertificate=False;";
+        var tokenConn = new SqlConnection(cs);
 
         // Acquire AAD token
-        var credential = new DefaultAzureCredential(); // uses VS/CLI login locally; Managed Identity in Azure
+        var credential = new DefaultAzureCredential();
         AccessToken token = await credential.GetTokenAsync(new TokenRequestContext(SqlScopes), default);
 
-        conn.AccessToken = token.Token;
-        await conn.OpenAsync();
-        return conn;
+        tokenConn.AccessToken = token.Token;
+        await tokenConn.OpenAsync();
+        return tokenConn;
     }
 }

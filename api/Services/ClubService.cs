@@ -29,7 +29,7 @@ public class ClubService : IClubService
 
             await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
             await using var cmd = new SqlCommand(
-                "SELECT ClubID, ClubName, Description, Active FROM dbo.Club", 
+                "SELECT ClubId, ClubName, ClubImgURL, ClubDescription FROM dbo.Clubs", 
                 conn);
             await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -38,9 +38,10 @@ public class ClubService : IClubService
             {
                 clubs.Add(new ClubDto
                 {
-                    ClubID = reader.GetInt32(0),  // ClubId
-                    ClubName = reader.GetString(1),  // ClubName
-                    Description = reader.IsDBNull(2) ? null : reader.GetString(2),  // Description
+                    ClubId = reader.GetInt32(0),
+                    ClubName = reader.GetString(1),
+                    ClubImgURL = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    ClubDescription = reader.IsDBNull(3) ? null : reader.GetString(3),
                 });
             }
 
@@ -74,9 +75,9 @@ public class ClubService : IClubService
             {
                 return new ClubDto
                 {
-                    ClubID = reader.GetInt32(0),  // ClubId
+                    ClubId = reader.GetInt32(0),  // ClubId
                     ClubName = reader.GetString(1),  // ClubName
-                    Description = reader.IsDBNull(2) ? null : reader.GetString(2),  // Description
+                    ClubDescription = reader.IsDBNull(2) ? null : reader.GetString(2),  // Description
                 };
             }
 
