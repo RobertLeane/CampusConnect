@@ -38,132 +38,94 @@
 
         <div class="grid grid-3">
 
-            <!-- Event 1 -->
+        @forEach (var event in events)
+        {
             <article class="card">
                 <div class="card__media">
-                    <img src="https://picsum.photos/seed/event-ai/800/480" alt="AI for Beginners workshop" />
+                    <img src="@event.ImageUrl" alt="@event.Title" />
                 </div>
                 <div class="card__body">
-                    <h3>AI for Beginners — Hands-on</h3>
+                    <h3>@event.Title</h3>
                     <ul class="meta">
-                        <li><strong>Hosted by:</strong> Computer Science Society</li>
-                        <li><strong>Time:</strong> Thu · 18:30–20:30</li>
-                        <li><strong>Venue:</strong> CS Building · Lab 2</li>
+                        <li><strong>Hosted by:</strong> @event.Host</li>
+                        <li><strong>Time:</strong> @event.Time</li>
+                        <li><strong>Venue:</strong> @event.Venue</li>
                     </ul>
                     <div class="tags">
-                        <span>Workshop</span><span>Python</span><span>Beginners</span>
+                    @foreach (var tag in event.Tags)
+                    {
+                        <span>@tag</span>
+                    }
                     </div>
                     <div class="actions">
-                        <a href="#" class="btn">RSVP</a>
+                         <button class="btn" @onclick="() => OnRSVPClicked(evt)">RSVP</button>
                     </div>
-                </div>
-            </article>
-
-            <!-- Event 2 -->
-            <article class="card">
-                <div class="card__media">
-                    <img src="https://picsum.photos/seed/event-photo/800/480" alt="Sunset Photo Walk" />
-                </div>
-                <div class="card__body">
-                    <h3>Sunset Photo Walk</h3>
-                    <ul class="meta">
-                        <li><strong>Hosted by:</strong> Photography Club</li>
-                        <li><strong>Time:</strong> Sat · 17:30–19:00</li>
-                        <li><strong>Venue:</strong> Riverside Park</li>
-                    </ul>
-                    <div class="tags">
-                        <span>Outdoors</span><span>Creativity</span>
-                    </div>
-                    <div class="actions">
-                        <a href="#" class="btn">RSVP</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Event 3 -->
-            <article class="card">
-                <div class="card__media">
-                    <img src="https://picsum.photos/seed/event-vol/800/480" alt="Campus Food Drive" />
-                </div>
-                <div class="card__body">
-                    <h3>Campus Food Drive</h3>
-                    <ul class="meta">
-                        <li><strong>Hosted by:</strong> Volunteer Corps</li>
-                        <li><strong>Time:</strong> Mon · 10:00–16:00</li>
-                        <li><strong>Venue:</strong> Student Union Hall</li>
-                    </ul>
-                    <div class="tags">
-                        <span>Community</span><span>Charity</span>
-                    </div>
-                    <div class="actions">
-                        <a href="#" class="btn">RSVP</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Event 4 -->
-            <article class="card">
-                <div class="card__media">
-                    <img src="https://picsum.photos/seed/event-hike/800/480" alt="Weekend Hike — Trail Day" />
-                </div>
-                <div class="card__body">
-                    <h3>Weekend Hike — Trail Day</h3>
-                    <ul class="meta">
-                        <li><strong>Hosted by:</strong> Hiking & Outdoors</li>
-                        <li><strong>Time:</strong> Sun · 08:00–14:00</li>
-                        <li><strong>Venue:</strong> Blue Ridge Trail</li>
-                    </ul>
-                    <div class="tags">
-                        <span>Fitness</span><span>Nature</span>
-                    </div>
-                    <div class="actions">
-                        <a href="#" class="btn">RSVP</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Event 5 -->
-            <article class="card">
-                <div class="card__media">
-                    <img src="https://picsum.photos/seed/event-debate/800/480" alt="Intervarsity Debate Night" />
-                </div>
-                <div class="card__body">
-                    <h3>Intervarsity Debate Night</h3>
-                    <ul class="meta">
-                        <li><strong>Hosted by:</strong> Debate Society</li>
-                        <li><strong>Time:</strong> Tue · 18:00–20:00</li>
-                        <li><strong>Venue:</strong> Lecture Theatre A</li>
-                    </ul>
-                    <div class="tags">
-                        <span>Public Speaking</span><span>Competition</span>
-                    </div>
-                    <div class="actions">
-                        <a href="#" class="btn">RSVP</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Event 6 -->
-            <article class="card">
-                <div class="card__media">
-                    <img src="https://picsum.photos/seed/event-green/800/480" alt="Repair Café" />
-                </div>
-                <div class="card__body">
-                    <h3>Repair Café</h3>
-                    <ul class="meta">
-                        <li><strong>Hosted by:</strong> Sustainability Society</li>
-                        <li><strong>Time:</strong> Fri · 16:00–18:00</li>
-                        <li><strong>Venue:</strong> Maker Space</li>
-                    </ul>
-                    <div class="tags">
-                        <span>Green</span><span>DIY</span><span>Community</span>
-                    </div>
-                    <div class="actions">
-                        <a href="#" class="btn">RSVP</a>
-                    </div>
+                    @if (!string.IsNullOrEmpty(event.Message))
+                    {
+                        <div class="alert alert-warning mt-2">@evt.Message</div>
+                    }
+        }
+           
                 </div>
             </article>
 
         </div>
     </section>
 </main>
+@code{
+    private List<EventViewModel> events = new List<Event>
+    {
+        // Example data — replace with database load
+        new Event
+        {
+            Title = "Tech Talk: The Future of AI",
+            Host = "AI Club",
+            Time = "March 5, 2024, 6:00 PM - 7:30 PM",
+            Venue = "Room 101, Tech Building",
+            ImageUrl = "images/events/ai_talk.jpg",
+            Tags = new List<string> { "Talk", "AI", "Technology" }
+        },
+        new Event
+        {
+            Title = "Spring Social Mixer",
+            Host = "Student Union",
+            Time = "March 7, 2024, 8:00 PM - 11:00 PM",
+            Venue = "Campus Lounge",
+            ImageUrl = "images/events/social_mixer.jpg",
+            Tags = new List<string> { "Social", "Networking", "Fun" }
+        },
+        new Event
+        {
+            Title = "Workshop: Resume Building",
+            Host = "Career Services",
+            Time = "March 10, 2024, 3:00 PM - 5:00 PM",
+            Venue = "Room 202, Library",
+            ImageUrl = "images/events/resume_workshop.jpg",
+            Tags = new List<string> { "Workshop", "Career", "Skills" }
+        }
+    };
+    private void OnRSVPClicked(EventViewModel evt)
+    {
+        string userId = "user123"; // Replace with actual authentication
+        int clubId = 1; // Replace with actual club ID logic
+
+        bool hasJoinedClub = await CheckUserClubMembership(userId, clubId);
+        if (!hasJoinedClub)
+        {
+            evt.Message = "Please join the hosting club to RSVP.";
+            return;
+        }
+        else
+        {
+            event.Message = "RSVP successful! Check your email for details.";
+            _dbContext.EventRegs.Add(new EventReg
+            {
+                userId = userId,
+                clubId = clubId,
+                eventId = evt.Id,
+                eventDate = DateTime.Now
+            });
+            await _dbContext.SaveChangesAsync();
+            
+    }
+}
