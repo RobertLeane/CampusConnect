@@ -1,8 +1,14 @@
+using System.Text.Json.Serialization;
+
 namespace Client.Models
 {
-    public class Event
+     public class Event
     {
-        // TODO: Add Event properties to match the API EventDto
-        // Hint: EventId, EventName, Description, EventDate, Location, MaxParticipants, ClubId, CreatedAt, Active
+        public int EventId { get; set; }
+        public string EventName { get; set; } = "";
+        public string? EventDescription { get; set; } = "";
+        public DateTime EventDateTime { get; set; }
+        public string? EventImgURL { get; set; } = "";
+        public int ClubId { get; set; }
     }
 }
