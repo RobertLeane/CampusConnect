@@ -13,21 +13,36 @@ public class ClubService : IClubService
     public ClubService(ILogger<ClubService> logger)
     {
         _logger = logger;
-        _server = Environment.GetEnvironmentVariable("Sql__Server")!;
-        _database = Environment.GetEnvironmentVariable("Sql__Database")!;
+        
+        // Try different environment variable patterns for Azure Static Web Apps
+        _server = Environment.GetEnvironmentVariable("Sql__Server") 
+               ?? Environment.GetEnvironmentVariable("SQL_SERVER")
+               ?? "svdb-campusconnect.database.windows.net";
+               
+        _database = Environment.GetEnvironmentVariable("Sql__Database") 
+                 ?? Environment.GetEnvironmentVariable("SQL_DATABASE") 
+                 ?? "DB-CampusConnect";
+                 
+        _logger.LogInformation($"Database config - Server: {_server}, Database: {_database}");
     }
 
     public async Task<List<ClubDto>> GetActiveClubsAsync()
     {
         try
         {
+            _logger.LogInformation("Starting to retrieve active clubs");
+            _logger.LogInformation($"Using server: {_server}, database: {_database}");
+            
             if (string.IsNullOrEmpty(_server) || string.IsNullOrEmpty(_database))
             {
-                _logger.LogError("Database configuration is missing");
-                throw new InvalidOperationException("Database configuration is missing");
+                var error = "Database configuration is missing";
+                _logger.LogError(error);
+                throw new InvalidOperationException(error);
             }
 
             await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            _logger.LogInformation("Database connection established successfully");
+            
             await using var cmd = new SqlCommand(
                 "SELECT ClubId, ClubName, ClubImgURL, ClubDescription FROM dbo.Clubs", 
                 conn);
@@ -45,12 +60,13 @@ public class ClubService : IClubService
                 });
             }
 
+            _logger.LogInformation($"Successfully retrieved {clubs.Count} clubs");
             return clubs;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving active clubs");
-            throw;
+            _logger.LogError(ex, "Error retrieving active clubs: {ErrorMessage}", ex.Message);
+            throw new InvalidOperationException($"An error occurred while retrieving clubs: {ex.Message}", ex);
         }
     }
 

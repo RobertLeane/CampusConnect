@@ -7,10 +7,11 @@
   ],
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/api/*", "/*.{js,css,png,jpg,jpeg,gif,ico,svg}"]
+    "exclude": ["/api/*", "/*.{js,css,png,jpg,jpeg,gif,ico,svg,wasm,pdb,map,json}"]
   },
   "mimeTypes": {
-    ".json": "application/json"
+    ".json": "application/json",
+    ".wasm": "application/wasm"
   },
   "globalHeaders": {
     "content-security-policy": "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https:; img-src 'self' data: https: blob:;"
