@@ -8,7 +8,22 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp =>
-    new HttpClient { BaseAddress = new Uri("http://localhost:7071") });
+{
+    var httpClient = new HttpClient();
+    
+    // In production (Azure Static Web Apps), use the current host
+    // In development, use the SWA emulator
+    if (builder.HostEnvironment.IsProduction())
+    {
+        httpClient.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+    }
+    else
+    {
+        httpClient.BaseAddress = new Uri("http://localhost:4280");
+    }
+    
+    return httpClient;
+});
 
 // Register API services
 builder.Services.AddScoped<UserApi>();

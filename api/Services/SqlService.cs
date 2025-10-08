@@ -13,14 +13,20 @@ public static class SqlService
     public static async Task<SqlConnection> OpenTokenConnectionAsync(string server, string database)
     {
         // For local development, try connection string first
-        var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+        var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") 
+                            ?? Environment.GetEnvironmentVariable("DefaultConnection");
+        
+        Console.WriteLine($"Looking for connection string: {connectionString?.Substring(0, Math.Min(50, connectionString?.Length ?? 0))}...");
+        
         if (!string.IsNullOrEmpty(connectionString))
         {
+            Console.WriteLine("Using connection string authentication");
             var conn = new SqlConnection(connectionString);
             await conn.OpenAsync();
             return conn;
         }
 
+        Console.WriteLine("Falling back to token authentication");
         // Fallback to token authentication for Azure
         var cs = $"Server=tcp:{server},1433;Database={database};Encrypt=True;TrustServerCertificate=False;";
         var tokenConn = new SqlConnection(cs);

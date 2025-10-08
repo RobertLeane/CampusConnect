@@ -11,13 +11,33 @@ public class ClubApi(HttpClient http)
         try
         {
             Console.WriteLine($"Making API call to: {http.BaseAddress}api/clubs");
-            var result = await http.GetFromJsonAsync<List<Club>>("/api/clubs", ct) ?? [];
-            Console.WriteLine($"API call successful, received {result.Count} clubs");
-            return result;
+            var response = await http.GetAsync("/api/clubs", ct);
+            Console.WriteLine($"Response status: {response.StatusCode}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Response content: {content}");
+                
+                var result = await response.Content.ReadFromJsonAsync<List<Club>>(cancellationToken: ct) ?? [];
+                Console.WriteLine($"API call successful, received {result.Count} clubs");
+                return result;
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"API call failed with status {response.StatusCode}: {errorContent}");
+                throw new HttpRequestException($"API call failed with status {response.StatusCode}: {errorContent}");
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"API call failed: {ex.Message}");
+            Console.WriteLine($"API call exception: {ex.Message}");
+            Console.WriteLine($"Exception type: {ex.GetType().Name}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
             throw;
         }
     }

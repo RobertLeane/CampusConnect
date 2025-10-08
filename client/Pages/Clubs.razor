@@ -58,15 +58,11 @@
                 {
                     <article class="card">
                         <div class="card__media">
-                            <img src="@GetClubImage(club)" alt="@club.ClubName cover" />
+                            <img src="@GetClubImage(club)" alt="@club.ClubName cover" onerror="this.src='@GetFallbackImage(club)'" />
                         </div>
                         <div class="card__body">
                             <h3>@club.ClubName</h3>
                             <p>@(club.ClubDescription ?? "No description available.")</p>
-                            <ul class="meta">
-                                <li>Club ID: @club.ClubId</li>
-                                <li>Active club</li>
-                            </ul>
                             <div class="actions">
                                 <a href="#" class="btn">Join Club</a>
                             </div>
@@ -104,9 +100,23 @@
 
     private string GetClubImage(Club club)
     {
-        // Use the club's image URL if available, otherwise fall back to a placeholder
-        return !string.IsNullOrEmpty(club.ClubImgURL) 
-            ? club.ClubImgURL 
-            : $"https://picsum.photos/seed/{club.ClubName.ToLower().Replace(" ", "-")}/800/480";
+        // Use the club's image URL from Azure Blob Storage if available
+        if (!string.IsNullOrEmpty(club.ClubImgURL))
+        {
+            // URL decode the image URL to handle encoded characters like %20 and %26
+            var decodedUrl = Uri.UnescapeDataString(club.ClubImgURL);
+            Console.WriteLine($"Original URL: {club.ClubImgURL}");
+            Console.WriteLine($"Decoded URL: {decodedUrl}");
+            return decodedUrl;
+        }
+        
+        // Fallback to a placeholder if no image URL is provided
+        return GetFallbackImage(club);
+    }
+    
+    private string GetFallbackImage(Club club)
+    {
+        // Generate a consistent placeholder image based on club name
+        return $"https://picsum.photos/seed/{club.ClubName.ToLower().Replace(" ", "-")}/800/480";
     }
 }

@@ -1,7 +1,7 @@
 # Build results
 bin/
 obj/
-client/obj/
+client/obj
 out/
 
 # VS Code

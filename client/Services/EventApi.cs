@@ -20,7 +20,7 @@ public class EventApi
         var response = await _httpClient.GetAsync("api/events");
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<List<Event>>();
+            return await response.Content.ReadFromJsonAsync<List<Event>>() ?? new List<Event>();
         }
         throw new Exception("Error retrieving events");
     }
