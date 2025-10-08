@@ -9,5 +9,8 @@
     },
     "ConnectionStrings": {
         "DefaultConnection": "Server=tcp:svdb-campusconnect.database.windows.net,1433;Initial Catalog=DB-CampusConnect;Persist Security Info=False;User ID=campusconnect_app;Password=SuperStrong!Passw0rd;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+    },
+    "Host": {
+        "CORS": "*"
     }
 }

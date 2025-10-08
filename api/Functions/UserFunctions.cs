@@ -122,4 +122,78 @@ public class UserFunctions
             };
         }
     }
+
+    [Function("Register")]
+    public async Task<IActionResult> Register(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "auth/register")] HttpRequest req)
+    {
+        try
+        {
+            _logger.LogInformation("Processing user registration");
+            using var reader = new StreamReader(req.Body);
+            var body = await reader.ReadToEndAsync();
+            var registerRequest = System.Text.Json.JsonSerializer.Deserialize<CampusConnect.Api.Models.RegisterRequest>(body);
+            
+            if (registerRequest == null)
+            {
+                return new BadRequestObjectResult("Invalid registration data.");
+            }
+
+            var result = await _userService.RegisterAsync(registerRequest);
+            
+            if (result.Success)
+            {
+                return new OkObjectResult(result);
+            }
+            else
+            {
+                return new BadRequestObjectResult(result);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during user registration");
+            return new ObjectResult("An error occurred during registration")
+            {
+                StatusCode = 500
+            };
+        }
+    }
+
+    [Function("Login")]
+    public async Task<IActionResult> Login(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "auth/login")] HttpRequest req)
+    {
+        try
+        {
+            _logger.LogInformation("Processing user login");
+            using var reader = new StreamReader(req.Body);
+            var body = await reader.ReadToEndAsync();
+            var loginRequest = System.Text.Json.JsonSerializer.Deserialize<CampusConnect.Api.Models.LoginRequest>(body);
+            
+            if (loginRequest == null)
+            {
+                return new BadRequestObjectResult("Invalid login data.");
+            }
+
+            var result = await _userService.LoginAsync(loginRequest);
+            
+            if (result.Success)
+            {
+                return new OkObjectResult(result);
+            }
+            else
+            {
+                return new UnauthorizedObjectResult(result);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during user login");
+            return new ObjectResult("An error occurred during login")
+            {
+                StatusCode = 500
+            };
+        }
+    }
 }

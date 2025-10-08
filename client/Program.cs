@@ -12,14 +12,14 @@ builder.Services.AddScoped(sp =>
     var httpClient = new HttpClient();
     
     // In production (Azure Static Web Apps), use the current host
-    // In development, use the SWA emulator
+    // In development, connect directly to Azure Functions
     if (builder.HostEnvironment.IsProduction())
     {
         httpClient.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
     }
     else
     {
-        httpClient.BaseAddress = new Uri("http://localhost:4280");
+        httpClient.BaseAddress = new Uri("http://localhost:7075");
     }
     
     return httpClient;
@@ -29,5 +29,6 @@ builder.Services.AddScoped(sp =>
 builder.Services.AddScoped<UserApi>();
 builder.Services.AddScoped<ClubApi>();
 builder.Services.AddScoped<EventApi>();
+builder.Services.AddScoped<AuthApi>();
 
 await builder.Build().RunAsync();

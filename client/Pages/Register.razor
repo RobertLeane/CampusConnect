@@ -1,4 +1,8 @@
 @page "/register"
+@using Client.Models
+@using Client.Services
+@inject AuthApi AuthApi
+@inject NavigationManager Navigation
 
 <PageTitle>Register</PageTitle>
 
@@ -11,39 +15,125 @@
 
  <!-- Register Form -->
  <main class="container auth-container">
-     <form class="auth-card" action="#" method="post" novalidate>
+     <EditForm Model="@registration" OnValidSubmit="@HandleRegistration" class="auth-card">
+         <DataAnnotationsValidator />
+         <ValidationSummary />
+         
          <h2>Sign Up</h2>
+
+         @if (!string.IsNullOrEmpty(errorMessage))
+         {
+             <div class="error">@errorMessage</div>
+         }
+
+         @if (!string.IsNullOrEmpty(successMessage))
+         {
+             <div class="success">@successMessage</div>
+         }
 
          <!-- Name row -->
          <div class="auth-row">
              <div class="auth-field">
                  <label for="firstName">First name</label>
-                 <input id="firstName" name="firstName" type="text" placeholder="First name" required />
+                 <InputText id="firstName" @bind-Value="registration.FirstName" placeholder="First name" />
+                 <ValidationMessage For="@(() => registration.FirstName)" />
              </div>
              <div class="auth-field">
                  <label for="lastName">Last name</label>
-                 <input id="lastName" name="lastName" type="text" placeholder="Last name" required />
+                 <InputText id="lastName" @bind-Value="registration.LastName" placeholder="Last name" />
+                 <ValidationMessage For="@(() => registration.LastName)" />
              </div>
          </div>
 
          <label for="email">Email</label>
-         <input id="email" name="email" type="email" placeholder="abc@email.com" required />
+         <InputText id="email" @bind-Value="registration.Email" type="email" placeholder="abc@email.com" />
+         <ValidationMessage For="@(() => registration.Email)" />
 
          <label for="password">Password</label>
-         <input id="password" name="password" type="password" placeholder="At least 8 characters" minlength="8" required />
+         <InputText id="password" @bind-Value="registration.Password" type="password" placeholder="At least 8 characters" />
+         <ValidationMessage For="@(() => registration.Password)" />
 
          <label for="confirm">Confirm password</label>
-         <input id="confirm" name="confirm" type="password" placeholder="Repeat your password" minlength="8" required />
+         <InputText id="confirm" @bind-Value="confirmPassword" type="password" placeholder="Repeat your password" />
 
          <label class="form-check">
-             <input type="checkbox" required />
+             <InputCheckbox @bind-Value="agreeToTerms" />
              <span>I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</span>
          </label>
 
-         <button type="submit" class="btn">Create Account</button>
+         <button type="submit" class="btn" disabled="@isLoading">
+             @if (isLoading)
+             {
+                 <span>Creating Account...</span>
+             }
+             else
+             {
+                 <span>Create Account</span>
+             }
+         </button>
 
          <p class="auth-links">
              Already have an account? <NavLink href="/login">Log in</NavLink>
          </p>
-     </form>
+     </EditForm>
  </main>
+
+@code {
+    private UserRegistration registration = new();
+    private string confirmPassword = "";
+    private bool agreeToTerms = false;
+    private bool isLoading = false;
+    private string? errorMessage = null;
+    private string? successMessage = null;
+
+    private async Task HandleRegistration()
+    {
+        try
+        {
+            errorMessage = null;
+            successMessage = null;
+
+            // Validation
+            if (registration.Password != confirmPassword)
+            {
+                errorMessage = "Passwords do not match.";
+                return;
+            }
+
+            if (!agreeToTerms)
+            {
+                errorMessage = "You must agree to the Terms and Privacy Policy.";
+                return;
+            }
+
+            isLoading = true;
+            Console.WriteLine("Starting registration process...");
+
+            var result = await AuthApi.RegisterAsync(registration);
+            
+            if (result.Success)
+            {
+                successMessage = "Registration successful! Redirecting to login...";
+                Console.WriteLine("Registration successful, redirecting to login");
+                
+                // Redirect to login page after a short delay
+                await Task.Delay(2000);
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                errorMessage = result.Message;
+                Console.WriteLine($"Registration failed: {result.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Registration failed: {ex.Message}";
+            Console.WriteLine($"Registration exception: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

@@ -1,4 +1,8 @@
 @page "/login"
+@using Client.Models
+@using Client.Services
+@inject AuthApi AuthApi
+@inject NavigationManager Navigation
 
 <PageTitle>Login</PageTitle>
 
@@ -11,20 +15,90 @@
 
  <!-- Login Form -->
  <main class="container auth-container">
-     <form class="auth-card">
+     <EditForm Model="@loginRequest" OnValidSubmit="@HandleLogin" class="auth-card">
+         <DataAnnotationsValidator />
+         <ValidationSummary />
+         
          <h2>Login</h2>
 
-         <label>Email</label>
-         <input type="email" placeholder="you@example.com" required />
+         @if (!string.IsNullOrEmpty(errorMessage))
+         {
+             <div class="error">@errorMessage</div>
+         }
 
-         <label>Password</label>
-         <input type="password" placeholder="Enter your password" required />
+         @if (!string.IsNullOrEmpty(successMessage))
+         {
+             <div class="success">@successMessage</div>
+         }
 
-         <button type="submit" class="btn">Login</button>
+         <label for="email">Email</label>
+         <InputText id="email" @bind-Value="loginRequest.Email" type="email" placeholder="you@example.com" />
+         <ValidationMessage For="@(() => loginRequest.Email)" />
+
+         <label for="password">Password</label>
+         <InputText id="password" @bind-Value="loginRequest.Password" type="password" placeholder="Enter your password" />
+         <ValidationMessage For="@(() => loginRequest.Password)" />
+
+         <button type="submit" class="btn" disabled="@isLoading">
+             @if (isLoading)
+             {
+                 <span>Logging in...</span>
+             }
+             else
+             {
+                 <span>Login</span>
+             }
+         </button>
 
          <p class="auth-links">           
-             <NavLink href="/forgot-password">Forgot password?</NavLink>I
+             <NavLink href="/forgot-password">Forgot password?</NavLink> | 
             <NavLink href="/register">Create an account</NavLink>
          </p>
-     </form>
+     </EditForm>
  </main>
+
+@code {
+    private LoginRequest loginRequest = new();
+    private bool isLoading = false;
+    private string? errorMessage = null;
+    private string? successMessage = null;
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            errorMessage = null;
+            successMessage = null;
+            isLoading = true;
+            
+            Console.WriteLine("Starting login process...");
+
+            var result = await AuthApi.LoginAsync(loginRequest);
+            
+            if (result.Success)
+            {
+                successMessage = "Login successful! Redirecting to dashboard...";
+                Console.WriteLine($"Login successful for user: {result.User?.Email}");
+                
+                // TODO: Store user session/token
+                // For now, just redirect to clubs page
+                await Task.Delay(1000);
+                Navigation.NavigateTo("/clubs");
+            }
+            else
+            {
+                errorMessage = result.Message;
+                Console.WriteLine($"Login failed: {result.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Login failed: {ex.Message}";
+            Console.WriteLine($"Login exception: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
