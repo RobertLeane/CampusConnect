@@ -5,6 +5,8 @@ namespace Client.Services;
 
 public class MemberApi(HttpClient http)
 {
+    private readonly HttpClient _http = http;
+
     // TODO: Implement methods to call the Member API endpoints
     // Examples:
     // public async Task<List<Member>> GetClubMembersAsync(int clubId, CancellationToken ct = default)
