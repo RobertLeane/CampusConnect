@@ -3,8 +3,8 @@ using Client.Models;
 
 namespace Client.Services;
 
-public class EventParticipantApi(HttpClient http)
-{
+
+
     // TODO: Implement methods to call the EventParticipant API endpoints
     // Examples:
     // public async Task<List<EventParticipant>> GetEventParticipantsAsync(int eventId, CancellationToken ct = default)
@@ -13,4 +13,3 @@ public class EventParticipantApi(HttpClient http)
     //
     // Use ClubApi.cs as a reference for the structure
     // Remember to use the correct HTTP methods (GET, POST, PUT, DELETE)
-}
