@@ -53,11 +53,23 @@ steps:
     ls -la ./client-publish/
     echo "Contents of wwwroot directory:"
     ls -la ./client-publish/wwwroot/
-    echo "Check if Home.razor changes are reflected in the published files:"
+    echo "Looking for index.html to verify content:"
+    if [ -f "./client-publish/wwwroot/index.html" ]; then
+      echo "Found index.html, checking for our text:"
+      grep -n "Monthly Events\|Active Members" ./client-publish/wwwroot/index.html || echo "Text not found in index.html"
+    fi
+    echo "Check compiled Blazor files:"
     find ./client-publish -name "*.dll" -o -name "*.json" -o -name "*.wasm" | head -10
+    echo "Check _framework directory:"
+    ls -la ./client-publish/wwwroot/_framework/ | head -20
+    echo "Build info:"
+    date
   displayName: 'Debug: Check published content'
 
 # Deploy to Azure Static Web Apps using SWA CLI
 - script: |
-    swa deploy ./client-publish/wwwroot --api-location ./api --deployment-token $(AZURE_STATIC_WEB_APPS_API_TOKEN) --env production --verbose
+    echo "Deploying from: ./client-publish/wwwroot"
+    echo "API location: ./api"
+    echo "Build timestamp: $(date)"
+    swa deploy ./client-publish/wwwroot --api-location ./api --deployment-token $(AZURE_STATIC_WEB_APPS_API_TOKEN) --env production --verbose --print-config --clear-cache
   displayName: 'Deploy to Azure Static Web Apps'
