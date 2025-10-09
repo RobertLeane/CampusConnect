@@ -21,8 +21,9 @@ steps:
 # Restore and build the Blazor client
 - script: |
     dotnet restore ./client
+    dotnet clean ./client
     dotnet publish ./client -c $(buildConfiguration) --no-restore -o ./client-publish
-  displayName: 'Build and Publish Blazor WebAssembly client'
+  displayName: 'Clean, Build and Publish Blazor WebAssembly client'
 
 # Restore and build the Azure Functions API
 - script: |
@@ -46,7 +47,17 @@ steps:
     npm install -g @azure/static-web-apps-cli
   displayName: 'Install SWA CLI'
 
+# Debug: List the published content
+- script: |
+    echo "Contents of client-publish directory:"
+    ls -la ./client-publish/
+    echo "Contents of wwwroot directory:"
+    ls -la ./client-publish/wwwroot/
+    echo "Check if Home.razor changes are reflected in the published files:"
+    find ./client-publish -name "*.dll" -o -name "*.json" -o -name "*.wasm" | head -10
+  displayName: 'Debug: Check published content'
+
 # Deploy to Azure Static Web Apps using SWA CLI
 - script: |
-    swa deploy ./client-publish/wwwroot --api-location ./api --deployment-token $(AZURE_STATIC_WEB_APPS_API_TOKEN) --env production
+    swa deploy ./client-publish/wwwroot --api-location ./api --deployment-token $(AZURE_STATIC_WEB_APPS_API_TOKEN) --env production --verbose
   displayName: 'Deploy to Azure Static Web Apps'
