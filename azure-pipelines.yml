@@ -5,29 +5,35 @@ trigger:
 - main
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
 variables:
   buildConfiguration: 'Release'
 
 steps:
+# Install .NET 8 SDK
 - task: UseDotNet@2
   displayName: 'Install .NET 8 SDK'
   inputs:
     packageType: 'sdk'
     version: '8.x'
 
-# Build and test the Blazor client
+# Restore and build the Blazor client
 - script: |
     dotnet restore ./client
     dotnet build ./client -c $(buildConfiguration) --no-restore
-  displayName: 'Build Blazor client'
+  displayName: 'Build Blazor WebAssembly client'
 
-# Build the Azure Functions API
+# Restore and build the Azure Functions API
 - script: |
     dotnet restore ./api
     dotnet build ./api -c $(buildConfiguration) --no-restore
   displayName: 'Build Azure Functions API'
+
+# Publish the Azure Functions API
+- script: |
+    dotnet publish ./api -c $(buildConfiguration) --no-build -o $(Build.ArtifactStagingDirectory)/api
+  displayName: 'Publish Azure Functions API'
 
 # Deploy to Azure Static Web Apps
 - task: AzureStaticWebApp@0
