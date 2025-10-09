@@ -9,8 +9,6 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  staticWebAppName: 'CampusConnectSWA'
-  resourceGroup: 'DevOpsTestGroup'
 
 steps:
 # Install .NET 8 SDK
@@ -20,35 +18,23 @@ steps:
     packageType: 'sdk'
     version: '8.x'
 
-# Build and publish the Blazor client
+# Restore and build the Blazor client
 - script: |
     dotnet restore ./client
-    dotnet publish ./client -c $(buildConfiguration) -o ./client-output
+    dotnet publish ./client -c $(buildConfiguration) --no-restore -o ./client-publish
   displayName: 'Build and Publish Blazor WebAssembly client'
 
-# Build the Azure Functions API
+# Restore and build the Azure Functions API
 - script: |
     dotnet restore ./api
-    dotnet build ./api -c $(buildConfiguration)
+    dotnet build ./api -c $(buildConfiguration) --no-restore
   displayName: 'Build Azure Functions API'
 
-# Install Node.js and SWA CLI
-- task: NodeTool@0
-  displayName: 'Install Node.js'
-  inputs:
-    versionSpec: '18.x'
-
-- script: |
-    npm install -g @azure/static-web-apps-cli
-  displayName: 'Install SWA CLI'
-
-# Deploy to Azure Static Web Apps using Azure CLI and SWA CLI
-- task: AzureCLI@2
+# Deploy to Azure Static Web Apps
+- task: AzureStaticWebApp@0
   displayName: 'Deploy to Azure Static Web Apps'
   inputs:
-    azureSubscription: 'Azure subscription 1(bd556404-fea5-48ad-b339-9988df969ee4)'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      deploymentToken=$(az staticwebapp secrets list --name "$(staticWebAppName)" --resource-group "$(resourceGroup)" --query "properties.apiKey" -o tsv)
-      swa deploy ./client-output/wwwroot --api-location ./api --deployment-token $deploymentToken --env production
+    app_location: './client-publish/wwwroot'
+    api_location: './api'
+    output_location: ''
+    azure_static_web_apps_api_token: '$(AZURE_STATIC_WEB_APPS_API_TOKEN)'
