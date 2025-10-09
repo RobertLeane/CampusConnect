@@ -9,6 +9,8 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
+  staticWebAppName: 'CampusConnectSWA'
+  resourceGroup: 'DevOpsTestGroup'
 
 steps:
 # Install .NET 8 SDK
@@ -18,58 +20,35 @@ steps:
     packageType: 'sdk'
     version: '8.x'
 
-# Restore and build the Blazor client
+# Build and publish the Blazor client
 - script: |
     dotnet restore ./client
-    dotnet clean ./client
-    dotnet publish ./client -c $(buildConfiguration) --no-restore -o ./client-publish
-  displayName: 'Clean, Build and Publish Blazor WebAssembly client'
+    dotnet publish ./client -c $(buildConfiguration) -o ./client-output
+  displayName: 'Build and Publish Blazor WebAssembly client'
 
-# Restore and build the Azure Functions API
+# Build the Azure Functions API
 - script: |
     dotnet restore ./api
-    dotnet build ./api -c $(buildConfiguration) --no-restore
+    dotnet build ./api -c $(buildConfiguration)
   displayName: 'Build Azure Functions API'
 
-# Publish the Azure Functions API
-- script: |
-    dotnet publish ./api -c $(buildConfiguration) --no-build -o $(Build.ArtifactStagingDirectory)/api
-  displayName: 'Publish Azure Functions API'
-
-# Install Node.js for SWA CLI
+# Install Node.js and SWA CLI
 - task: NodeTool@0
   displayName: 'Install Node.js'
   inputs:
     versionSpec: '18.x'
 
-# Install Static Web Apps CLI
 - script: |
     npm install -g @azure/static-web-apps-cli
   displayName: 'Install SWA CLI'
 
-# Debug: List the published content
-- script: |
-    echo "Contents of client-publish directory:"
-    ls -la ./client-publish/
-    echo "Contents of wwwroot directory:"
-    ls -la ./client-publish/wwwroot/
-    echo "Looking for index.html to verify content:"
-    if [ -f "./client-publish/wwwroot/index.html" ]; then
-      echo "Found index.html, checking for our text:"
-      grep -n "Monthly Events\|Active Members" ./client-publish/wwwroot/index.html || echo "Text not found in index.html"
-    fi
-    echo "Check compiled Blazor files:"
-    find ./client-publish -name "*.dll" -o -name "*.json" -o -name "*.wasm" | head -10
-    echo "Check _framework directory:"
-    ls -la ./client-publish/wwwroot/_framework/ | head -20
-    echo "Build info:"
-    date
-  displayName: 'Debug: Check published content'
-
-# Deploy to Azure Static Web Apps using SWA CLI
-- script: |
-    echo "Deploying from: ./client-publish/wwwroot"
-    echo "API location: ./api"
-    echo "Build timestamp: $(date)"
-    swa deploy ./client-publish/wwwroot --api-location ./api --deployment-token $(AZURE_STATIC_WEB_APPS_API_TOKEN) --env production --verbose --print-config --clear-cache
+# Deploy to Azure Static Web Apps using Azure CLI and SWA CLI
+- task: AzureCLI@2
   displayName: 'Deploy to Azure Static Web Apps'
+  inputs:
+    azureSubscription: 'Azure subscription 1(bd556404-fea5-48ad-b339-9988df969ee4)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      deploymentToken=$(az staticwebapp secrets list --name "$(staticWebAppName)" --resource-group "$(resourceGroup)" --query "properties.apiKey" -o tsv)
+      swa deploy ./client-output/wwwroot --api-location ./api --deployment-token $deploymentToken --env production
