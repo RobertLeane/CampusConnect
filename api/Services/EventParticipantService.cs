@@ -55,7 +55,7 @@ public class EventParticipantService : IEventParticipantService
         }
     }
 
-    public async Task<int?> GetUserByMemberIdAsync(int memberId)
+    public async Task<int?> GetUserIdByMemberIdAsync(int memberId)
     {
         try
         {
