@@ -1,32 +1,89 @@
 @page "/login"
 
+@using Client.Services
+@inject AuthService AuthService
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
 <PageTitle>Login</PageTitle>
 
- <section class="hero center">
-     <div class="container">
-         <h1>Welcome Back</h1>
-         <p>Log in to access your clubs, events, and dashboard.</p>
-     </div>
- </section>
+<section class="hero center">
+    <div class="container">
+        <h1>Welcome Back</h1>
+        <p>Log in to access your clubs, events, and dashboard.</p>
+    </div>
+</section>
 
- <!-- Login Form -->
- <main class="container auth-container">
-     <form class="auth-card">
-         <h2>Login</h2>
+<main class="container auth-container">
+    <EditForm Model="model" OnValidSubmit="OnSubmit">
+        <DataAnnotationsValidator />
+        <div class="auth-card">
+            <h2>Login</h2>
 
-         <label for="email">Email</label>
-         <input id="email" type="email" placeholder="you@example.com" />
+            <label for="email">Email</label>
+            <InputText id="email" @bind-Value="model.Email" type="email" placeholder="you@example.com" />
+            <ValidationMessage For="() => model.Email" />
 
-         <label for="password">Password</label>
-         <input id="password" type="password" placeholder="Enter your password" />
+            <label for="password">Password</label>
+            <InputText id="password" @bind-Value="model.Password" type="password" placeholder="Enter your password" />
+            <ValidationMessage For="() => model.Password" />
 
-         <button type="submit" class="btn">
-             <span>Login</span>
-         </button>
+            <button type="submit" class="btn" disabled="@submitting">
+                <span>@(submitting ? "Signing in..." : "Login")</span>
+            </button>
 
-         <p class="auth-links">           
-             <a href="/forgot-password">Forgot password?</a> | 
-             <a href="/register">Create an account</a>
-         </p>
-     </form>
- </main>
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <p class="auth-links" style="color: red;">@errorMessage</p>
+            }
+
+            <p class="auth-links">           
+                <a href="/forgot-password">Forgot password?</a> | 
+                <a href="/register">Create an account</a>
+            </p>
+        </div>
+    </EditForm>
+</main>
+
+@code {
+    private LoginVm model = new();
+    private bool submitting;
+    private string? errorMessage;
+
+    private async Task OnSubmit()
+    {
+        errorMessage = null;
+        submitting = true;
+
+        try
+        {
+            var success = await AuthService.LoginAsync(model.Email, model.Password, Http);
+            if (success)
+            {
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = "Invalid email or password.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Login failed: {ex.Message}";
+        }
+        finally
+        {
+            submitting = false;
+        }
+    }
+
+    public class LoginVm
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Password { get; set; } = string.Empty;
+    }
+}

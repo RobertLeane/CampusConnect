@@ -1,99 +1,122 @@
 @page "/dashboard"
 
+@using Client.Services
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
 <PageTitle>Dashboard</PageTitle>
 
-<section class="dashboard-hero">
-    <div class="container">
-        <h1>My <span>Dashboard</span></h1>
-        <p>Welcome back! Here's your activity overview.</p>
-    </div>
-</section>
-
-<!-- Stats (below the blue) -->
-<section class="stats-section">
-    <div class="container">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-meta">
-                    <div class="stat-title">Clubs Joined</div>
-                    <div class="stat-num">2</div>
-                </div>
-                <div class="stat-icon" aria-hidden="true">👥</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-meta">
-                    <div class="stat-title">Events Registered</div>
-                    <div class="stat-num">2</div>
-                </div>
-                <div class="stat-icon green" aria-hidden="true">📅</div>
-            </div>
+@if (!AuthService.IsAuthenticated)
+{
+    <section class="hero center">
+        <div class="container">
+            <h1>Access Denied</h1>
+            <p>Please <a href="/login">log in</a> to view your dashboard.</p>
         </div>
-    </div>
-</section>
-
-
-<!-- Dashboard Content (left = My Clubs, right = Upcoming) -->
-<main class="container dashboard-layout">
-    <!-- My Clubs -->
-    <section class="dashboard-card">
-        <div class="section-head">
-            <h3>My Clubs</h3>
-            <a href="#">View All</a>
-        </div>
-
-        <div class="list">
-            <div class="list-item">
-                <img src="https://picsum.photos/seed/club-cs/64" alt="Computer Science Society" />
-                <div class="info">
-                    <h4>Computer Science Society</h4>
-                    <span class="badge">Member</span>
-                    <small>Oct 18 · Hackathon</small>
-                </div>
-            </div>
-
-            <div class="list-item">
-                <img src="https://picsum.photos/seed/club-biz/64" alt="Business Club" />
-                <div class="info">
-                    <h4>Business Club</h4>
-                    <span class="badge">Vice President</span>
-                    <small>Oct 19 · Networking</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="actions">
-            <a class="btn" href="#">Discover More Clubs</a>
+    </section>
+}
+else
+{
+    <section class="dashboard-hero">
+        <div class="container">
+            <h1>My <span>Dashboard</span></h1>
+            <p>Welcome back, @AuthService.CurrentUser?.Email! Here's your activity overview.</p>
         </div>
     </section>
 
-    <!-- Upcoming Events -->
-    <section class="dashboard-card">
-        <div class="section-head">
-            <h3>Attending Events</h3>
-            <a href="#">View All</a>
-        </div>
+    <!-- Stats (below the blue) -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-meta">
+                        <div class="stat-title">Clubs Joined</div>
+                        <div class="stat-num">2</div>
+                    </div>
+                    <div class="stat-icon" aria-hidden="true">👥</div>
+                </div>
 
-        <div class="list">
-            <div class="list-item">
-                <div class="info">
-                    <h4>Annual Tech Conference</h4>
-                    <small>Oct 18, 2024 · 9:00 AM</small><br />
-                    <small>Engineering Auditorium · by Computer Science Society</small>
+                <div class="stat-card">
+                    <div class="stat-meta">
+                        <div class="stat-title">Events Registered</div>
+                        <div class="stat-num">2</div>
+                    </div>
+                    <div class="stat-icon green" aria-hidden="true">📅</div>
                 </div>
             </div>
-
-            <div class="list-item">
-                <div class="info">
-                    <h4>Business Networking Night</h4>
-                    <small>Oct 19, 2024 · 7:00 PM</small><br />
-                    <small>Business School Atrium · by Business Club</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="actions">
-            <a class="btn" href="#">Find More Events</a>
         </div>
     </section>
-</main>
+
+
+    <!-- Dashboard Content (left = My Clubs, right = Upcoming) -->
+    <main class="container dashboard-layout">
+        <!-- My Clubs -->
+        <section class="dashboard-card">
+            <div class="section-head">
+                <h3>My Clubs</h3>
+                <a href="#">View All</a>
+            </div>
+
+            <div class="list">
+                <div class="list-item">
+                    <img src="https://picsum.photos/seed/club-cs/64" alt="Computer Science Society" />
+                    <div class="info">
+                        <h4>Computer Science Society</h4>
+                        <span class="badge">Member</span>
+                        <small>Oct 18 · Hackathon</small>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <img src="https://picsum.photos/seed/club-biz/64" alt="Business Club" />
+                    <div class="info">
+                        <h4>Business Club</h4>
+                        <span class="badge">Vice President</span>
+                        <small>Oct 19 · Networking</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a class="btn" href="#">Discover More Clubs</a>
+            </div>
+        </section>
+
+        <!-- Upcoming Events -->
+        <section class="dashboard-card">
+            <div class="section-head">
+                <h3>Attending Events</h3>
+                <a href="#">View All</a>
+            </div>
+
+            <div class="list">
+                <div class="list-item">
+                    <div class="info">
+                        <h4>Annual Tech Conference</h4>
+                        <small>Oct 18, 2024 · 9:00 AM</small><br />
+                        <small>Engineering Auditorium · by Computer Science Society</small>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <div class="info">
+                        <h4>Business Networking Night</h4>
+                        <small>Oct 19, 2024 · 7:00 PM</small><br />
+                        <small>Business School Atrium · by Business Club</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a class="btn" href="#">Find More Events</a>
+            </div>
+        </section>
+    </main>
+}
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthService.InitializeAsync();
+    }
+}

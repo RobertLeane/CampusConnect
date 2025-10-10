@@ -6,4 +6,5 @@ public interface IUserService
 {
     Task<bool> EmailExistsAsync(string email);
     Task<int> RegisterAsync(RegisterRequest req);
+    Task<AuthResponse?> LoginAsync(LoginRequest req);
 }

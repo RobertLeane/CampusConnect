@@ -71,4 +71,43 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
             throw new InvalidOperationException("Email already exists");
         }
     }
+
+    public async Task<AuthResponse?> LoginAsync(LoginRequest req)
+    {
+        var email = (req.Email ?? string.Empty).Trim().ToLowerInvariant();
+        var password = req.Password ?? string.Empty;
+
+        const string sql = "SELECT UserId, FirstName, LastName, Email, PasswordHash FROM dbo.Users WHERE Email = @Email";
+        await using var conn = await SqlService.CreateConnection();
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.Add(new SqlParameter("@Email", SqlDbType.NVarChar, 100) { Value = email });
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+        {
+            _logger.LogInformation("Login attempt with non-existent email: {Email}", email);
+            return null; // User not found
+        }
+
+        var userId = reader.GetInt32("UserId");
+        var firstName = reader.GetString("FirstName");
+        var lastName = reader.GetString("LastName");
+        var storedEmail = reader.GetString("Email");
+        var passwordHash = reader.GetString("PasswordHash");
+
+        // Verify password using BCrypt
+        if (!BCrypt.Net.BCrypt.Verify(password, passwordHash))
+        {
+            _logger.LogInformation("Invalid password for email: {Email}", email);
+            return null; // Invalid password
+        }
+
+        _logger.LogInformation("Successful login for user: {UserId}", userId);
+        return new AuthResponse
+        {
+            UserId = userId,
+            Email = storedEmail,
+            Message = $"Welcome back, {firstName}!"
+        };
+    }
 }

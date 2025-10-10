@@ -65,4 +65,41 @@ public class AuthFunctions
             return new StatusCodeResult(StatusCodes.Status500InternalServerError);
         }
     }
+
+    [Function("LoginUser")]
+    public async Task<IActionResult> Login(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "auth/login")] HttpRequest req)
+    {
+        try
+        {
+            using var reader = new StreamReader(req.Body);
+            var body = await reader.ReadToEndAsync();
+
+            var jsonOpts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var model = JsonSerializer.Deserialize<LoginRequest>(body, jsonOpts);
+            if (model is null)
+                return new BadRequestObjectResult("Invalid JSON payload.");
+
+            var ctx = new ValidationContext(model);
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateObject(model, ctx, results, true))
+            {
+                var errors = results.Select(r => r.ErrorMessage).ToArray();
+                return new BadRequestObjectResult(new { Message = "Validation failed", Errors = errors });
+            }
+
+            var authResponse = await _userService.LoginAsync(model);
+            if (authResponse == null)
+            {
+                return new UnauthorizedObjectResult(new { Message = "Invalid email or password" });
+            }
+
+            return new OkObjectResult(authResponse);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during login");
+            return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+        }
+    }
 }

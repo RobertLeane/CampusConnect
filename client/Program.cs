@@ -28,5 +28,6 @@ builder.Services.AddScoped(sp =>
 // Register API services
 builder.Services.AddScoped<ClubApi>();
 builder.Services.AddScoped<EventApi>();
+builder.Services.AddScoped<AuthService>();
 
 await builder.Build().RunAsync();

@@ -4,24 +4,11 @@
   <div class="container nav__inner">
     <div class="brand">CampusConnect</div>
 
-    <nav class="tabs">
-      <NavLink href="/" Match="NavLinkMatch.All">Home</NavLink>
-      <NavLink href="/clubs">Clubs</NavLink>
-      <NavLink href="/events">Events</NavLink>
-      <NavLink href="/dashboard">My Dashboard</NavLink>
-    </nav>
+    <NavMenu />
 
     <form class="top-search">
       <input type="search" placeholder="Search clubs and events..." />
     </form>
-
-    <NavLink href="/login" class="login-link" aria-label="Login">
-      <!-- user-circle icon -->
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.42 0-8 2.24-8 5v.5a.5.5 0 0 0 .5.5h15a.5.5 0 0 0 .5-.5V19c0-2.76-3.58-5-8-5Z" />
-      </svg>
-      <span>Login</span>
-    </NavLink>
  
   </div>
 </header>
