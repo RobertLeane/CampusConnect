@@ -16,9 +16,10 @@ builder.Services
 builder.Services.AddScoped<IClubService, ClubService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IEventParticipantService, EventParticipantService>();
 
 // TODO: Register the remaining services by uncommenting these lines as team members implement them:
 // builder.Services.AddScoped<IMemberService, MemberService>();
-// builder.Services.AddScoped<IEventParticipantService, EventParticipantService>();
+
 
 builder.Build().Run();
