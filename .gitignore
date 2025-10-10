@@ -5,7 +5,6 @@ client/obj
 out/
 
 # VS Code
-.vscode/
 
 # User-specific files
 *.suo
