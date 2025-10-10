@@ -39,4 +39,18 @@ public static class SqlService
         await tokenConn.OpenAsync();
         return tokenConn;
     }
+
+    // Convenience factory that reads env vars and returns an open connection
+    public static Task<SqlConnection> CreateConnection()
+    {
+        var server = Environment.GetEnvironmentVariable("Sql__Server")
+                   ?? Environment.GetEnvironmentVariable("SQL_SERVER")
+                   ?? throw new InvalidOperationException("Sql__Server is not configured.");
+
+        var database = Environment.GetEnvironmentVariable("Sql__Database")
+                     ?? Environment.GetEnvironmentVariable("SQL_DATABASE")
+                     ?? throw new InvalidOperationException("Sql__Database is not configured.");
+
+        return OpenTokenConnectionAsync(server, database);
+    }
 }

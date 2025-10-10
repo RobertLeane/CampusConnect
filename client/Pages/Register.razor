@@ -1,51 +1,172 @@
 @page "/register"
 
+@using System.Net.Http.Json
+@inject HttpClient Http
+
 <PageTitle>Register</PageTitle>
 
- <section class="hero center">
-     <div class="container">
-         <h1>Create Your Account</h1>
-         <p>Join clubs, RSVP to events, and build your campus profile.</p>
-     </div>
+<section class="hero center">
+    <div class="container">
+        <h1>Create Your Account</h1>
+        <p>Join clubs, RSVP to events, and build your campus profile.</p>
+    </div>
  </section>
 
- <!-- Register Form -->
- <main class="container auth-container">
-     <form class="auth-card">
-         <h2>Sign Up</h2>
+<main class="container auth-container">
+    <EditForm Model="model" OnValidSubmit="OnSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="auth-card">
+            <h2>Sign Up</h2>
 
-         <!-- Name row -->
-         <div class="auth-row">
-             <div class="auth-field">
-                 <label for="firstName">First name</label>
-                 <input id="firstName" type="text" placeholder="First name" />
-             </div>
-             <div class="auth-field">
-                 <label for="lastName">Last name</label>
-                 <input id="lastName" type="text" placeholder="Last name" />
-             </div>
-         </div>
+            <div class="auth-row">
+                <div class="auth-field">
+                    <label for="firstName">First name</label>
+                    <InputText id="firstName" @bind-Value="model.FirstName" placeholder="First name" />
+                    <ValidationMessage For="() => model.FirstName" />
+                </div>
+                <div class="auth-field">
+                    <label for="lastName">Last name</label>
+                    <InputText id="lastName" @bind-Value="model.LastName" placeholder="Last name" />
+                    <ValidationMessage For="() => model.LastName" />
+                </div>
+            </div>
 
-         <label for="email">Email</label>
-         <input id="email" type="email" placeholder="abc@email.com" />
+            <label for="email">Email</label>
+            <InputText id="email" @bind-Value="model.Email" type="email" placeholder="abc@email.com" />
+            <ValidationMessage For="() => model.Email" />
 
-         <label for="password">Password</label>
-         <input id="password" type="password" placeholder="At least 8 characters" />
+            <label for="password">Password</label>
+            <InputText id="password" @bind-Value="model.Password" type="password" placeholder="At least 8 characters" />
+            <ValidationMessage For="() => model.Password" />
 
-         <label for="confirm">Confirm password</label>
-         <input id="confirm" type="password" placeholder="Repeat your password" />
+            <label for="confirm">Confirm password</label>
+            <InputText id="confirm" @bind-Value="confirm" type="password" placeholder="Repeat your password" />
+            @if (!string.IsNullOrEmpty(confirmError))
+            {
+                <div class="validation-message">@confirmError</div>
+            }
 
-         <label class="form-check">
-             <input type="checkbox" />
-             <span>I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</span>
-         </label>
+            <label class="form-check">
+                <input type="checkbox" @bind="accept" />
+                <span>I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</span>
+            </label>
+            @if (!string.IsNullOrEmpty(acceptError))
+            {
+                <div class="validation-message">@acceptError</div>
+            }
 
-         <button type="submit" class="btn">
-             <span>Create Account</span>
-         </button>
+            <button type="submit" class="btn" disabled="@submitting">
+                <span>@(submitting ? "Creating..." : "Create Account")</span>
+            </button>
 
-         <p class="auth-links">
-             Already have an account? <a href="/login">Log in</a>
-         </p>
-     </form>
- </main>
+            @if (!string.IsNullOrEmpty(serverMessage))
+            {
+                <p class="auth-links">@serverMessage</p>
+            }
+
+            <p class="auth-links">
+                Already have an account? <a href="/login">Log in</a>
+            </p>
+        </div>
+    </EditForm>
+</main>
+
+@code {
+    private RegisterVm model = new();
+    private string confirm = string.Empty;
+    private bool accept;
+    private bool submitting;
+    private string? serverMessage;
+    private string? acceptError;
+    private string? confirmError;
+
+    private async Task OnSubmit()
+    {
+        serverMessage = null;
+        acceptError = null;
+        confirmError = null;
+
+        if (!accept)
+        {
+            acceptError = "You must accept the terms to continue.";
+            return;
+        }
+        if (!string.Equals(model.Password, confirm, StringComparison.Ordinal))
+        {
+            confirmError = "Passwords do not match.";
+            return;
+        }
+
+        submitting = true;
+        try
+        {
+            var payload = new RegisterRequest
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Email = model.Email,
+                Password = model.Password
+            };
+
+            var resp = await Http.PostAsJsonAsync("/api/auth/register", payload);
+            if (resp.IsSuccessStatusCode)
+            {
+                serverMessage = "Account created successfully.";
+                model = new();
+                confirm = string.Empty;
+                accept = false;
+            }
+            else if ((int)resp.StatusCode == 409)
+            {
+                serverMessage = "That email is already registered.";
+            }
+            else if ((int)resp.StatusCode == 400)
+            {
+                var text = await resp.Content.ReadAsStringAsync();
+                serverMessage = $"Validation failed: {text}";
+            }
+            else
+            {
+                var text = await resp.Content.ReadAsStringAsync();
+                serverMessage = $"Registration failed: {(int)resp.StatusCode} {text}";
+            }
+        }
+        catch (Exception ex)
+        {
+            serverMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            submitting = false;
+        }
+    }
+
+    public class RegisterVm
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.StringLength(50)]
+        public string FirstName { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.StringLength(50)]
+        public string LastName { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.EmailAddress]
+        [System.ComponentModel.DataAnnotations.StringLength(100)]
+        public string Email { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.StringLength(255, MinimumLength = 8)]
+        public string Password { get; set; } = string.Empty;
+    }
+
+    public class RegisterRequest
+    {
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+}
