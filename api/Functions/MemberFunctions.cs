@@ -16,17 +16,77 @@ public class MemberFunctions
         _logger = logger;
         _memberService = memberService;
     }
+    [Function("GetClubMembers")]
+    public async Task<IActionResult> GetClubMembers(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "clubs/{clubId:int}/members")] HttpRequest req,
+        int clubId)
+    {
+        try
+        {
+            _logger.LogInformation($"Getting members for club {clubId} from database");
+            var members = await _memberService.GetMembersByClubIdAsync(clubId);
+            _logger.LogInformation($"Retrieved {members?.Count ?? 0} members for club {clubId}");
+            return new OkObjectResult(members);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving members for club {ClubId}", clubId);
+            return new ObjectResult("An error occurred while retrieving club members") { StatusCode = 500 };
+        }
+    }
 
-    // TODO: Add Azure Functions for Member operations
-    // Examples:
-    // [Function("GetClubMembers")]
-    // [Function("GetUserMemberships")]
-    // [Function("AddMemberToClub")]
-    // 
-    // Use ClubFunctions.cs as a reference for the structure
-    // Remember to:
-    // 1. Use appropriate HTTP triggers (GET, POST, PUT, DELETE)
-    // 2. Define proper routes (e.g., "clubs/{clubId:int}/members", "users/{userId:int}/memberships")
-    // 3. Handle exceptions and return appropriate HTTP status codes
-    // 4. Log information and errors appropriately
+    [Function("GetUserMemberships")]
+    public async Task<IActionResult> GetUserMemberships(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "users/{userId:int}/memberships")] HttpRequest req,
+        int userId)
+    {
+        try
+        {
+            _logger.LogInformation($"Getting memberships for user {userId} from database");
+            var memberships = await _memberService.GetMembersByUserIdAsync(userId);
+            _logger.LogInformation($"Retrieved {memberships?.Count ?? 0} memberships for user {userId}");
+            return new OkObjectResult(memberships);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving memberships for user {UserId}", userId);
+            return new ObjectResult("An error occurred while retrieving user memberships") { StatusCode = 500 };
+        }
+    }
+
+    [Function("AddMemberToClub")]
+    public async Task<IActionResult> AddMemberToClub(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "clubs/{clubId:int}/members")] HttpRequest req,
+        int clubId)
+    {
+        try
+        {
+            // Expect a simple JSON body like { "userId": 123, "role": "Member" }
+            var body = await System.Text.Json.JsonSerializer.DeserializeAsync<AddMemberRequest>(req.Body, new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (body == null || body.UserId <= 0)
+            {
+                return new BadRequestObjectResult("Invalid request body. Expecting { userId: int, role: string }");
+            }
+
+            _logger.LogInformation($"Adding user {body.UserId} to club {clubId} with role '{body.Role}'");
+            var member = await _memberService.AddMemberToClubAsync(body.UserId, clubId, body.Role ?? "Member");
+            return new CreatedResult($"/clubs/{clubId}/members/{member?.MemberId}", member);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding member to club {ClubId}", clubId);
+            return new ObjectResult("An error occurred while adding the member to the club") { StatusCode = 500 };
+        }
+    }
+
+    // Small DTO used for deserializing AddMember requests
+    private class AddMemberRequest
+    {
+        public int UserId { get; set; }
+        public string? Role { get; set; }
+    }
 }
