@@ -2,6 +2,7 @@
 @using Client.Models
 @using Client.Services
 @inject EventApi EventApi
+@inject EventRegistrationService EventRegistration
 @inject IJSRuntime JS
 
 <PageTitle>Events</PageTitle>
@@ -47,7 +48,7 @@
               <h3 class="card__title">@ev.EventName</h3>
               <p class="card__date">@ev.EventDateTime.ToString("f")</p>
               <p class="card__description">@ev.EventDescription</p>
-              <button class="btn btn--primary" @onclick="() => RsvpAsync(ev.EventId, ev.ClubId)">RSVP</button>
+              <button class="btn btn--primary" @onclick="() => HandleRsvpClickAsync(ev.EventId, ev.ClubId)">Register For Event</button>
             </div>
           </article>
         }
@@ -74,30 +75,8 @@
 
   private int CurrentUserId => 1;
 
-  private async Task RsvpAsync(int eventId, int clubId)
+  private async Task HandleRsvpClickAsync(int eventId, int clubId)
   {
-    if (CurrentUserId == 0)
-    {
-      await JS.InvokeVoidAsync("alert", "Please log in to RSVP.");
-      return;
-    }
-
-    var resp = await EventApi.RsvpAsync(eventId, CurrentUserId);
-
-    if (resp.IsSuccessStatusCode)
-    {
-      await JS.InvokeVoidAsync("alert", "RSVP successful 🎉");
-      return;
-    }
-
-    var msg = ((int)resp.StatusCode) switch
-    {
-      401 => "Please register or sign in to RSVP.",
-      403 => "You must join this club to RSVP.",
-      404 => "Event not found.",
-      409 => "You already RSVPed.",
-      _   => $"RSVP failed: {resp.StatusCode}"
-    };
-    await JS.InvokeVoidAsync("alert", msg);
+    await EventRegistration.HandleRsvpAsync(eventId, clubId, CurrentUserId);
   }
 }
