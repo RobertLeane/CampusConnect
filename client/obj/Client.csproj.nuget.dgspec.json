@@ -52,12 +52,12 @@
           "dependencies": {
             "Microsoft.AspNetCore.Components.WebAssembly": {
               "target": "Package",
-              "version": "[8.0.10, )"
+              "version": "[8.0.11, )"
             },
             "Microsoft.AspNetCore.Components.WebAssembly.DevServer": {
               "suppressParent": "All",
               "target": "Package",
-              "version": "[8.0.10, )"
+              "version": "[8.0.11, )"
             },
             "Microsoft.NET.ILLink.Tasks": {
               "suppressParent": "All",
@@ -70,6 +70,14 @@
               "target": "Package",
               "version": "[8.0.20, )",
               "autoReferenced": true
+            },
+            "bunit": {
+              "target": "Package",
+              "version": "[1.40.0, )"
+            },
+            "bunit.web": {
+              "target": "Package",
+              "version": "[1.40.0, )"
             }
           },
           "imports": [
