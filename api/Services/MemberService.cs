@@ -33,7 +33,7 @@ public class MemberService : IMemberService
     // 4. Handle exceptions and log errors
     // 5. Return appropriate data types as defined in the interface
 
-    public Task<List<MemberDto>> GetMembersByClubIdAsync(int clubId)
+    public async Task<List<MemberDto>> GetMembersByClubIdAsync(int clubId)
     {
         try
         {
@@ -62,7 +62,7 @@ public class MemberService : IMemberService
             }
 
             _logger.LogInformation("Retrieved {Count} members for club {ClubId}", list.Count, clubId);
-            return Task.FromResult(list);
+            return list;
         }
         catch (Exception ex)
         {
@@ -71,7 +71,7 @@ public class MemberService : IMemberService
         }
     }
 
-    public Task<List<MemberDto>> GetMembersByUserIdAsync(int userId)
+    public async Task<List<MemberDto>> GetMembersByUserIdAsync(int userId)
     {
         try
         {
@@ -99,7 +99,7 @@ public class MemberService : IMemberService
                 });
             }
 
-            return Task.FromResult(list);
+            return list;
         }
         catch (Exception ex)
         {
@@ -108,7 +108,7 @@ public class MemberService : IMemberService
         }
     }
 
-    public Task<MemberDto?> GetMemberByIdAsync(int memberId)
+    public async Task<MemberDto?> GetMemberByIdAsync(int memberId)
     {
         try
         {
@@ -133,10 +133,10 @@ public class MemberService : IMemberService
                     UserId = reader.GetInt32(1),
                     ClubId = reader.GetInt32(2)
                 };
-                return Task.FromResult<MemberDto?>(member);
+                return member;
             }
 
-            return Task.FromResult<MemberDto?>(null);
+            return null;
         }
         catch (Exception ex)
         {
@@ -145,7 +145,7 @@ public class MemberService : IMemberService
         }
     }
 
-    public Task<MemberDto> AddMemberToClubAsync(int userId, int clubId, string role)
+    public async Task<MemberDto> AddMemberToClubAsync(int userId, int clubId, string role)
     {
         try
         {
