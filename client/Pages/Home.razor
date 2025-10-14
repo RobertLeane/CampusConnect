@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @using Client.Models
 @using Client.Services
 @inject ClubApi ClubApi
@@ -36,7 +36,7 @@
 <section class="container">
     <div class="section-head">
         <h2>Featured Clubs</h2>
-        <a href="club.html" class="link-btn">View All Clubs</a>
+        <NavLink href='/Clubs' >class="link-btn">View All clubs</NavLink>
     </div>
 
     @if (isLoading)
@@ -77,7 +77,7 @@
 <section class="container">
     <div class="section-head">
         <h2>Upcoming Events</h2>
-        <a href="#" class="link-btn">View All Events</a>
+        <NavLink href="/Events" class="link-btn">View All Events</NavLink>
     </div>
 
     <div class="grid grid-2">
