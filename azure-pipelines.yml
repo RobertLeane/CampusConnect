@@ -36,7 +36,6 @@ steps:
     cp -r ./api-publish/* $(Build.ArtifactStagingDirectory)/drop/
     cp -r ./client-publish/wwwroot/* $(Build.ArtifactStagingDirectory)/drop/wwwroot/
   displayName: 'Prepare deployment package'
-  displayName: 'Prepare deployment package'
 
 # Create deployment artifact
 - task: PublishPipelineArtifact@1
