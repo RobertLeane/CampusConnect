@@ -48,7 +48,7 @@
               <h3 class="card__title">@ev.EventName</h3>
               <p class="card__date">@ev.EventDateTime.ToString("f")</p>
               <p class="card__description">@ev.EventDescription</p>
-              <button class="btn btn--primary" @onclick="() => HandleRsvpClickAsync(ev.EventId, ev.ClubId)">Register For Event</button>
+              <button class="btn btn--primary" @onclick="() => HandleRsvpClickAsync(ev.EventId, ev.ClubId)">RSVP For Event</button>
             </div>
           </article>
         }
@@ -79,4 +79,5 @@
   {
     await EventRegistration.HandleRsvpAsync(eventId, clubId, CurrentUserId);
   }
+  
 }
