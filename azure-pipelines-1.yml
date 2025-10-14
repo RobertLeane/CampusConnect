@@ -1,0 +1,56 @@
+# Azure Static Web Apps - CampusConnect
+# Build and deploy Blazor WebAssembly client and Azure Functions API
+
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+# Install .NET 8 SDK
+- task: UseDotNet@2
+  displayName: 'Install .NET 8 SDK'
+  inputs:
+    packageType: 'sdk'
+    version: '8.x'
+
+# Restore and build the Blazor client
+- script: |
+    dotnet restore ./client
+    dotnet publish ./client -c $(buildConfiguration) --no-restore -o ./client-publish
+  displayName: 'Build and Publish Blazor WebAssembly client'
+
+# Restore and build the API as Web App
+- script: |
+    dotnet restore ./api
+    dotnet publish ./api -c $(buildConfiguration) --no-restore -o ./api-publish
+  displayName: 'Build and Publish API as Web App'
+
+# Prepare combined deployment package
+- script: |
+    mkdir -p $(Build.ArtifactStagingDirectory)/drop
+    cp -r ./api-publish/* $(Build.ArtifactStagingDirectory)/drop/
+    cp -r ./client-publish/wwwroot/* $(Build.ArtifactStagingDirectory)/drop/wwwroot/
+  displayName: 'Prepare deployment package'
+  displayName: 'Prepare deployment package'
+
+# Create deployment artifact
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish pipeline artifact'
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)/drop'
+    artifactName: 'drop'
+
+# Deploy to Azure App Service
+- task: AzureWebApp@1
+  displayName: 'Deploy to Azure App Service'
+  inputs:
+    azureSubscription: '$(AZURE_SERVICE_CONNECTION)'  # Update with your service connection name
+    appName: '$(APP_SERVICE_NAME)'  # Update with your App Service name
+    package: '$(Build.ArtifactStagingDirectory)/drop'
+    deploymentMethod: 'auto'
+
