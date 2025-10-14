@@ -24,17 +24,32 @@ steps:
     dotnet publish ./client -c $(buildConfiguration) --no-restore -o ./client-publish
   displayName: 'Build and Publish Blazor WebAssembly client'
 
-# Restore and build the Azure Functions API
+# Restore and build the API as Web App
 - script: |
     dotnet restore ./api
-    dotnet build ./api -c $(buildConfiguration) --no-restore
-  displayName: 'Build Azure Functions API'
+    dotnet publish ./api -c $(buildConfiguration) --no-restore -o ./api-publish
+  displayName: 'Build and Publish API as Web App'
 
-# Deploy to Azure Static Web Apps
-- task: AzureStaticWebApp@0
-  displayName: 'Deploy to Azure Static Web Apps'
+# Prepare combined deployment package
+- script: |
+    mkdir -p $(Build.ArtifactStagingDirectory)/drop
+    cp -r ./api-publish/* $(Build.ArtifactStagingDirectory)/drop/
+    cp -r ./client-publish/wwwroot/* $(Build.ArtifactStagingDirectory)/drop/wwwroot/
+  displayName: 'Prepare deployment package'
+  displayName: 'Prepare deployment package'
+
+# Create deployment artifact
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish pipeline artifact'
   inputs:
-    app_location: './client-publish/wwwroot'
-    api_location: './api'
-    output_location: ''
-    azure_static_web_apps_api_token: '$(AZURE_STATIC_WEB_APPS_API_TOKEN)'
+    targetPath: '$(Build.ArtifactStagingDirectory)/drop'
+    artifactName: 'drop'
+
+# Deploy to Azure App Service
+- task: AzureWebApp@1
+  displayName: 'Deploy to Azure App Service'
+  inputs:
+    azureSubscription: '$(AZURE_SERVICE_CONNECTION)'  # Update with your service connection name
+    appName: '$(APP_SERVICE_NAME)'  # Update with your App Service name
+    package: '$(Build.ArtifactStagingDirectory)/drop'
+    deploymentMethod: 'auto'

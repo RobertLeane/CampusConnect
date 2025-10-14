@@ -11,16 +11,8 @@ builder.Services.AddScoped(sp =>
 {
     var httpClient = new HttpClient();
     
-    // In production (Azure Static Web Apps), use the current host
-    // In development, connect directly to Azure Functions
-    if (builder.HostEnvironment.IsProduction())
-    {
-        httpClient.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
-    }
-    else
-    {
-        httpClient.BaseAddress = new Uri("http://localhost:7075");
-    }
+    // For App Service, the API and client are served from the same domain
+    httpClient.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
     
     return httpClient;
 });
@@ -28,8 +20,7 @@ builder.Services.AddScoped(sp =>
 // Register API services
 builder.Services.AddScoped<ClubApi>();
 builder.Services.AddScoped<EventApi>();
-builder.Services.AddScoped<EventParticipantApi>();
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<EventRegistrationService>();
+builder.Services.AddScoped<MemberApi>();
 
 await builder.Build().RunAsync();

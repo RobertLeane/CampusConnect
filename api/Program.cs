@@ -1,25 +1,50 @@
-using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using CampusConnect.Api.Services;
 
-var builder = FunctionsApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
-builder.ConfigureFunctionsWebApplication();
-
-builder.Services
-    .AddApplicationInsightsTelemetryWorkerService()
-    .ConfigureFunctionsApplicationInsights();
+// Add services to the container.
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Register your API services
 builder.Services.AddScoped<IClubService, ClubService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEventParticipantService, EventParticipantService>();
+builder.Services.AddScoped<IMemberService, MemberService>();
 
-// TODO: Register the remaining services by uncommenting these lines as team members implement them:
-// builder.Services.AddScoped<IMemberService, MemberService>();
+// Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowBlazorClient",
+        policy =>
+        {
+            policy.WithOrigins("https://localhost:5001", "http://localhost:5000", "https://campusconnect-a5gmchaahpf4ajem.uksouth-01.azurewebsites.net")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
 
+var app = builder.Build();
 
-builder.Build().Run();
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+app.UseCors("AllowBlazorClient");
+app.UseAuthorization();
+app.MapControllers();
+
+// Serve static files for Blazor
+app.UseStaticFiles();
+app.UseRouting();
+
+// Fallback routing for Blazor SPA
+app.MapFallbackToFile("index.html");
+
+app.Run();
