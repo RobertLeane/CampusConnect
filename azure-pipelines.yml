@@ -67,7 +67,18 @@ steps:
     rm -rf $(Build.ArtifactStagingDirectory)/final-package/wwwroot
     
     if [ -d "$(Build.ArtifactStagingDirectory)/client-temp/wwwroot" ]; then
+        # Copy the entire wwwroot directory
         cp -r $(Build.ArtifactStagingDirectory)/client-temp/wwwroot $(Build.ArtifactStagingDirectory)/final-package/
+        
+        echo "=== Verifying Critical Blazor Files ==="
+        echo "Checking for icudt files specifically:"
+        ls -la $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/icudt*.dat || echo "ERROR: ICU data files missing!"
+        
+        echo "Checking for dotnet runtime files:"
+        ls -la $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/dotnet*.wasm || echo "ERROR: dotnet runtime missing!"
+        
+        echo "Checking for blazor.boot.json:"
+        ls -la $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/blazor.boot.json || echo "ERROR: blazor.boot.json missing!"
         
         echo "=== Verifying Linux App Service Configuration ==="
         # For Linux App Service, we rely on Program.cs configuration for static files and SPA routing
@@ -82,29 +93,51 @@ steps:
             rm $(Build.ArtifactStagingDirectory)/final-package/web.config
         fi
         
-        echo "=== Verification ==="
+        echo "=== Complete Verification ==="
         echo "Final package wwwroot:"
         ls -la $(Build.ArtifactStagingDirectory)/final-package/wwwroot/
         
-        echo "_framework directory:"
-        ls -la $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/ | head -10
+        echo "_framework directory (first 15 files):"
+        ls -la $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/ | head -15
         
         echo "Critical files count:"
         echo "DAT files: $(find $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework -name "*.dat" | wc -l)"
         echo "WASM files: $(find $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework -name "*.wasm" | wc -l)"
         echo "JS files: $(find $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework -name "*.js" | wc -l)"
         
-        echo "Checking for specific problem files:"
-        ls -la $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/icudt* || echo "ICU files not found"
-        ls -la $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/dotnet.*.wasm || echo "dotnet.wasm not found"
+        # Verify file permissions are correct
+        echo "=== File Permissions Check ==="
+        echo "Checking permissions on critical files:"
+        ls -la $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/icudt_EFIGS.dat || echo "icudt_EFIGS.dat not found"
+        ls -la $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/blazor.webassembly.js || echo "blazor.webassembly.js not found"
+        
+        # Check total size to ensure files aren't corrupted
+        echo "=== Size Verification ==="
+        echo "Total _framework size:"
+        du -sh $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/
+        
+        # Final verification that all expected files exist
+        EXPECTED_FILES=(
+            "$(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/icudt_EFIGS.dat"
+            "$(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/icudt_CJK.dat"
+            "$(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/icudt_no_CJK.dat"
+            "$(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/blazor.webassembly.js"
+            "$(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/blazor.boot.json"
+        )
+        
+        echo "=== Final File Existence Check ==="
+        for file in "${EXPECTED_FILES[@]}"; do
+            if [ -f "$file" ]; then
+                echo "✅ Found: $(basename $file)"
+            else
+                echo "❌ Missing: $(basename $file)"
+            fi
+        done
         
     else
         echo "FATAL ERROR: Client wwwroot directory not found!"
         exit 1
     fi
-    
-    echo "=== Final Package Size ==="
-    du -sh $(Build.ArtifactStagingDirectory)/final-package/wwwroot/
     
     echo "=== Final Package Root Files ==="
     ls -la $(Build.ArtifactStagingDirectory)/final-package/
@@ -128,3 +161,29 @@ steps:
     package: '$(Build.ArtifactStagingDirectory)/final-package'
     runtimeStack: 'DOTNETCORE|8.0'
     deploymentMethod: 'runFromPackage'
+
+# Verify critical files are accessible
+- script: |
+    echo "=== Post-Deployment Verification ==="
+    APP_URL="https://campusconnect-a5gmchashpf4ajem.uksouth-01.azurewebsites.net"
+    
+    # Test critical Blazor WebAssembly files
+    echo "Testing critical Blazor files:"
+    
+    echo "1. Testing icudt_EFIGS.dat..."
+    curl -I "$APP_URL/_framework/icudt_EFIGS.dat" || echo "❌ icudt_EFIGS.dat not accessible"
+    
+    echo "2. Testing blazor.webassembly.js..."
+    curl -I "$APP_URL/_framework/blazor.webassembly.js" || echo "❌ blazor.webassembly.js not accessible"
+    
+    echo "3. Testing blazor.boot.json..."
+    curl -I "$APP_URL/_framework/blazor.boot.json" || echo "❌ blazor.boot.json not accessible"
+    
+    echo "4. Testing index.html..."
+    curl -I "$APP_URL/" || echo "❌ Index page not accessible"
+    
+    echo "5. Testing API endpoint..."
+    curl -I "$APP_URL/api/ping" || echo "❌ API not accessible"
+    
+    echo "=== File Access Test Complete ==="
+  displayName: 'Verify Deployed Files Are Accessible'
