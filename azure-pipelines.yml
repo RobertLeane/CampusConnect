@@ -24,55 +24,57 @@ steps:
     dotnet restore
   displayName: 'Restore dependencies'
 
-# Build and publish the ASP.NET Core Web API (Server)
+# Build and publish - Use a simpler approach
 - script: |
-    dotnet publish ./api -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/publish
-  displayName: 'Build and Publish API (Controllers)'
-
-# Build the Blazor WebAssembly Client
-- script: |
-    dotnet publish ./client -c $(buildConfiguration) -o ./client-publish
-  displayName: 'Build Blazor WebAssembly Client'
-
-# Copy Blazor client files into server's wwwroot
-- script: |
-    echo "=== Debugging Blazor Client Integration ==="
-    echo "Client-publish directory structure:"
-    find ./client-publish -type f | head -20
-    echo ""
-    echo "Looking for wwwroot in client-publish:"
-    find ./client-publish -name "wwwroot" -type d
-    echo ""
-    echo "API publish directory before integration:"
-    ls -la $(Build.ArtifactStagingDirectory)/publish/
-    echo ""
+    echo "Building API and Client together..."
+    dotnet publish ./api -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/api-publish
+    dotnet publish ./client -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/client-publish
     
-    # Remove existing wwwroot if any
-    rm -rf $(Build.ArtifactStagingDirectory)/publish/wwwroot
+    echo "=== API Publish Structure ==="
+    find $(Build.ArtifactStagingDirectory)/api-publish -type f | head -15
     
-    # The correct path for Blazor WASM published files
-    if [ -d "./client-publish/wwwroot" ]; then
-        echo "Found wwwroot in client-publish, copying..."
-        cp -a ./client-publish/wwwroot $(Build.ArtifactStagingDirectory)/publish/
+    echo "=== Client Publish Structure ==="
+    find $(Build.ArtifactStagingDirectory)/client-publish -type f | head -15
+    
+    echo "=== Looking for Blazor WASM files ==="
+    find $(Build.ArtifactStagingDirectory)/client-publish -name "*.wasm" -o -name "blazor.webassembly.js" -o -name "*.dll"
+  displayName: 'Build and Publish Both Projects'
+
+# Integrate Blazor into API
+- script: |
+    echo "=== Starting Blazor Integration ==="
+    
+    # Create the final publish directory
+    mkdir -p $(Build.ArtifactStagingDirectory)/final-publish
+    
+    # Copy API files first
+    cp -r $(Build.ArtifactStagingDirectory)/api-publish/* $(Build.ArtifactStagingDirectory)/final-publish/
+    
+    # Now copy Blazor WASM files
+    if [ -d "$(Build.ArtifactStagingDirectory)/client-publish/wwwroot" ]; then
+        echo "Found client wwwroot, copying to final publish..."
+        rm -rf $(Build.ArtifactStagingDirectory)/final-publish/wwwroot
+        cp -r $(Build.ArtifactStagingDirectory)/client-publish/wwwroot $(Build.ArtifactStagingDirectory)/final-publish/
     else
-        echo "wwwroot not found in client-publish, checking for dist or other patterns..."
-        find ./client-publish -name "*.js" -o -name "*.wasm" -o -name "*.json" | head -10
+        echo "No client wwwroot found, checking alternative locations..."
+        find $(Build.ArtifactStagingDirectory)/client-publish -name "index.html" -exec dirname {} \;
     fi
     
-    echo ""
-    echo "API publish directory after integration:"
-    ls -la $(Build.ArtifactStagingDirectory)/publish/
-    if [ -d "$(Build.ArtifactStagingDirectory)/publish/wwwroot" ]; then
+    echo "=== Final Structure ==="
+    ls -la $(Build.ArtifactStagingDirectory)/final-publish/
+    if [ -d "$(Build.ArtifactStagingDirectory)/final-publish/wwwroot" ]; then
         echo "wwwroot contents:"
-        ls -la $(Build.ArtifactStagingDirectory)/publish/wwwroot/ | head -10
+        ls -la $(Build.ArtifactStagingDirectory)/final-publish/wwwroot/ | head -10
+        echo "Looking for critical Blazor files:"
+        find $(Build.ArtifactStagingDirectory)/final-publish/wwwroot -name "blazor.webassembly.js" -o -name "_framework"
     fi
-  displayName: 'Integrate Blazor Client into API wwwroot (with debugging)'
+  displayName: 'Integrate Blazor Client Files'
 
 # Publish artifact
 - task: PublishPipelineArtifact@1
   displayName: 'Publish deployment artifact'
   inputs:
-    targetPath: '$(Build.ArtifactStagingDirectory)/publish'
+    targetPath: '$(Build.ArtifactStagingDirectory)/final-publish'
     artifactName: 'drop'
 
 # Deploy to Azure App Service
@@ -83,6 +85,6 @@ steps:
     azureSubscription: 'CampusConnect-ServiceConnection'
     appName: 'CampusConnect'
     appType: 'webAppLinux'
-    package: '$(Build.ArtifactStagingDirectory)/publish'
+    package: '$(Build.ArtifactStagingDirectory)/final-publish'
     runtimeStack: 'DOTNETCORE|8.0'
     deploymentMethod: 'runFromPackage'
