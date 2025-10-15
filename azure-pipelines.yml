@@ -36,9 +36,11 @@ steps:
 
 # Copy Blazor client files into server's wwwroot
 - script: |
+    echo "Merging Blazor client build into API publish folder..."
+    rm -rf $(Build.ArtifactStagingDirectory)/publish/wwwroot
     mkdir -p $(Build.ArtifactStagingDirectory)/publish/wwwroot
-    cp -r ./client-publish/wwwroot/* $(Build.ArtifactStagingDirectory)/publish/wwwroot/
-  displayName: 'Integrate Blazor Client into API wwwroot'
+    cp -a ./client/wwwroot/. $(Build.ArtifactStagingDirectory)/publish/wwwroot/
+  displayName: 'Integrate Blazor Client into API wwwroot (correct path)'
 
 # Publish artifact
 - task: PublishPipelineArtifact@1
