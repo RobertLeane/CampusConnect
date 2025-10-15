@@ -19,15 +19,11 @@ builder.Services.AddScoped(sp =>
     }
     else
     {
-        // For App Service, the API and client are served from the same domain
-        // Use the current page's base address
-        var baseAddress = builder.HostEnvironment.BaseAddress;
-        if (string.IsNullOrEmpty(baseAddress))
-        {
-            // Fallback: construct from current location
-            baseAddress = $"{Uri.UriSchemeHttps}://{System.Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME") ?? "localhost"}";
-        }
-        httpClient.BaseAddress = new Uri(baseAddress);
+        // For App Service, use the same domain - no subdirectory needed
+        var baseUri = builder.HostEnvironment.BaseAddress;
+        Console.WriteLine($"[DEBUG] Environment BaseAddress: {baseUri}");
+        httpClient.BaseAddress = new Uri(baseUri);
+        Console.WriteLine($"[DEBUG] HttpClient BaseAddress set to: {httpClient.BaseAddress}");
     }
     
     return httpClient;
