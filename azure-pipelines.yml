@@ -9,6 +9,7 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
+  resourceGroupName: 'Software-Tools-Project'
 
 steps:
 # Install .NET 8 SDK
@@ -50,11 +51,11 @@ steps:
 - task: AzureCLI@2
   displayName: 'Enable Public Access'
   inputs:
-    azureSubscription: 'your-service-connection'
+    azureSubscription: 'CampusConnect-ServiceConnection'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az webapp update --name CampusConnect --resource-group your-rg --set publicNetworkAccess=Enabled
+      az webapp update --name CampusConnect --resource-group $(resourceGroupName) --set publicNetworkAccess=Enabled
 
 # Deploy to Azure App Service
 - task: AzureWebApp@1
@@ -71,8 +72,8 @@ steps:
 - task: AzureCLI@2
   displayName: 'Disable Public Access'
   inputs:
-    azureSubscription: 'your-service-connection'
+    azureSubscription: 'CampusConnect-ServiceConnection'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az webapp update --name CampusConnect --resource-group your-rg --set publicNetworkAccess=Disabled
+      az webapp update --name CampusConnect --resource-group $(resourceGroupName) --set publicNetworkAccess=Disabled
