@@ -67,6 +67,15 @@ steps:
     if [ -d "$(Build.ArtifactStagingDirectory)/client-temp/wwwroot" ]; then
         cp -r $(Build.ArtifactStagingDirectory)/client-temp/wwwroot $(Build.ArtifactStagingDirectory)/final-package/
         
+        echo "=== Ensuring web.config for Azure App Service ==="
+        # Make sure web.config is present for IIS/Azure App Service hosting
+        if [ ! -f "$(Build.ArtifactStagingDirectory)/final-package/web.config" ]; then
+            echo "Warning: web.config not found, this may cause hosting issues!"
+        else
+            echo "web.config found - good for Azure App Service hosting"
+            ls -la $(Build.ArtifactStagingDirectory)/final-package/web.config
+        fi
+        
         echo "=== Verification ==="
         echo "Final package wwwroot:"
         ls -la $(Build.ArtifactStagingDirectory)/final-package/wwwroot/
@@ -90,6 +99,9 @@ steps:
     
     echo "=== Final Package Size ==="
     du -sh $(Build.ArtifactStagingDirectory)/final-package/wwwroot/
+    
+    echo "=== Final Package Root Files ==="
+    ls -la $(Build.ArtifactStagingDirectory)/final-package/
   displayName: 'Create Final Integrated Package'
 
 # Publish artifact
