@@ -6,8 +6,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 builder.Configuration.AddJsonFile("local.settings.json", optional: true, reloadOnChange: true);
 
-// Add services to the container.
-builder.Services.AddControllers();
+// Add services to the container
+builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -21,7 +22,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEventParticipantService, EventParticipantService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
 
-// Add CORS - Updated for Azure App Service
+// Add CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -35,20 +36,25 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "CampusConnect API V1");
-        c.RoutePrefix = string.Empty; // Set Swagger UI at apps root
+        c.RoutePrefix = string.Empty; // Set Swagger UI at app's root (only in dev)
     });
 }
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthorization();
+
+// ✅ Serve Blazor WASM + Controllers
+app.UseStaticFiles();
+app.UseRouting();
 app.MapControllers();
+app.MapFallbackToFile("index.html"); // <-- critical: serves Blazor app at "/"
 
 app.Run();
