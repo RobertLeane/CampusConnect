@@ -1,15 +1,17 @@
-# CampusConnect - Blazor WASM + Controllers API
-# Deploys to Azure App Service (Linux, .NET 8)
+# Azure DevOps Pipeline for CampusConnect
+# Blazor WebAssembly + ASP.NET Core Web API deployment to Azure App Service
 
 trigger:
 - main
 
-pool:
-  vmImage: 'ubuntu-latest'
-
 variables:
   buildConfiguration: 'Release'
+  azureServiceConnection: 'CampusConnect-ServiceConnection'
+  webAppName: 'CampusConnect'
   resourceGroupName: 'Software-Tools-Project'
+
+pool:
+  vmImage: 'ubuntu-latest'
 
 steps:
 # Install .NET 8 SDK
@@ -67,13 +69,17 @@ steps:
     if [ -d "$(Build.ArtifactStagingDirectory)/client-temp/wwwroot" ]; then
         cp -r $(Build.ArtifactStagingDirectory)/client-temp/wwwroot $(Build.ArtifactStagingDirectory)/final-package/
         
-        echo "=== Ensuring web.config for Azure App Service ==="
-        # Make sure web.config is present for IIS/Azure App Service hosting
-        if [ ! -f "$(Build.ArtifactStagingDirectory)/final-package/web.config" ]; then
-            echo "Warning: web.config not found, this may cause hosting issues!"
-        else
-            echo "web.config found - good for Azure App Service hosting"
-            ls -la $(Build.ArtifactStagingDirectory)/final-package/web.config
+        echo "=== Verifying Linux App Service Configuration ==="
+        # For Linux App Service, we rely on Program.cs configuration for static files and SPA routing
+        echo "Program.cs should contain:"
+        echo "  - app.UseStaticFiles()"
+        echo "  - app.MapFallbackToFile(\"index.html\")"
+        echo "This is configured for Linux hosting, no web.config needed."
+        
+        # Remove any web.config file that might interfere with Linux hosting
+        if [ -f "$(Build.ArtifactStagingDirectory)/final-package/web.config" ]; then
+            echo "Removing web.config (not needed for Linux App Service)"
+            rm $(Build.ArtifactStagingDirectory)/final-package/web.config
         fi
         
         echo "=== Verification ==="

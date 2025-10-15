@@ -1,0 +1,124 @@
+# CampusConnect - Blazor WASM + Controllers API
+# Deploys to Azure App Service (Linux, .NET 8)
+
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  resourceGroupName: 'Software-Tools-Project'
+
+steps:
+# Install .NET 8 SDK
+- task: UseDotNet@2
+  displayName: 'Install .NET 8 SDK'
+  inputs:
+    packageType: 'sdk'
+    version: '8.x'
+
+# Restore dependencies
+- script: |
+    dotnet restore
+  displayName: 'Restore dependencies'
+
+# Build and publish - Use integrated approach
+- script: |
+    echo "Building API first..."
+    dotnet publish ./api -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/api-temp
+    
+    echo "Building Blazor WebAssembly with proper hosted configuration..."
+    dotnet publish ./client -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/client-temp
+    
+    echo "=== API Temp Structure ==="
+    ls -la $(Build.ArtifactStagingDirectory)/api-temp/ | head -10
+    
+    echo "=== Client Temp Structure ==="
+    ls -la $(Build.ArtifactStagingDirectory)/client-temp/
+    
+    echo "=== Client wwwroot Structure ==="
+    if [ -d "$(Build.ArtifactStagingDirectory)/client-temp/wwwroot" ]; then
+        ls -la $(Build.ArtifactStagingDirectory)/client-temp/wwwroot/
+        echo "=== _framework Contents ==="
+        ls -la $(Build.ArtifactStagingDirectory)/client-temp/wwwroot/_framework/ | head -15
+        echo "=== Looking for critical files ==="
+        find $(Build.ArtifactStagingDirectory)/client-temp/wwwroot/_framework -name "*.dat" | wc -l
+        find $(Build.ArtifactStagingDirectory)/client-temp/wwwroot/_framework -name "*.wasm" | wc -l
+    else
+        echo "ERROR: Client wwwroot not found!"
+        find $(Build.ArtifactStagingDirectory)/client-temp -name "*.wasm" -o -name "*.dat" | head -10
+    fi
+  displayName: 'Build API and Client Separately'
+
+# Create final integrated package
+- script: |
+    echo "=== Creating Final Package ==="
+    
+    # Start with API as base
+    mkdir -p $(Build.ArtifactStagingDirectory)/final-package
+    cp -r $(Build.ArtifactStagingDirectory)/api-temp/* $(Build.ArtifactStagingDirectory)/final-package/
+    
+    # Completely replace wwwroot with client's wwwroot
+    echo "Replacing API wwwroot with client wwwroot..."
+    rm -rf $(Build.ArtifactStagingDirectory)/final-package/wwwroot
+    
+    if [ -d "$(Build.ArtifactStagingDirectory)/client-temp/wwwroot" ]; then
+        cp -r $(Build.ArtifactStagingDirectory)/client-temp/wwwroot $(Build.ArtifactStagingDirectory)/final-package/
+        
+        echo "=== Ensuring web.config for Azure App Service ==="
+        # Make sure web.config is present for IIS/Azure App Service hosting
+        if [ ! -f "$(Build.ArtifactStagingDirectory)/final-package/web.config" ]; then
+            echo "Warning: web.config not found, this may cause hosting issues!"
+        else
+            echo "web.config found - good for Azure App Service hosting"
+            ls -la $(Build.ArtifactStagingDirectory)/final-package/web.config
+        fi
+        
+        echo "=== Verification ==="
+        echo "Final package wwwroot:"
+        ls -la $(Build.ArtifactStagingDirectory)/final-package/wwwroot/
+        
+        echo "_framework directory:"
+        ls -la $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/ | head -10
+        
+        echo "Critical files count:"
+        echo "DAT files: $(find $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework -name "*.dat" | wc -l)"
+        echo "WASM files: $(find $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework -name "*.wasm" | wc -l)"
+        echo "JS files: $(find $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework -name "*.js" | wc -l)"
+        
+        echo "Checking for specific problem files:"
+        ls -la $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/icudt* || echo "ICU files not found"
+        ls -la $(Build.ArtifactStagingDirectory)/final-package/wwwroot/_framework/dotnet.*.wasm || echo "dotnet.wasm not found"
+        
+    else
+        echo "FATAL ERROR: Client wwwroot directory not found!"
+        exit 1
+    fi
+    
+    echo "=== Final Package Size ==="
+    du -sh $(Build.ArtifactStagingDirectory)/final-package/wwwroot/
+    
+    echo "=== Final Package Root Files ==="
+    ls -la $(Build.ArtifactStagingDirectory)/final-package/
+  displayName: 'Create Final Integrated Package'
+
+# Publish artifact
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish deployment artifact'
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)/final-package'
+    artifactName: 'drop'
+
+# Deploy to Azure App Service
+- task: AzureWebApp@1
+  displayName: 'Deploy to Azure App Service'
+  timeoutInMinutes: 10
+  inputs:
+    azureSubscription: 'CampusConnect-ServiceConnection'
+    appName: 'CampusConnect'
+    appType: 'webAppLinux'
+    package: '$(Build.ArtifactStagingDirectory)/final-package'
+    runtimeStack: 'DOTNETCORE|8.0'
+    deploymentMethod: 'runFromPackage'
