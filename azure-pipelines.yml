@@ -50,10 +50,11 @@ steps:
 # Deploy to Azure App Service
 - task: AzureWebApp@1
   displayName: 'Deploy to Azure App Service'
+  timeoutInMinutes: 10
   inputs:
     azureSubscription: 'CampusConnect-ServiceConnection'
     appName: 'CampusConnect'
     appType: 'webAppLinux'
     package: '$(Build.ArtifactStagingDirectory)/publish'
     runtimeStack: 'DOTNETCORE|8.0'
-    deploymentMethod: 'auto'
+    deploymentMethod: 'runFromPackage'
