@@ -2,10 +2,19 @@ using CampusConnect.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add local.settings.json for local development
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddJsonFile("local.settings.json", optional: true, reloadOnChange: true);
+}
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { Title = "CampusConnect API", Version = "v1" });
+});
 
 // Register your API services
 builder.Services.AddScoped<IClubService, ClubService>();
@@ -14,13 +23,13 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEventParticipantService, EventParticipantService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
 
-// Add CORS
+// Add CORS - Updated for Azure App Service
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowBlazorClient",
+    options.AddPolicy("AllowAll",
         policy =>
         {
-            policy.WithOrigins("https://localhost:5001", "http://localhost:5000", "https://campusconnect-a5gmchaahpf4ajem.uksouth-01.azurewebsites.net")
+            policy.AllowAnyOrigin()
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -32,19 +41,16 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "CampusConnect API V1");
+        c.RoutePrefix = string.Empty; // Set Swagger UI at apps root
+    });
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowBlazorClient");
+app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
-
-// Serve static files for Blazor
-app.UseStaticFiles();
-app.UseRouting();
-
-// Fallback routing for Blazor SPA
-app.MapFallbackToFile("index.html");
 
 app.Run();

@@ -11,8 +11,17 @@ builder.Services.AddScoped(sp =>
 {
     var httpClient = new HttpClient();
     
-    // For App Service, the API and client are served from the same domain
-    httpClient.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+    // For local development, point to the API running on port 5000
+    // For App Service deployment, both client and API will be on the same domain
+    if (builder.HostEnvironment.IsDevelopment())
+    {
+        httpClient.BaseAddress = new Uri("http://localhost:5000");
+    }
+    else
+    {
+        // For App Service, the API and client are served from the same domain
+        httpClient.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+    }
     
     return httpClient;
 });

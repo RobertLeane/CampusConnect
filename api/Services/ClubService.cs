@@ -1,5 +1,6 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using CampusConnect.Api.Models;
 
 namespace CampusConnect.Api.Services;
@@ -7,19 +8,25 @@ namespace CampusConnect.Api.Services;
 public class ClubService : IClubService
 {
     private readonly ILogger<ClubService> _logger;
+    private readonly IConfiguration _configuration;
     private readonly string _server;
     private readonly string _database;
 
-    public ClubService(ILogger<ClubService> logger)
+    public ClubService(ILogger<ClubService> logger, IConfiguration configuration)
     {
         _logger = logger;
+        _configuration = configuration;
         
-        // Try different environment variable patterns for Azure Static Web Apps
-        _server = Environment.GetEnvironmentVariable("Sql__Server") 
+        // Try different configuration sources for database settings
+        _server = _configuration["Values:Sql__Server"]
+               ?? _configuration["Sql__Server"]
+               ?? Environment.GetEnvironmentVariable("Sql__Server") 
                ?? Environment.GetEnvironmentVariable("SQL_SERVER")
                ?? "svdb-campusconnect.database.windows.net";
                
-        _database = Environment.GetEnvironmentVariable("Sql__Database") 
+        _database = _configuration["Values:Sql__Database"]
+                 ?? _configuration["Sql__Database"]
+                 ?? Environment.GetEnvironmentVariable("Sql__Database") 
                  ?? Environment.GetEnvironmentVariable("SQL_DATABASE") 
                  ?? "DB-CampusConnect";
                  
@@ -40,7 +47,7 @@ public class ClubService : IClubService
                 throw new InvalidOperationException(error);
             }
 
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database, _configuration);
             _logger.LogInformation("Database connection established successfully");
             
             await using var cmd = new SqlCommand(
