@@ -50,25 +50,39 @@ steps:
     # Copy API files first
     cp -r $(Build.ArtifactStagingDirectory)/api-publish/* $(Build.ArtifactStagingDirectory)/final-publish/
     
-    # Now copy Blazor WASM files
+    # Now integrate the COMPLETE Blazor WASM publish output
     if [ -d "$(Build.ArtifactStagingDirectory)/client-publish/wwwroot" ]; then
-        echo "Found client wwwroot, copying to final publish..."
+        echo "Found client wwwroot, merging with API wwwroot..."
+        
+        # Remove API's wwwroot if it exists
         rm -rf $(Build.ArtifactStagingDirectory)/final-publish/wwwroot
+        
+        # Copy the entire client publish wwwroot (this includes _framework with all assemblies)
         cp -r $(Build.ArtifactStagingDirectory)/client-publish/wwwroot $(Build.ArtifactStagingDirectory)/final-publish/
+        
+        echo "=== Verifying Critical Blazor Files ==="
+        echo "Checking for _framework directory:"
+        ls -la $(Build.ArtifactStagingDirectory)/final-publish/wwwroot/_framework/ | head -10
+        
+        echo "Checking for .dat files:"
+        find $(Build.ArtifactStagingDirectory)/final-publish/wwwroot/_framework -name "*.dat" | head -5
+        
+        echo "Checking for .wasm files:"
+        find $(Build.ArtifactStagingDirectory)/final-publish/wwwroot/_framework -name "*.wasm" | head -5
+        
+        echo "Checking for blazor.webassembly.js:"
+        ls -la $(Build.ArtifactStagingDirectory)/final-publish/wwwroot/_framework/blazor.webassembly.js
+        
     else
-        echo "No client wwwroot found, checking alternative locations..."
-        find $(Build.ArtifactStagingDirectory)/client-publish -name "index.html" -exec dirname {} \;
+        echo "ERROR: No client wwwroot found!"
+        exit 1
     fi
     
     echo "=== Final Structure ==="
     ls -la $(Build.ArtifactStagingDirectory)/final-publish/
-    if [ -d "$(Build.ArtifactStagingDirectory)/final-publish/wwwroot" ]; then
-        echo "wwwroot contents:"
-        ls -la $(Build.ArtifactStagingDirectory)/final-publish/wwwroot/ | head -10
-        echo "Looking for critical Blazor files:"
-        find $(Build.ArtifactStagingDirectory)/final-publish/wwwroot -name "blazor.webassembly.js" -o -name "_framework"
-    fi
-  displayName: 'Integrate Blazor Client Files'
+    echo "Final wwwroot size:"
+    du -sh $(Build.ArtifactStagingDirectory)/final-publish/wwwroot/
+  displayName: 'Integrate Blazor Client Files (Complete)'
 
 # Publish artifact
 - task: PublishPipelineArtifact@1
