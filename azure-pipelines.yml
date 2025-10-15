@@ -47,16 +47,6 @@ steps:
     targetPath: '$(Build.ArtifactStagingDirectory)/publish'
     artifactName: 'drop'
 
-# Before deployment enable Public IP Access
-- task: AzureCLI@2
-  displayName: 'Enable Public Access'
-  inputs:
-    azureSubscription: 'CampusConnect-ServiceConnection'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      az webapp update --name CampusConnect --resource-group $(resourceGroupName) --set publicNetworkAccess=Enabled
-
 # Deploy to Azure App Service
 - task: AzureWebApp@1
   displayName: 'Deploy to Azure App Service'
@@ -67,13 +57,3 @@ steps:
     package: '$(Build.ArtifactStagingDirectory)/publish'
     runtimeStack: 'DOTNETCORE|8.0'
     deploymentMethod: 'auto'
-
-# After deployment disable Public IP Access
-- task: AzureCLI@2
-  displayName: 'Disable Public Access'
-  inputs:
-    azureSubscription: 'CampusConnect-ServiceConnection'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      az webapp update --name CampusConnect --resource-group $(resourceGroupName) --set publicNetworkAccess=Disabled
