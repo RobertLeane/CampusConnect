@@ -13,31 +13,31 @@ public static class SqlService
 
     public static async Task<SqlConnection> OpenTokenConnectionAsync(string server, string database, IConfiguration? configuration = null)
     {
-        // For local development, try connection string first
         string? connectionString = null;
 
-        // Get connection string using standard ASP.NET Core configuration
+        // Priority 1: Standard ASP.NET Core appsettings.json
         if (configuration != null)
         {
             connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        // Fallback to environment variables
+        // Priority 2: Azure App Service connection strings (automatically available as environment variables)
+        connectionString ??= Environment.GetEnvironmentVariable("SQLAZURECONNSTR_DefaultConnection");
+        
+        // Priority 3: Custom environment variables
         connectionString ??= Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+
+        // Priority 4: local.settings.json for local development
+        if (configuration != null && string.IsNullOrEmpty(connectionString))
+        {
+            var localConnectionString = configuration["ConnectionStrings:DefaultConnection"];
+            connectionString = localConnectionString;
+        }
         
         Console.WriteLine($"Checking connection string from config...");
         if (!string.IsNullOrEmpty(connectionString))
         {
             Console.WriteLine($"Found connection string (first 50 chars): {connectionString.Substring(0, Math.Min(50, connectionString.Length))}...");
-        }
-        else
-        {
-            Console.WriteLine("No connection string found in config or environment variables");
-        }
-        
-        if (!string.IsNullOrEmpty(connectionString))
-        {
-            Console.WriteLine("Using connection string authentication");
             try
             {
                 var conn = new SqlConnection(connectionString);
@@ -48,30 +48,13 @@ public static class SqlService
             catch (Exception ex)
             {
                 Console.WriteLine($"Connection string authentication failed: {ex.Message}");
-                // Continue to token auth fallback
+                throw new InvalidOperationException($"Database connection failed: {ex.Message}");
             }
         }
-
-        Console.WriteLine("Falling back to token authentication");
-        try
+        else
         {
-            // Fallback to token authentication for Azure
-            var cs = $"Server=tcp:{server},1433;Database={database};Encrypt=True;TrustServerCertificate=False;";
-            var tokenConn = new SqlConnection(cs);
-
-            // Acquire AAD token
-            var credential = new DefaultAzureCredential();
-            AccessToken token = await credential.GetTokenAsync(new TokenRequestContext(SqlScopes), default);
-
-            tokenConn.AccessToken = token.Token;
-            await tokenConn.OpenAsync();
-            Console.WriteLine("Token authentication successful");
-            return tokenConn;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Token authentication failed: {ex.Message}");
-            throw new InvalidOperationException($"Unable to connect to database. Connection string auth failed and token auth failed: {ex.Message}");
+            Console.WriteLine("No connection string found in any configuration source");
+            throw new InvalidOperationException("No database connection string configured. Please add ConnectionStrings:DefaultConnection to appsettings.json or configure it in Azure App Service.");
         }
     }
 

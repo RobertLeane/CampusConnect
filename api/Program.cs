@@ -2,11 +2,9 @@ using CampusConnect.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add local.settings.json for local development
-if (builder.Environment.IsDevelopment())
-{
-    builder.Configuration.AddJsonFile("local.settings.json", optional: true, reloadOnChange: true);
-}
+// Add configuration sources - works for both local and Azure
+builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+builder.Configuration.AddJsonFile("local.settings.json", optional: true, reloadOnChange: true);
 
 // Add services to the container.
 builder.Services.AddControllers();

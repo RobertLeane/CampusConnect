@@ -20,15 +20,17 @@ public class ClubService : IClubService
         // Try different configuration sources for database settings
         _server = _configuration["Values:Sql__Server"]
                ?? _configuration["Sql__Server"]
+               ?? _configuration["Sql:Server"]
                ?? Environment.GetEnvironmentVariable("Sql__Server") 
                ?? Environment.GetEnvironmentVariable("SQL_SERVER")
-               ?? "svdb-campusconnect.database.windows.net";
+               ?? "campusconnect-server.database.windows.net";
                
         _database = _configuration["Values:Sql__Database"]
                  ?? _configuration["Sql__Database"]
+                 ?? _configuration["Sql:Database"]
                  ?? Environment.GetEnvironmentVariable("Sql__Database") 
                  ?? Environment.GetEnvironmentVariable("SQL_DATABASE") 
-                 ?? "DB-CampusConnect";
+                 ?? "campusconnect-database";
                  
         _logger.LogInformation($"Database config - Server: {_server}, Database: {_database}");
     }
@@ -87,9 +89,9 @@ public class ClubService : IClubService
                 throw new InvalidOperationException("Database configuration is missing");
             }
 
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database, _configuration);
             await using var cmd = new SqlCommand(
-                "SELECT ClubID, ClubName, Description, Active FROM dbo.Club WHERE ClubID = @clubId", 
+                "SELECT ClubId, ClubName, ClubImgURL, ClubDescription FROM dbo.Clubs WHERE ClubId = @clubId", 
                 conn);
             cmd.Parameters.AddWithValue("@clubId", clubId);
             await using var reader = await cmd.ExecuteReaderAsync();
@@ -100,7 +102,8 @@ public class ClubService : IClubService
                 {
                     ClubId = reader.GetInt32(0),  // ClubId
                     ClubName = reader.GetString(1),  // ClubName
-                    ClubDescription = reader.IsDBNull(2) ? null : reader.GetString(2),  // Description
+                    ClubImgURL = reader.IsDBNull(2) ? null : reader.GetString(2),  // ClubImgURL
+                    ClubDescription = reader.IsDBNull(3) ? null : reader.GetString(3),  // ClubDescription
                 };
             }
 
