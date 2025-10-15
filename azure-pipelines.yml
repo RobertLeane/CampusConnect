@@ -26,7 +26,7 @@ steps:
 
 # Build and publish the ASP.NET Core Web API (Server)
 - script: |
-    dotnet publish ./api -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/publish
+    dotnet publish ./api -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)
   displayName: 'Build and Publish API (Controllers)'
 
 # Build the Blazor WebAssembly Client
@@ -57,6 +57,6 @@ steps:
     azureSubscription: 'CampusConnect-ServiceConnection'
     appName: 'CampusConnect'
     appType: 'webAppLinux'
-    package: '$(Build.ArtifactStagingDirectory)/publish'
+    package: '$(Build.ArtifactStagingDirectory)'
     runtimeStack: 'DOTNETCORE|8.0'
     deploymentMethod: 'runFromPackage'
