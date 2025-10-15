@@ -1,5 +1,5 @@
-# Azure Static Web Apps - CampusConnect
-# Build and deploy Blazor WebAssembly client and Azure Functions API
+# CampusConnect - Blazor WASM + Controllers API
+# Deploys to Azure App Service (Linux, .NET 8)
 
 trigger:
 - main
@@ -18,37 +18,41 @@ steps:
     packageType: 'sdk'
     version: '8.x'
 
-# Restore and build the Blazor client
+# Restore dependencies
 - script: |
-    dotnet restore ./client
-    dotnet publish ./client -c $(buildConfiguration) --no-restore -o ./client-publish
-  displayName: 'Build and Publish Blazor WebAssembly client'
+    dotnet restore
+  displayName: 'Restore dependencies'
 
-# Restore and build the API as Web App
+# Build and publish the ASP.NET Core Web API (Server)
 - script: |
-    dotnet restore ./api
-    dotnet publish ./api -c $(buildConfiguration) --no-restore -o ./api-publish
-  displayName: 'Build and Publish API as Web App'
+    dotnet publish ./api -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/publish
+  displayName: 'Build and Publish API (Controllers)'
 
-# Prepare combined deployment package
+# Build the Blazor WebAssembly Client
 - script: |
-    mkdir -p $(Build.ArtifactStagingDirectory)/drop
-    cp -r ./api-publish/* $(Build.ArtifactStagingDirectory)/drop/
-    cp -r ./client-publish/wwwroot/* $(Build.ArtifactStagingDirectory)/drop/wwwroot/
-  displayName: 'Prepare deployment package'
+    dotnet publish ./client -c $(buildConfiguration) -o ./client-publish
+  displayName: 'Build Blazor WebAssembly Client'
 
-# Create deployment artifact
+# Copy Blazor client files into server's wwwroot
+- script: |
+    mkdir -p $(Build.ArtifactStagingDirectory)/publish/wwwroot
+    cp -r ./client-publish/wwwroot/* $(Build.ArtifactStagingDirectory)/publish/wwwroot/
+  displayName: 'Integrate Blazor Client into API wwwroot'
+
+# Publish artifact
 - task: PublishPipelineArtifact@1
-  displayName: 'Publish pipeline artifact'
+  displayName: 'Publish deployment artifact'
   inputs:
-    targetPath: '$(Build.ArtifactStagingDirectory)/drop'
+    targetPath: '$(Build.ArtifactStagingDirectory)/publish'
     artifactName: 'drop'
 
 # Deploy to Azure App Service
 - task: AzureWebApp@1
   displayName: 'Deploy to Azure App Service'
   inputs:
-    azureSubscription: '$(AZURE_SERVICE_CONNECTION)'  # Update with your service connection name
-    appName: '$(APP_SERVICE_NAME)'  # Update with your App Service name
-    package: '$(Build.ArtifactStagingDirectory)/drop'
+    azureSubscription: 'CampusConnect-ServiceConnection'
+    appName: 'CampusConnect'
+    appType: 'webAppLinux'
+    package: '$(Build.ArtifactStagingDirectory)/publish'
+    runtimeStack: 'DOTNETCORE|8.0'
     deploymentMethod: 'auto'
