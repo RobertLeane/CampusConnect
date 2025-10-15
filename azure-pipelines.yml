@@ -36,11 +36,37 @@ steps:
 
 # Copy Blazor client files into server's wwwroot
 - script: |
-    echo "Merging Blazor client build into API publish folder..."
+    echo "=== Debugging Blazor Client Integration ==="
+    echo "Client-publish directory structure:"
+    find ./client-publish -type f | head -20
+    echo ""
+    echo "Looking for wwwroot in client-publish:"
+    find ./client-publish -name "wwwroot" -type d
+    echo ""
+    echo "API publish directory before integration:"
+    ls -la $(Build.ArtifactStagingDirectory)/publish/
+    echo ""
+    
+    # Remove existing wwwroot if any
     rm -rf $(Build.ArtifactStagingDirectory)/publish/wwwroot
-    mkdir -p $(Build.ArtifactStagingDirectory)/publish/wwwroot
-    cp -a ./client-publish/wwwroot/. $(Build.ArtifactStagingDirectory)/publish/wwwroot/
-  displayName: 'Integrate Blazor Client into API wwwroot'
+    
+    # The correct path for Blazor WASM published files
+    if [ -d "./client-publish/wwwroot" ]; then
+        echo "Found wwwroot in client-publish, copying..."
+        cp -a ./client-publish/wwwroot $(Build.ArtifactStagingDirectory)/publish/
+    else
+        echo "wwwroot not found in client-publish, checking for dist or other patterns..."
+        find ./client-publish -name "*.js" -o -name "*.wasm" -o -name "*.json" | head -10
+    fi
+    
+    echo ""
+    echo "API publish directory after integration:"
+    ls -la $(Build.ArtifactStagingDirectory)/publish/
+    if [ -d "$(Build.ArtifactStagingDirectory)/publish/wwwroot" ]; then
+        echo "wwwroot contents:"
+        ls -la $(Build.ArtifactStagingDirectory)/publish/wwwroot/ | head -10
+    fi
+  displayName: 'Integrate Blazor Client into API wwwroot (with debugging)'
 
 # Publish artifact
 - task: PublishPipelineArtifact@1
