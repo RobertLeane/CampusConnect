@@ -6,6 +6,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 builder.Configuration.AddJsonFile("local.settings.json", optional: true, reloadOnChange: true);
 
+// Configure logging for better diagnostics
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
+// Ensure the app listens on the correct port for Azure App Service
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 // Add services to the container
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
@@ -15,12 +24,19 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new() { Title = "CampusConnect API", Version = "v1" });
 });
 
-// Register your API services
-builder.Services.AddScoped<IClubService, ClubService>();
-builder.Services.AddScoped<IEventService, EventService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IEventParticipantService, EventParticipantService>();
-builder.Services.AddScoped<IMemberService, MemberService>();
+// Register your API services (with error handling)
+try 
+{
+    builder.Services.AddScoped<IClubService, ClubService>();
+    builder.Services.AddScoped<IEventService, EventService>();
+    builder.Services.AddScoped<IUserService, UserService>();
+    builder.Services.AddScoped<IEventParticipantService, EventParticipantService>();
+    builder.Services.AddScoped<IMemberService, MemberService>();
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Warning: Service registration failed: {ex.Message}");
+}
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -35,6 +51,12 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Add startup logging
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+logger.LogInformation("=== CampusConnect API Starting ===");
+logger.LogInformation($"Environment: {app.Environment.EnvironmentName}");
+logger.LogInformation($"Port: {Environment.GetEnvironmentVariable("PORT") ?? "8080"}");
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
@@ -70,5 +92,8 @@ app.MapGet("/health", () => new { status = "healthy", timestamp = DateTime.UtcNo
 
 app.MapControllers();
 app.MapFallbackToFile("index.html"); // <-- critical: serves Blazor app at "/"
+
+logger.LogInformation("=== CampusConnect API Configuration Complete ===");
+logger.LogInformation("Available endpoints: /health, /api/*, /swagger, / (Blazor app)");
 
 app.Run();
