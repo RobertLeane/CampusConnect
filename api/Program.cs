@@ -37,12 +37,25 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+if (app.Environment.IsDevelopment())
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "CampusConnect API V1");
-    c.RoutePrefix = "swagger"; // Always serve Swagger at /swagger, not root
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "CampusConnect API V1");
+        c.RoutePrefix = "swagger";
+    });
+}
+else
+{
+    // In production, serve Swagger at /swagger but don't make it the default
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "CampusConnect API V1");
+        c.RoutePrefix = "swagger";
+    });
+}
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
@@ -51,6 +64,10 @@ app.UseAuthorization();
 // ✅ Serve Blazor WASM + Controllers
 app.UseStaticFiles();
 app.UseRouting();
+
+// Add a simple health check endpoint
+app.MapGet("/health", () => new { status = "healthy", timestamp = DateTime.UtcNow });
+
 app.MapControllers();
 app.MapFallbackToFile("index.html"); // <-- critical: serves Blazor app at "/"
 

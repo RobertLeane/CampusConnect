@@ -60,10 +60,16 @@ steps:
     ls -la $(Build.ArtifactStagingDirectory)/api/ | head -10
     
     echo "Blazor files in wwwroot:"
-    ls -la $(Build.ArtifactStagingDirectory)/api/wwwroot/ | head -5
+    ls -la $(Build.ArtifactStagingDirectory)/api/wwwroot/ | head -10
     
     echo "Critical Blazor files:"
-    ls -la $(Build.ArtifactStagingDirectory)/api/wwwroot/_framework/blazor.*.js 2>/dev/null || echo "No blazor JS files found"
+    ls -la $(Build.ArtifactStagingDirectory)/api/wwwroot/_framework/ | head -10
+    
+    echo "Checking for index.html:"
+    ls -la $(Build.ArtifactStagingDirectory)/api/wwwroot/index.html || echo "❌ index.html missing!"
+    
+    echo "Checking for blazor.webassembly.js:"
+    ls -la $(Build.ArtifactStagingDirectory)/api/wwwroot/_framework/blazor.webassembly.js || echo "❌ blazor.webassembly.js missing!"
     
     # Check total size
     echo "Total deployment size:"
