@@ -76,16 +76,24 @@ steps:
     du -sh $(Build.ArtifactStagingDirectory)/api/
   displayName: 'Integrate Blazor with API'
 
-# Deploy to Azure App Service with timeout
-- task: AzureWebApp@1
+# Archive and deploy using Web Deploy method
+- task: ArchiveFiles@2
+  displayName: 'Create deployment package'
+  inputs:
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/api'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/CampusConnect.zip'
+    replaceExistingArchive: true
+
+# Deploy using Web Deploy method (not ZIP Deploy)
+- task: AzureRmWebAppDeployment@4
   displayName: 'Deploy to Azure App Service'
-  timeoutInMinutes: 10
   inputs:
     azureSubscription: 'CampusConnect-ServiceConnection'
     appType: 'webAppLinux'
-    appName: 'CampusConnect'
-    package: '$(Build.ArtifactStagingDirectory)/api'
-    runtimeStack: 'DOTNETCORE|8.0'
-    deploymentMethod: 'auto'
-    enableCustomDeployment: true
-    removeAdditionalFilesFlag: true
+    WebAppName: 'CampusConnect'
+    packageForLinux: '$(Build.ArtifactStagingDirectory)/CampusConnect.zip'
+    RuntimeStack: 'DOTNETCORE|8.0'
+    RemoveAdditionalFilesFlag: true
+    TakeAppOfflineFlag: false
