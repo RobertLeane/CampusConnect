@@ -15,3 +15,11 @@ steps:
     azureSubscription: 'CampusConnect-ServiceConnection'
     command: 'publish'
     publishWebProjects: true
+
+- task: AzureWebApp@1
+  inputs:
+    azureSubscription: 'CampusConnect-ServiceConnection'
+    appType: 'webAppLinux'
+    appName: 'CampusConnect'
+    package: '$(System.DefaultWorkingDirectory)/**/*.zip'
+    runtimeStack: 'DOTNETCORE|8.0'
