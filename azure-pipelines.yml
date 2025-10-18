@@ -1,25 +1,80 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+# Azure DevOps Pipeline for CampusConnect
+# Blazor WebAssembly + ASP.NET Core Web API deployment to Azure App Service
 
 trigger:
 - main
+
+variables:
+  buildConfiguration: 'Release'
 
 pool:
   vmImage: ubuntu-latest
 
 steps:
-- task: DotNetCoreCLI@2
+# Install .NET 8 SDK
+- task: UseDotNet@2
+  displayName: 'Install .NET 8 SDK'
   inputs:
-    azureSubscription: 'CampusConnect-ServiceConnection'
-    command: 'publish'
-    publishWebProjects: true
+    packageType: 'sdk'
+    version: '8.x'
 
+# Restore dependencies
+- task: DotNetCoreCLI@2
+  displayName: 'Restore dependencies'
+  inputs:
+    command: 'restore'
+    projects: '**/*.csproj'
+
+# Publish API project (this will be the main app)
+- task: DotNetCoreCLI@2
+  displayName: 'Publish API'
+  inputs:
+    command: 'publish'
+    projects: './api/api.csproj'
+    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/api'
+    publishWebProjects: false
+    zipAfterPublish: false
+
+# Publish Blazor WebAssembly client
+- task: DotNetCoreCLI@2
+  displayName: 'Publish Blazor Client'
+  inputs:
+    command: 'publish'
+    projects: './client/Client.csproj'
+    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/client'
+    publishWebProjects: false
+    zipAfterPublish: false
+
+# Integrate Blazor client into API wwwroot
+- script: |
+    echo "Integrating Blazor WebAssembly with API..."
+    
+    # Remove existing wwwroot from API
+    rm -rf $(Build.ArtifactStagingDirectory)/api/wwwroot
+    
+    # Copy Blazor client wwwroot to API
+    cp -r $(Build.ArtifactStagingDirectory)/client/wwwroot $(Build.ArtifactStagingDirectory)/api/
+    
+    echo "Integration complete"
+    ls -la $(Build.ArtifactStagingDirectory)/api/
+  displayName: 'Integrate Blazor with API'
+
+# Create deployment zip
+- task: ArchiveFiles@2
+  displayName: 'Create deployment zip'
+  inputs:
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/api'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/CampusConnect.zip'
+    replaceExistingArchive: true
+
+# Deploy to Azure App Service
 - task: AzureWebApp@1
+  displayName: 'Deploy to Azure App Service'
   inputs:
     azureSubscription: 'CampusConnect-ServiceConnection'
     appType: 'webAppLinux'
     appName: 'CampusConnect'
-    package: '$(System.DefaultWorkingDirectory)/**/*.zip'
+    package: '$(Build.ArtifactStagingDirectory)/CampusConnect.zip'
     runtimeStack: 'DOTNETCORE|8.0'
