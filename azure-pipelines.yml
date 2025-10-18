@@ -49,32 +49,52 @@ steps:
 - script: |
     echo "Integrating Blazor WebAssembly with API..."
     
-    # Remove existing wwwroot from API
+    # Remove existing wwwroot from API if it exists
     rm -rf $(Build.ArtifactStagingDirectory)/api/wwwroot
     
     # Copy Blazor client wwwroot to API
     cp -r $(Build.ArtifactStagingDirectory)/client/wwwroot $(Build.ArtifactStagingDirectory)/api/
     
-    echo "Integration complete"
-    ls -la $(Build.ArtifactStagingDirectory)/api/
+    echo "=== Integration complete ==="
+    echo "API directory contents:"
+    ls -la $(Build.ArtifactStagingDirectory)/api/ | head -10
+    
+    echo "Blazor files in wwwroot:"
+    ls -la $(Build.ArtifactStagingDirectory)/api/wwwroot/ | head -5
+    
+    echo "Critical Blazor files:"
+    ls -la $(Build.ArtifactStagingDirectory)/api/wwwroot/_framework/blazor.*.js 2>/dev/null || echo "No blazor JS files found"
+    
+    # Check total size
+    echo "Total deployment size:"
+    du -sh $(Build.ArtifactStagingDirectory)/api/
   displayName: 'Integrate Blazor with API'
 
-# Create deployment zip
-- task: ArchiveFiles@2
-  displayName: 'Create deployment zip'
-  inputs:
-    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/api'
-    includeRootFolder: false
-    archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/CampusConnect.zip'
-    replaceExistingArchive: true
-
-# Deploy to Azure App Service
+# Deploy to Azure App Service with timeout
 - task: AzureWebApp@1
   displayName: 'Deploy to Azure App Service'
+  timeoutInMinutes: 10
   inputs:
     azureSubscription: 'CampusConnect-ServiceConnection'
     appType: 'webAppLinux'
     appName: 'CampusConnect'
-    package: '$(Build.ArtifactStagingDirectory)/CampusConnect.zip'
+    package: '$(Build.ArtifactStagingDirectory)/api'
     runtimeStack: 'DOTNETCORE|8.0'
+    deploymentMethod: 'auto'
+    enableCustomDeployment: true
+    removeAdditionalFilesFlag: true
+
+# Post-deployment check
+- script: |
+    echo "Deployment completed, checking app status..."
+    sleep 10
+    
+    APP_URL="https://campusconnect-a5gmchaahpf4ajem.uksouth-01.azurewebsites.net"
+    
+    echo "Testing main page..."
+    curl -f --connect-timeout 30 --max-time 60 "$APP_URL/" -o /dev/null && echo "✅ Main page accessible" || echo "❌ Main page failed"
+    
+    echo "Testing API..."
+    curl -f --connect-timeout 30 --max-time 60 "$APP_URL/api/ping" && echo "✅ API accessible" || echo "❌ API failed"
+  displayName: 'Verify deployment'
+  continueOnError: true
