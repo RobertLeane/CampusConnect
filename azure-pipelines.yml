@@ -1,80 +1,25 @@
-# Azure DevOps Pipeline for CampusConnect
-# Blazor WebAssembly + ASP.NET Core Web API deployment to Azure App Service
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
 
 trigger:
 - main
 
-variables:
-  buildConfiguration: 'Release'
-  azureServiceConnection: 'CampusConnect-ServiceConnection'
-  webAppName: 'CampusConnect'
-  resourceGroupName: 'Software-Tools-Project'
-
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: ubuntu-latest
 
 steps:
-# Install .NET 8 SDK
-- task: UseDotNet@2
-  displayName: 'Install .NET 8 SDK'
-  inputs:
-    packageType: 'sdk'
-    version: '8.x'
-
-# Restore dependencies
-- script: |
-    dotnet restore
-  displayName: 'Restore dependencies'
-
-# Build and publish API
 - task: DotNetCoreCLI@2
-  displayName: 'Publish API'
-  inputs:
-    command: 'publish'
-    projects: './api/api.csproj'
-    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/api'
-    publishWebProjects: false
-    zipAfterPublish: false
-
-# Build and publish Blazor WebAssembly client
-- task: DotNetCoreCLI@2
-  displayName: 'Publish Blazor Client'
-  inputs:
-    command: 'publish'
-    projects: './client/Client.csproj'
-    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/client'
-    publishWebProjects: false
-    zipAfterPublish: false
-
-# Create integrated package
-- script: |
-    echo "Creating integrated deployment package..."
-    
-    # Create package directory and copy API files as base
-    mkdir -p $(Build.ArtifactStagingDirectory)/package
-    cp -r $(Build.ArtifactStagingDirectory)/api/* $(Build.ArtifactStagingDirectory)/package/
-    
-    # Replace wwwroot with Blazor client files
-    rm -rf $(Build.ArtifactStagingDirectory)/package/wwwroot
-    cp -r $(Build.ArtifactStagingDirectory)/client/wwwroot $(Build.ArtifactStagingDirectory)/package/
-    
-    echo "Package created successfully"
-  displayName: 'Create deployment package'
-
-# Publish artifact
-- task: PublishPipelineArtifact@1
-  displayName: 'Publish deployment artifact'
-  inputs:
-    targetPath: '$(Build.ArtifactStagingDirectory)/package'
-    artifactName: 'drop'
-
-# Deploy to Azure App Service
-- task: AzureWebApp@1
-  displayName: 'Deploy to Azure App Service'
   inputs:
     azureSubscription: 'CampusConnect-ServiceConnection'
-    appName: 'CampusConnect'
-    appType: 'webAppLinux'
-    package: '$(Build.ArtifactStagingDirectory)/package'
-    runtimeStack: 'DOTNETCORE|8.0'
+    command: 'publish'
+    publishWebProjects: true
 
+- task: AzureWebApp@1
+  inputs:
+    azureSubscription: 'CampusConnect-ServiceConnection'
+    appType: 'webAppLinux'
+    appName: 'CampusConnect'
+    package: '$(System.DefaultWorkingDirectory)/**/*.zip'
+    runtimeStack: 'DOTNETCORE|8.0'
