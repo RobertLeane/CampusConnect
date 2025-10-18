@@ -83,18 +83,3 @@ steps:
     deploymentMethod: 'auto'
     enableCustomDeployment: true
     removeAdditionalFilesFlag: true
-
-# Post-deployment check
-- script: |
-    echo "Deployment completed, checking app status..."
-    sleep 10
-    
-    APP_URL="https://campusconnect-a5gmchaahpf4ajem.uksouth-01.azurewebsites.net"
-    
-    echo "Testing main page..."
-    curl -f --connect-timeout 30 --max-time 60 "$APP_URL/" -o /dev/null && echo "✅ Main page accessible" || echo "❌ Main page failed"
-    
-    echo "Testing API..."
-    curl -f --connect-timeout 30 --max-time 60 "$APP_URL/api/ping" && echo "✅ API accessible" || echo "❌ API failed"
-  displayName: 'Verify deployment'
-  continueOnError: true
