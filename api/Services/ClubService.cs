@@ -122,6 +122,51 @@ public class ClubService : IClubService
         throw new NotImplementedException("Club creation not yet implemented");
     }
 
+    public async Task<List<ClubDto>> GetUserJoinedClubsAsync(int userId)
+    {
+        try
+        {
+            _logger.LogInformation($"Getting clubs for user ID {userId}");
+            
+            if (string.IsNullOrEmpty(_server) || string.IsNullOrEmpty(_database))
+            {
+                _logger.LogError("Database configuration is missing");
+                throw new InvalidOperationException("Database configuration is missing");
+            }
+
+            const string sql = @"
+                SELECT c.ClubId, c.ClubName, c.ClubImgURL, c.ClubDescription
+                FROM dbo.Clubs c
+                INNER JOIN dbo.Members m ON c.ClubId = m.ClubId
+                WHERE m.UserId = @UserId";
+
+            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database, _configuration);
+            await using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@UserId", userId);
+            await using var reader = await cmd.ExecuteReaderAsync();
+
+            var clubs = new List<ClubDto>();
+            while (await reader.ReadAsync())
+            {
+                clubs.Add(new ClubDto
+                {
+                    ClubId = reader.GetInt32(0),
+                    ClubName = reader.GetString(1),
+                    ClubImgURL = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    ClubDescription = reader.IsDBNull(3) ? null : reader.GetString(3),
+                });
+            }
+
+            _logger.LogInformation($"Successfully retrieved {clubs.Count} clubs for user {userId}");
+            return clubs;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving clubs for user {UserId}", userId);
+            throw;
+        }
+    }
+
     public Task<ClubDto?> UpdateClubAsync(int clubId, ClubDto club)
     {
         // TODO: Implement club update

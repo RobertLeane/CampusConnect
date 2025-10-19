@@ -14,6 +14,7 @@ public interface IEventService
     Task<EventDto?> GetEventByIdAsync(int eventId);
     Task<List<EventDto>> GetEventsByClubIdAsync(int clubId);
     Task<RsvpResult> RsvpToEventAsync(int eventId, int userId);
+    Task<List<EventDto>> GetUserRsvpEventsAsync(int userId);
     
     public enum RsvpResult
     {

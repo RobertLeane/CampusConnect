@@ -56,4 +56,20 @@ public class ClubsController : ControllerBase
                 "An error occurred while retrieving the club");
         }
     }
+
+    [HttpGet("user/{userId:int}")]
+    public async Task<IActionResult> GetUserJoinedClubs(int userId)
+    {
+        try
+        {
+            _logger.LogInformation($"Getting clubs for user ID {userId}");
+            var clubs = await _clubService.GetUserJoinedClubsAsync(userId);
+            return Ok(clubs);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error retrieving clubs for user ID {userId}");
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
 }

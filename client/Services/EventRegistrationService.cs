@@ -33,9 +33,8 @@ public class EventRegistrationService
             {
                 var msg = ((int)resp.StatusCode) switch
                 {
-                    401 => "Please register or sign in to RSVP.",
                     403 => "You must join this club to RSVP.",
-                    404 => "Event not found.",
+                    404 => "Event or user not found.",
                     409 => "You already RSVPed.",
                     _   => $"RSVP failed: {resp.StatusCode}"
                 };

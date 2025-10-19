@@ -129,6 +129,29 @@ namespace CampusConnect.Api.Services
             return RsvpAsync(eventId, userId);
         }
 
+        public async Task<List<EventDto>> GetUserRsvpEventsAsync(int userId)
+        {
+            const string sql = @"
+                SELECT e.*
+                FROM dbo.Events e
+                INNER JOIN dbo.EventRsvps r ON e.EventId = r.EventId
+                WHERE r.UserId = @UserId
+                ORDER BY e.EventDateTime";
+
+            using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = userId });
+
+            using var rdr = await cmd.ExecuteReaderAsync();
+
+            var events = new List<EventDto>();
+            while (await rdr.ReadAsync())
+            {
+                events.Add(MapEvent(rdr));
+            }
+            return events;
+        }
+
         private async Task<IEventService.RsvpResult> RsvpAsync(int eventId, int userId)
         {
             const string checkEventSql = "SELECT COUNT(1) FROM dbo.Events WHERE EventId = @EventId";
