@@ -31,6 +31,10 @@ EXPOSE 8080
 # Set environment variables for Azure App Service
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
+ENV PORT=8080
+
+# Add a startup script to help with debugging
+RUN echo '#!/bin/bash\necho "Starting CampusConnect application..."\necho "PORT: $PORT"\necho "ASPNETCORE_URLS: $ASPNETCORE_URLS"\ndotnet api.dll' > /app/start.sh && chmod +x /app/start.sh
 
 # Run the application
-ENTRYPOINT ["dotnet", "api.dll"]
+ENTRYPOINT ["/app/start.sh"]
