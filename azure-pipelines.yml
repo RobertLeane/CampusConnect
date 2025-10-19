@@ -1,99 +1,35 @@
 # Azure DevOps Pipeline for CampusConnect
-# Blazor WebAssembly + ASP.NET Core Web API deployment to Azure App Service
+# Blazor WebAssembly + ASP.NET Core Web API Docker deployment to Azure App Service
 
 trigger:
 - main
 
 variables:
   buildConfiguration: 'Release'
+  containerRegistry: 'campusconnectregistry.azurecr.io'
+  imageName: 'campusconnect'
+  imageTag: '$(Build.BuildId)'
 
 pool:
   vmImage: ubuntu-latest
 
 steps:
-# Install .NET 8 SDK
-- task: UseDotNet@2
-  displayName: 'Install .NET 8 SDK'
+# Build and push Docker image
+- task: Docker@2
+  displayName: 'Build and push Docker image'
   inputs:
-    packageType: 'sdk'
-    version: '8.x'
+    containerRegistry: 'CampusConnect-ACR-ServiceConnection'
+    repository: '$(imageName)'
+    command: 'buildAndPush'
+    Dockerfile: 'Dockerfile'
+    tags: |
+      $(imageTag)
+      latest
 
-# Restore dependencies
-- task: DotNetCoreCLI@2
-  displayName: 'Restore dependencies'
-  inputs:
-    command: 'restore'
-    projects: '**/*.csproj'
-
-# Publish API project (this will be the main app)
-- task: DotNetCoreCLI@2
-  displayName: 'Publish API'
-  inputs:
-    command: 'publish'
-    projects: './api/api.csproj'
-    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/api'
-    publishWebProjects: false
-    zipAfterPublish: false
-
-# Publish Blazor WebAssembly client
-- task: DotNetCoreCLI@2
-  displayName: 'Publish Blazor Client'
-  inputs:
-    command: 'publish'
-    projects: './client/Client.csproj'
-    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/client'
-    publishWebProjects: false
-    zipAfterPublish: false
-
-# Integrate Blazor client into API wwwroot
-- script: |
-    echo "Integrating Blazor WebAssembly with API..."
-    
-    # Remove existing wwwroot from API if it exists
-    rm -rf $(Build.ArtifactStagingDirectory)/api/wwwroot
-    
-    # Copy Blazor client wwwroot to API
-    cp -r $(Build.ArtifactStagingDirectory)/client/wwwroot $(Build.ArtifactStagingDirectory)/api/
-    
-    echo "=== Integration complete ==="
-    echo "API directory contents:"
-    ls -la $(Build.ArtifactStagingDirectory)/api/ | head -10
-    
-    echo "Blazor files in wwwroot:"
-    ls -la $(Build.ArtifactStagingDirectory)/api/wwwroot/ | head -10
-    
-    echo "Critical Blazor files:"
-    ls -la $(Build.ArtifactStagingDirectory)/api/wwwroot/_framework/ | head -10
-    
-    echo "Checking for index.html:"
-    ls -la $(Build.ArtifactStagingDirectory)/api/wwwroot/index.html || echo "❌ index.html missing!"
-    
-    echo "Checking for blazor.webassembly.js:"
-    ls -la $(Build.ArtifactStagingDirectory)/api/wwwroot/_framework/blazor.webassembly.js || echo "❌ blazor.webassembly.js missing!"
-    
-    # Check total size
-    echo "Total deployment size:"
-    du -sh $(Build.ArtifactStagingDirectory)/api/
-  displayName: 'Integrate Blazor with API'
-
-# Archive and deploy using Web Deploy method
-- task: ArchiveFiles@2
-  displayName: 'Create deployment package'
-  inputs:
-    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/api'
-    includeRootFolder: false
-    archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/CampusConnect.zip'
-    replaceExistingArchive: true
-
-# Deploy using Web Deploy method (not ZIP Deploy)
-- task: AzureRmWebAppDeployment@4
+# Deploy Docker container to Azure App Service
+- task: AzureWebAppContainer@1
   displayName: 'Deploy to Azure App Service'
   inputs:
     azureSubscription: 'CampusConnect-ServiceConnection'
-    appType: 'webAppLinux'
-    WebAppName: 'CampusConnect'
-    packageForLinux: '$(Build.ArtifactStagingDirectory)/CampusConnect.zip'
-    RuntimeStack: 'DOTNETCORE|8.0'
-    RemoveAdditionalFilesFlag: true
-    TakeAppOfflineFlag: false
+    appName: 'CampusConnect'
+    containers: '$(containerRegistry)/$(imageName):$(imageTag)'

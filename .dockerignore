@@ -1,0 +1,36 @@
+# Ignore build artifacts
+**/bin/
+**/obj/
+**/out/
+
+# Ignore IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore git
+.git/
+.gitignore
+
+# Ignore Azure DevOps files
+azure-pipelines.yml
+
+# Ignore test results
+TestResults/
+*.trx
+
+# Ignore temporary files
+**/temp/
+**/tmp/
+
+# Ignore documentation
+README.md
+TEAM_ASSIGNMENTS.md
+
+# Ignore node_modules if any
+**/node_modules/
