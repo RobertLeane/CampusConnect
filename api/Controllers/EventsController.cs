@@ -94,6 +94,7 @@ public class EventsController : ControllerBase
                 IEventService.RsvpResult.Success => Ok(),
                 IEventService.RsvpResult.EventNotFound => NotFound("Event not found"),
                 IEventService.RsvpResult.UserNotFound => NotFound("User not found"),
+                IEventService.RsvpResult.NotClubMember => StatusCode(StatusCodes.Status403Forbidden, "You must join this club to RSVP"),
                 IEventService.RsvpResult.AlreadyRsvped => Conflict("User has already RSVPed"),
                 _ => StatusCode(StatusCodes.Status500InternalServerError),
             };
@@ -101,6 +102,22 @@ public class EventsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Error RSVPing to event ID {eventId}");
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    [HttpGet("user/{userId:int}/rsvps")]
+    public async Task<IActionResult> GetUserRsvpEvents(int userId)
+    {
+        try
+        {
+            _logger.LogInformation($"Getting RSVP'd events for user ID {userId}");
+            var events = await _eventService.GetUserRsvpEventsAsync(userId);
+            return Ok(events);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error retrieving RSVP'd events for user ID {userId}");
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

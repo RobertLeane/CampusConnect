@@ -1,58 +1,65 @@
-# CampusConnect - Blazor WASM + Controllers API
-# Deploys to Azure App Service (Linux, .NET 8)
+# Azure DevOps Pipeline for CampusConnect
+# Blazor WebAssembly + ASP.NET Core Web API Docker deployment to Azure App Service
 
 trigger:
 - main
 
-pool:
-  vmImage: 'ubuntu-latest'
-
 variables:
   buildConfiguration: 'Release'
+  containerRegistry: 'campusconnectregistry.azurecr.io'
+  imageName: 'campusconnect'
+  imageTag: '$(Build.BuildId)'
+
+pool:
+  vmImage: ubuntu-latest
 
 steps:
-# Install .NET 8 SDK
-- task: UseDotNet@2
-  displayName: 'Install .NET 8 SDK'
+# Login to Azure and configure ACR permissions
+- task: AzureCLI@2
+  displayName: 'Configure ACR permissions and build/push Docker image'
   inputs:
-    packageType: 'sdk'
-    version: '8.x'
+    azureSubscription: 'CampusConnect-ServiceConnection'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      # Get the service principal ID from the current context
+      SERVICE_PRINCIPAL_ID=$(az account show --query user.name -o tsv)
+      echo "Service Principal ID: $SERVICE_PRINCIPAL_ID"
+      
+      # Grant AcrPush role to the service principal for the ACR
+      az role assignment create \
+        --assignee $SERVICE_PRINCIPAL_ID \
+        --role "AcrPush" \
+        --scope "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/Software-Tools-Project/providers/Microsoft.ContainerRegistry/registries/campusconnectregistry" \
+        || echo "Role assignment may already exist"
+      
+      # Login to ACR using managed identity
+      az acr login --name campusconnectregistry
+      
+      # Verify project files exist
+      echo "Checking project structure..."
+      ls -la
+      ls -la api/
+      ls -la client/
+      
+      # Build and tag the image
+      echo "Building Docker image..."
+      docker build -t $(containerRegistry)/$(imageName):$(imageTag) -t $(containerRegistry)/$(imageName):latest .
+      
+      # Verify image was built
+      docker images | grep campusconnect
+      
+      # Push the images
+      echo "Pushing images to ACR..."
+      docker push $(containerRegistry)/$(imageName):$(imageTag)
+      docker push $(containerRegistry)/$(imageName):latest
+      
+      echo "Image pushed successfully: $(containerRegistry)/$(imageName):$(imageTag)"
 
-# Restore dependencies
-- script: |
-    dotnet restore
-  displayName: 'Restore dependencies'
-
-# Build and publish the ASP.NET Core Web API (Server)
-- script: |
-    dotnet publish ./api -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/publish
-  displayName: 'Build and Publish API (Controllers)'
-
-# Build the Blazor WebAssembly Client
-- script: |
-    dotnet publish ./client -c $(buildConfiguration) -o ./client-publish
-  displayName: 'Build Blazor WebAssembly Client'
-
-# Copy Blazor client files into server's wwwroot
-- script: |
-    mkdir -p $(Build.ArtifactStagingDirectory)/publish/wwwroot
-    cp -r ./client-publish/wwwroot/* $(Build.ArtifactStagingDirectory)/publish/wwwroot/
-  displayName: 'Integrate Blazor Client into API wwwroot'
-
-# Publish artifact
-- task: PublishPipelineArtifact@1
-  displayName: 'Publish deployment artifact'
-  inputs:
-    targetPath: '$(Build.ArtifactStagingDirectory)/publish'
-    artifactName: 'drop'
-
-# Deploy to Azure App Service
-- task: AzureWebApp@1
+# Deploy Docker container to Azure App Service
+- task: AzureWebAppContainer@1
   displayName: 'Deploy to Azure App Service'
   inputs:
     azureSubscription: 'CampusConnect-ServiceConnection'
     appName: 'CampusConnect'
-    appType: 'webAppLinux'
-    package: '$(Build.ArtifactStagingDirectory)/publish'
-    runtimeStack: 'DOTNETCORE|8.0'
-    deploymentMethod: 'auto'
+    containers: '$(containerRegistry)/$(imageName):$(imageTag)'

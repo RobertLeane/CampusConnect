@@ -20,15 +20,17 @@ public class ClubService : IClubService
         // Try different configuration sources for database settings
         _server = _configuration["Values:Sql__Server"]
                ?? _configuration["Sql__Server"]
+               ?? _configuration["Sql:Server"]
                ?? Environment.GetEnvironmentVariable("Sql__Server") 
                ?? Environment.GetEnvironmentVariable("SQL_SERVER")
-               ?? "svdb-campusconnect.database.windows.net";
+               ?? "campusconnect-server.database.windows.net";
                
         _database = _configuration["Values:Sql__Database"]
                  ?? _configuration["Sql__Database"]
+                 ?? _configuration["Sql:Database"]
                  ?? Environment.GetEnvironmentVariable("Sql__Database") 
                  ?? Environment.GetEnvironmentVariable("SQL_DATABASE") 
-                 ?? "DB-CampusConnect";
+                 ?? "campusconnect-database";
                  
         _logger.LogInformation($"Database config - Server: {_server}, Database: {_database}");
     }
@@ -87,9 +89,9 @@ public class ClubService : IClubService
                 throw new InvalidOperationException("Database configuration is missing");
             }
 
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database, _configuration);
             await using var cmd = new SqlCommand(
-                "SELECT ClubID, ClubName, Description, Active FROM dbo.Club WHERE ClubID = @clubId", 
+                "SELECT ClubId, ClubName, ClubImgURL, ClubDescription FROM dbo.Clubs WHERE ClubId = @clubId", 
                 conn);
             cmd.Parameters.AddWithValue("@clubId", clubId);
             await using var reader = await cmd.ExecuteReaderAsync();
@@ -100,7 +102,8 @@ public class ClubService : IClubService
                 {
                     ClubId = reader.GetInt32(0),  // ClubId
                     ClubName = reader.GetString(1),  // ClubName
-                    ClubDescription = reader.IsDBNull(2) ? null : reader.GetString(2),  // Description
+                    ClubImgURL = reader.IsDBNull(2) ? null : reader.GetString(2),  // ClubImgURL
+                    ClubDescription = reader.IsDBNull(3) ? null : reader.GetString(3),  // ClubDescription
                 };
             }
 
@@ -117,6 +120,51 @@ public class ClubService : IClubService
     {
         // TODO: Implement club creation
         throw new NotImplementedException("Club creation not yet implemented");
+    }
+
+    public async Task<List<ClubDto>> GetUserJoinedClubsAsync(int userId)
+    {
+        try
+        {
+            _logger.LogInformation($"Getting clubs for user ID {userId}");
+            
+            if (string.IsNullOrEmpty(_server) || string.IsNullOrEmpty(_database))
+            {
+                _logger.LogError("Database configuration is missing");
+                throw new InvalidOperationException("Database configuration is missing");
+            }
+
+            const string sql = @"
+                SELECT c.ClubId, c.ClubName, c.ClubImgURL, c.ClubDescription
+                FROM dbo.Clubs c
+                INNER JOIN dbo.Members m ON c.ClubId = m.ClubId
+                WHERE m.UserId = @UserId";
+
+            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database, _configuration);
+            await using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@UserId", userId);
+            await using var reader = await cmd.ExecuteReaderAsync();
+
+            var clubs = new List<ClubDto>();
+            while (await reader.ReadAsync())
+            {
+                clubs.Add(new ClubDto
+                {
+                    ClubId = reader.GetInt32(0),
+                    ClubName = reader.GetString(1),
+                    ClubImgURL = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    ClubDescription = reader.IsDBNull(3) ? null : reader.GetString(3),
+                });
+            }
+
+            _logger.LogInformation($"Successfully retrieved {clubs.Count} clubs for user {userId}");
+            return clubs;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving clubs for user {UserId}", userId);
+            throw;
+        }
     }
 
     public Task<ClubDto?> UpdateClubAsync(int clubId, ClubDto club)

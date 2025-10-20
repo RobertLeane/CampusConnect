@@ -19,8 +19,11 @@ builder.Services.AddScoped(sp =>
     }
     else
     {
-        // For App Service, the API and client are served from the same domain
-        httpClient.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+        // For App Service, use the same domain - no subdirectory needed
+        var baseUri = builder.HostEnvironment.BaseAddress;
+        Console.WriteLine($"[DEBUG] Environment BaseAddress: {baseUri}");
+        httpClient.BaseAddress = new Uri(baseUri);
+        Console.WriteLine($"[DEBUG] HttpClient BaseAddress set to: {httpClient.BaseAddress}");
     }
     
     return httpClient;
@@ -31,5 +34,7 @@ builder.Services.AddScoped<ClubApi>();
 builder.Services.AddScoped<EventApi>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<MemberApi>();
+builder.Services.AddScoped<EventParticipantApi>();
+builder.Services.AddScoped<EventRegistrationService>();
 
 await builder.Build().RunAsync();
