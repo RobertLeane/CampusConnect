@@ -66,8 +66,8 @@ public class MemberApi(HttpClient http)
     {
         try
         {
-            var payload = new { userId = userId };
-            Console.WriteLine($"Posting to: {_http.BaseAddress}api/clubs/{clubId}/members with payload: {{ userId: {userId} }}");
+            var payload = new { UserId = userId, Role = "Member" };
+            Console.WriteLine($"Posting to: {_http.BaseAddress}api/clubs/{clubId}/members with payload: {{ UserId: {userId}, Role: \"Member\" }}");
             var response = await _http.PostAsJsonAsync($"/api/clubs/{clubId}/members", payload, ct);
             Console.WriteLine($"Response status: {response.StatusCode}");
 

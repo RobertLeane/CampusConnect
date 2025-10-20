@@ -2,6 +2,8 @@
 @using Client.Models
 @using Client.Services
 @inject ClubApi ClubApi
+@inject MemberApi MemberApi
+@inject IJSRuntime JS
 
 <PageTitle>Clubs</PageTitle>
 
@@ -64,7 +66,7 @@
                             <h3>@club.ClubName</h3>
                             <p>@(club.ClubDescription ?? "No description available.")</p>
                             <div class="actions">
-                                <a href="#" class="btn">Join Club</a>
+                                <button class="btn btn--primary" @onclick="() => HandleJoinClubAsync(club.ClubId)">Join Club</button>
                             </div>
                         </div>
                     </article>
@@ -95,6 +97,24 @@
         finally
         {
             isLoading = false;
+        }
+    }
+
+    private int CurrentUserId => 1;
+
+    private async Task HandleJoinClubAsync(int clubId)
+    {
+        try
+        {
+            var member = await MemberApi.AddMemberToClubAsync(CurrentUserId, clubId);
+            if (member != null)
+            {
+                await JS.InvokeVoidAsync("alert", "Successfully joined the club!");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error joining club: {ex.Message}");
         }
     }
 
