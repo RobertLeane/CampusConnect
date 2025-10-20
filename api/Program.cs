@@ -11,9 +11,14 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
-// Ensure the app listens on the correct port for Azure App Service
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+// Configure ports: Azure App Service uses PORT env var, local dev uses launch settings
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PORT")))
+{
+    // Azure App Service - use the PORT environment variable
+    var port = Environment.GetEnvironmentVariable("PORT");
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+// For local development, let ASP.NET Core use the default ports from launchSettings.json
 
 // Add services to the container
 builder.Services.AddControllersWithViews();

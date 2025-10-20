@@ -8,17 +8,19 @@ namespace CampusConnect.Api.Services;
 public class UserService : IUserService
 {
     private readonly ILogger<UserService> _logger;
+    private readonly IConfiguration _configuration;
 
-    public UserService(ILogger<UserService> logger)
+    public UserService(ILogger<UserService> logger, IConfiguration configuration)
     {
         _logger = logger;
+        _configuration = configuration;
     }
 
     public async Task<bool> EmailExistsAsync(string email)
     {
         var normalizedEmail = (email ?? string.Empty).Trim().ToLowerInvariant();
         const string sql = "SELECT COUNT(1) FROM dbo.Users WHERE Email = @Email";
-        await using var conn = await SqlService.CreateConnection();
+        await using var conn = await SqlService.CreateConnection(_configuration);
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.Add(new SqlParameter("@Email", SqlDbType.NVarChar, 100) { Value = normalizedEmail });
 
@@ -46,7 +48,7 @@ public class UserService : IUserService
 VALUES (@FirstName, @LastName, @Email, @PasswordHash);
 SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
-    await using var conn = await SqlService.CreateConnection();
+    await using var conn = await SqlService.CreateConnection(_configuration);
     await using var cmd = new SqlCommand(sql, conn);
     cmd.Parameters.Add(new SqlParameter("@FirstName", SqlDbType.NVarChar, 50) { Value = first });
     cmd.Parameters.Add(new SqlParameter("@LastName", SqlDbType.NVarChar, 50) { Value = last });
@@ -78,7 +80,7 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
         var password = req.Password ?? string.Empty;
 
         const string sql = "SELECT UserId, FirstName, LastName, Email, PasswordHash FROM dbo.Users WHERE Email = @Email";
-        await using var conn = await SqlService.CreateConnection();
+        await using var conn = await SqlService.CreateConnection(_configuration);
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.Add(new SqlParameter("@Email", SqlDbType.NVarChar, 100) { Value = email });
 

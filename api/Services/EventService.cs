@@ -1,6 +1,7 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using CampusConnect.Api.Models;
 using System.Data.Common;
 using System.Linq.Expressions;
@@ -10,19 +11,12 @@ namespace CampusConnect.Api.Services
     public class EventService : IEventService
     {
         private readonly ILogger<EventService> _logger;
-        private readonly string _server;
-        private readonly string _database;
+        private readonly IConfiguration _configuration;
 
-        public EventService(ILogger<EventService> logger)
+        public EventService(ILogger<EventService> logger, IConfiguration configuration)
         {
             _logger = logger;
-            _server = Environment.GetEnvironmentVariable("Sql__Server") ?? string.Empty;
-            _database = Environment.GetEnvironmentVariable("Sql__Database") ?? string.Empty;
-
-            if (string.IsNullOrWhiteSpace(_server) || string.IsNullOrWhiteSpace(_database))
-            {
-                _logger.LogWarning("Database configuration is missing (Sql__Server / Sql__Database).");
-            }
+            _configuration = configuration;
         }
 
         public async Task<List<EventDto>> GetAllEventsAsync()
@@ -32,7 +26,7 @@ namespace CampusConnect.Api.Services
                 FROM dbo.Events
                 ORDER BY EventDateTime";
 
-            using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            using var conn = await SqlService.CreateConnection(_configuration);
             using var cmd = new SqlCommand(sql, conn);
             using var rdr = await cmd.ExecuteReaderAsync();
 
@@ -69,12 +63,7 @@ namespace CampusConnect.Api.Services
         {
             try
             {
-                if (string.IsNullOrEmpty(_server) || string.IsNullOrEmpty(_database))
-                {
-                    _logger.LogError("Database configuration is missing");
-                    throw new InvalidOperationException("Database configuration is missing");
-                }
-                await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+                await using var conn = await SqlService.CreateConnection(_configuration);
                 await using var cmd = new SqlCommand(
                     "SELECT * FROM dbo.Events WHERE EventId = @EventId",
                     conn);
@@ -110,7 +99,7 @@ namespace CampusConnect.Api.Services
                 FROM dbo.Events WHERE ClubId = @ClubId
                 ORDER BY EventDateTime";
 
-            using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            using var conn = await SqlService.CreateConnection(_configuration);
             using var cmd = new SqlCommand(sql, conn);
             cmd.Parameters.Add(new SqlParameter("@ClubId", SqlDbType.Int) { Value = clubId });
 
@@ -138,7 +127,7 @@ namespace CampusConnect.Api.Services
                 WHERE r.UserId = @UserId
                 ORDER BY e.EventDateTime";
 
-            using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            using var conn = await SqlService.CreateConnection(_configuration);
             using var cmd = new SqlCommand(sql, conn);
             cmd.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = userId });
 
@@ -170,7 +159,7 @@ namespace CampusConnect.Api.Services
             VALUES (@EventId, @UserId, GETUTCDATE())";
             try
             {
-                using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+                using var conn = await SqlService.CreateConnection(_configuration);
 
                 // Event exists?
                 using (var checkEvent = new SqlCommand(checkEventSql, conn))

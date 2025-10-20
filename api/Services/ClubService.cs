@@ -166,16 +166,4 @@ public class ClubService : IClubService
             throw;
         }
     }
-
-    public Task<ClubDto?> UpdateClubAsync(int clubId, ClubDto club)
-    {
-        // TODO: Implement club update
-        throw new NotImplementedException("Club update not yet implemented");
-    }
-
-    public Task<bool> DeleteClubAsync(int clubId)
-    {
-        // TODO: Implement club deletion
-        throw new NotImplementedException("Club deletion not yet implemented");
-    }
 }
