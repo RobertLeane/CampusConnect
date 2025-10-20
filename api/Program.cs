@@ -72,6 +72,8 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "CampusConnect API V1");
         c.RoutePrefix = "swagger";
     });
+    // Only use HTTPS redirection in development
+    app.UseHttpsRedirection();
 }
 else
 {
@@ -82,9 +84,8 @@ else
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "CampusConnect API V1");
         c.RoutePrefix = "swagger";
     });
+    // Don't use HTTPS redirection in production (Azure App Service handles this)
 }
-
-app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthorization();
 
@@ -92,11 +93,45 @@ app.UseAuthorization();
 app.UseStaticFiles();
 app.UseRouting();
 
+// Add logging middleware to debug requests
+app.Use(async (context, next) =>
+{
+    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation($"Request: {context.Request.Method} {context.Request.Path}");
+    await next();
+    logger.LogInformation($"Response: {context.Response.StatusCode}");
+});
+
 // Add a simple health check endpoint
 app.MapGet("/health", () => new { status = "healthy", timestamp = DateTime.UtcNow });
 
+// Add debug endpoints for Azure App Service
+app.MapGet("/debug/env", () => new 
+{ 
+    environment = app.Environment.EnvironmentName,
+    port = Environment.GetEnvironmentVariable("PORT"),
+    urls = builder.WebHost.GetSetting("urls"),
+    contentRoot = app.Environment.ContentRootPath,
+    webRoot = app.Environment.WebRootPath
+});
+
+app.MapGet("/debug/files", () => 
+{
+    var wwwrootPath = app.Environment.WebRootPath;
+    if (!string.IsNullOrEmpty(wwwrootPath) && Directory.Exists(wwwrootPath))
+    {
+        var files = Directory.GetFiles(wwwrootPath, "*", SearchOption.AllDirectories)
+            .Select(f => f.Replace(wwwrootPath, "").Replace("\\", "/"))
+            .ToArray();
+        return Results.Json(new { wwwrootExists = true, files });
+    }
+    return Results.Json(new { wwwrootExists = false, message = "wwwroot directory not found" });
+});
+
 app.MapControllers();
-app.MapFallbackToFile("index.html"); // <-- critical: serves Blazor app at "/"
+
+// Serve the Blazor app for all non-API routes
+app.MapFallbackToFile("index.html");
 
 logger.LogInformation("=== CampusConnect API Configuration Complete ===");
 logger.LogInformation("Available endpoints: /health, /api/*, /swagger, / (Blazor app)");
