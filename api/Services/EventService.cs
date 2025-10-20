@@ -123,8 +123,9 @@ namespace CampusConnect.Api.Services
             const string sql = @"
                 SELECT e.*
                 FROM dbo.Events e
-                INNER JOIN dbo.EventRsvps r ON e.EventId = r.EventId
-                WHERE r.UserId = @UserId
+                INNER JOIN dbo.EventParticipants ep ON e.EventId = ep.EventId
+                INNER JOIN dbo.Members m ON ep.MemberId = m.MemberId
+                WHERE m.UserId = @UserId
                 ORDER BY e.EventDateTime";
 
             using var conn = await SqlService.CreateConnection(_configuration);
@@ -153,10 +154,13 @@ namespace CampusConnect.Api.Services
             INNER JOIN dbo.Events e ON e.ClubId = m.ClubId
             WHERE e.EventId = @EventId AND m.UserId = @UserId";
 
-            const string checkRsvpSql = "SELECT COUNT(1) FROM dbo.EventRsvps WHERE EventId = @EventId AND UserId = @UserId";
+            const string checkRsvpSql = "SELECT COUNT(1) FROM dbo.EventParticipants WHERE EventId = @EventId AND MemberId IN (SELECT MemberId FROM dbo.Members WHERE UserId = @UserId)";
             const string insertRsvpSql = @"
-            INSERT INTO dbo.EventRsvps (EventId, UserId, RsvpDateTime)
-            VALUES (@EventId, @UserId, GETUTCDATE())";
+            INSERT INTO dbo.EventParticipants (EventId, MemberId, ClubId)
+            SELECT @EventId, m.MemberId, e.ClubId 
+            FROM dbo.Members m
+            INNER JOIN dbo.Events e ON e.EventId = @EventId
+            WHERE m.UserId = @UserId AND m.ClubId = e.ClubId";
             try
             {
                 using var conn = await SqlService.CreateConnection(_configuration);

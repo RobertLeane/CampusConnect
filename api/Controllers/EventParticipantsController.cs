@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using CampusConnect.Api.Services;
+using CampusConnect.Api.Models;
 
 namespace CampusConnect.Api.Controllers;
 
@@ -56,6 +57,55 @@ public class EventParticipantsController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError, 
                 "An error occurred while retrieving the event registrations");
         }
+    }
+    
+    [HttpPost("register")]
+    public async Task<IActionResult> RegisterForEvent([FromBody] RegisterEventRequest request)
+    {
+        try
+        {
+            _logger.LogInformation("Registering user {UserId} for event {EventId} in club {ClubId}", 
+                request.UserId, request.EventId, request.ClubId);
+
+            // Get the memberId for this user and club
+            var memberId = await _eventParticipantService.GetMemberIdByUserIdAndClubIdAsync(request.UserId, request.ClubId);
+            if (memberId == null)
+            {
+                return BadRequest("User is not a member of this club");
+            }
+
+            await _eventParticipantService.RegisterUserForEventAsync(memberId.Value, request.ClubId, request.EventId);
+            
+            // Return the created participant in the format the client expects
+            var result = new EventParticipantDto
+            {
+                MemberId = memberId.Value,
+                EventId = request.EventId,
+                ClubId = request.ClubId
+            };
+            
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Registration conflict for UserId={UserId}, EventId={EventId}", 
+                request.UserId, request.EventId);
+            return Conflict(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error registering for event");
+            return StatusCode(StatusCodes.Status500InternalServerError, 
+                "An error occurred while registering for the event");
+        }
+    }
+
+    // Simple request model for registering
+    public class RegisterEventRequest
+    {
+        public int UserId { get; set; }
+        public int EventId { get; set; }
+        public int ClubId { get; set; }
     }
     
     [HttpPost("users/{userId}/events/{eventId}/register")]

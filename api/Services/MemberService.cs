@@ -1,5 +1,6 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using CampusConnect.Api.Models;
 
 namespace CampusConnect.Api.Services;
@@ -7,21 +8,12 @@ namespace CampusConnect.Api.Services;
 public class MemberService : IMemberService
 {
     private readonly ILogger<MemberService> _logger;
-    private readonly string _server;
-    private readonly string _database;
+    private readonly IConfiguration _configuration;
 
-    public MemberService(ILogger<MemberService> logger)
+    public MemberService(ILogger<MemberService> logger, IConfiguration configuration)
     {
         _logger = logger;
-     // Try different environment variable names like ClubService does to be robust for local and Azure environments
-     _server = Environment.GetEnvironmentVariable("Sql__Server") 
-         ?? Environment.GetEnvironmentVariable("SQL_SERVER")
-         ?? "svdb-campusconnect.database.windows.net";
-     _database = Environment.GetEnvironmentVariable("Sql__Database") 
-           ?? Environment.GetEnvironmentVariable("SQL_DATABASE")
-           ?? "DB-CampusConnect";
-
-     _logger.LogInformation($"MemberService database config - Server: {_server}, Database: {_database}");
+        _configuration = configuration;
     }
 
     // TODO: Implement all methods from IMemberService interface
@@ -39,13 +31,7 @@ public class MemberService : IMemberService
         {
             _logger.LogInformation("Getting members for club {ClubId}", clubId);
 
-            if (string.IsNullOrWhiteSpace(_server) || string.IsNullOrWhiteSpace(_database))
-            {
-                _logger.LogError("Database configuration is missing");
-                throw new InvalidOperationException("Database configuration is missing");
-            }
-
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            await using var conn = await SqlService.CreateConnection(_configuration);
             await using var cmd = new SqlCommand("SELECT MemberId, UserId, ClubId FROM dbo.Members WHERE ClubId = @ClubId", conn);
             cmd.Parameters.Add(new SqlParameter("@ClubId", System.Data.SqlDbType.Int) { Value = clubId });
             await using var reader = await cmd.ExecuteReaderAsync();
@@ -77,13 +63,7 @@ public class MemberService : IMemberService
         {
             _logger.LogInformation("Getting members for user {UserId}", userId);
 
-            if (string.IsNullOrWhiteSpace(_server) || string.IsNullOrWhiteSpace(_database))
-            {
-                _logger.LogError("Database configuration is missing");
-                throw new InvalidOperationException("Database configuration is missing");
-            }
-
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            await using var conn = await SqlService.CreateConnection(_configuration);
             await using var cmd = new SqlCommand("SELECT MemberId, UserId, ClubId FROM dbo.Members WHERE UserId = @UserId", conn);
             cmd.Parameters.Add(new SqlParameter("@UserId", System.Data.SqlDbType.Int) { Value = userId });
             await using var reader = await cmd.ExecuteReaderAsync();
@@ -114,13 +94,7 @@ public class MemberService : IMemberService
         {
             _logger.LogInformation("Getting member {MemberId}", memberId);
 
-            if (string.IsNullOrWhiteSpace(_server) || string.IsNullOrWhiteSpace(_database))
-            {
-                _logger.LogError("Database configuration is missing");
-                throw new InvalidOperationException("Database configuration is missing");
-            }
-
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            await using var conn = await SqlService.CreateConnection(_configuration);
             await using var cmd = new SqlCommand("SELECT MemberId, UserId, ClubId FROM dbo.Members WHERE MemberId = @MemberId", conn);
             cmd.Parameters.Add(new SqlParameter("@MemberId", System.Data.SqlDbType.Int) { Value = memberId });
             await using var reader = await cmd.ExecuteReaderAsync();
@@ -151,13 +125,7 @@ public class MemberService : IMemberService
         {
             _logger.LogInformation("Adding member for user {UserId} to club {ClubId}", userId, clubId);
 
-            if (string.IsNullOrWhiteSpace(_server) || string.IsNullOrWhiteSpace(_database))
-            {
-                _logger.LogError("Database configuration is missing");
-                throw new InvalidOperationException("Database configuration is missing");
-            }
-
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            await using var conn = await SqlService.CreateConnection(_configuration);
 
             // Validate user exists
             await using (var checkUserCmd = new SqlCommand("SELECT COUNT(1) FROM dbo.Users WHERE UserId = @UserId", conn))

@@ -128,6 +128,28 @@ app.MapGet("/debug/files", () =>
     return Results.Json(new { wwwrootExists = false, message = "wwwroot directory not found" });
 });
 
+// Debug endpoint to check database tables
+app.MapGet("/debug/tables", async () => 
+{
+    try
+    {
+        using var conn = await CampusConnect.Api.Services.SqlService.CreateConnection(app.Services.GetRequiredService<IConfiguration>());
+        using var cmd = new Microsoft.Data.SqlClient.SqlCommand("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'", conn);
+        using var reader = await cmd.ExecuteReaderAsync();
+        
+        var tables = new List<string>();
+        while (await reader.ReadAsync())
+        {
+            tables.Add(reader.GetString(0));
+        }
+        return Results.Json(new { tables });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { error = ex.Message });
+    }
+});
+
 app.MapControllers();
 
 // Serve the Blazor app for all non-API routes
