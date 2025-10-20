@@ -159,6 +159,30 @@ public class MemberService : IMemberService
 
             await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
 
+            // Validate user exists
+            await using (var checkUserCmd = new SqlCommand("SELECT COUNT(1) FROM dbo.Users WHERE UserId = @UserId", conn))
+            {
+                checkUserCmd.Parameters.Add(new SqlParameter("@UserId", System.Data.SqlDbType.Int) { Value = userId });
+                var userExists = await checkUserCmd.ExecuteScalarAsync();
+                if (userExists == null || Convert.ToInt32(userExists) == 0)
+                {
+                    _logger.LogError("User {UserId} does not exist", userId);
+                    throw new InvalidOperationException($"User with ID {userId} does not exist");
+                }
+            }
+
+            // Validate club exists
+            await using (var checkClubCmd = new SqlCommand("SELECT COUNT(1) FROM dbo.Clubs WHERE ClubId = @ClubId", conn))
+            {
+                checkClubCmd.Parameters.Add(new SqlParameter("@ClubId", System.Data.SqlDbType.Int) { Value = clubId });
+                var clubExists = await checkClubCmd.ExecuteScalarAsync();
+                if (clubExists == null || Convert.ToInt32(clubExists) == 0)
+                {
+                    _logger.LogError("Club {ClubId} does not exist", clubId);
+                    throw new InvalidOperationException($"Club with ID {clubId} does not exist");
+                }
+            }
+
             // Prevent duplicate membership
             await using (var checkCmd = new SqlCommand("SELECT MemberId FROM dbo.Members WHERE UserId = @UserId AND ClubId = @ClubId", conn))
             {
