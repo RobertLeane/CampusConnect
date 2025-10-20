@@ -33,3 +33,8 @@ ScaffoldingReadMe.txt
 
 # Others
 wwwroot/dist/
+client/obj/Client.csproj.nuget.dgspec.json
+client/obj/Client.csproj.nuget.g.props
+client/obj/Client.csproj.nuget.g.targets
+client/obj/project.assets.json
+client/obj/project.nuget.cache
