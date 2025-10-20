@@ -12,8 +12,8 @@ public class MemberApi(HttpClient http)
     {
         try
         {
-            Console.WriteLine($"Making API call to: {_http.BaseAddress}api/clubs/{clubId}/members");
-            var response = await _http.GetAsync($"/api/clubs/{clubId}/members", ct);
+            Console.WriteLine($"Making API call to: {_http.BaseAddress}api/members/clubs/{clubId}/members");
+            var response = await _http.GetAsync($"/api/members/clubs/{clubId}/members", ct);
             Console.WriteLine($"Response status: {response.StatusCode}");
 
             if (response.IsSuccessStatusCode)
@@ -41,7 +41,7 @@ public class MemberApi(HttpClient http)
         try
         {
             Console.WriteLine($"Making API call to: {_http.BaseAddress}api/users/{userId}/memberships");
-            var response = await _http.GetAsync($"/api/users/{userId}/memberships", ct);
+            var response = await _http.GetAsync($"/api/members/users/{userId}/memberships", ct);
             Console.WriteLine($"Response status: {response.StatusCode}");
 
             if (response.IsSuccessStatusCode)
@@ -67,8 +67,8 @@ public class MemberApi(HttpClient http)
         try
         {
             var payload = new { UserId = userId, Role = "Member" };
-            Console.WriteLine($"Posting to: {_http.BaseAddress}api/clubs/{clubId}/members with payload: {{ UserId: {userId}, Role: \"Member\" }}");
-            var response = await _http.PostAsJsonAsync($"/api/clubs/{clubId}/members", payload, ct);
+            Console.WriteLine($"Posting to: {_http.BaseAddress}api/members/clubs/{clubId}/members with payload: {{ UserId: {userId}, Role: \"Member\" }}");
+            var response = await _http.PostAsJsonAsync($"/api/members/clubs/{clubId}/members", payload, ct);
             Console.WriteLine($"Response status: {response.StatusCode}");
 
             if (response.IsSuccessStatusCode)
