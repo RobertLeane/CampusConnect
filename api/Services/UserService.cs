@@ -112,4 +112,14 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
             Message = $"Welcome back, {firstName}!"
         };
     }
+
+    public async Task<int> GetUserCountAsync()
+    {
+        const string sql = "SELECT COUNT(*) FROM dbo.Users";
+        await using var conn = await SqlService.CreateConnection(_configuration);
+        await using var cmd = new SqlCommand(sql, conn);
+
+        var result = await cmd.ExecuteScalarAsync();
+        return (result is int i) ? i : Convert.ToInt32(result);
+    }
 }

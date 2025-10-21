@@ -3,6 +3,7 @@
 @using Client.Services
 @inject ClubApi ClubApi
 @inject EventApi EventApi
+@inject UserApi UserApi
 @inject AuthService AuthService
 @inject IJSRuntime JS
 
@@ -13,10 +14,6 @@
     <div class="container">
         <h1>Discover Your <span>Campus Community</span></h1>
         <p>Join clubs, attend events, and connect with fellow students. Your college experience starts here.</p>
-        <form class="hero-search">
-            <input type="search" placeholder="Search for clubs, events, or interests..." />
-            <button type="button">Search</button>
-        </form>
 
         <div class="stats">
             <div class="stat">
@@ -28,7 +25,7 @@
                 <div class="stat__label">Events</div>
             </div>
             <div class="stat">
-                <div class="stat__num">5+</div>
+                <div class="stat__num">@users.Count</div>
                 <div class="stat__label">Active Members</div>
             </div>
         </div>
@@ -121,16 +118,9 @@
 
 <!-- Categories + CTA -->
 <section class="container">
-    <h2 class="center">Explore by Category</h2>
-    <div class="chips">
-        <span class="chip">Technology</span>
-        <span class="chip">Arts &amp; Culture</span>
-        <span class="chip">Sports</span>
-        <span class="chip">Community Service</span>
-        <span class="chip">Professional</span>
-        <span class="chip">Environment</span>
+    <div>
+    <p></p>
     </div>
-
     <div class="cta">
         <h3>Ready to Get Involved?</h3>
         <p>Join the vibrant campus community. Connect with students, develop new skills, and create lasting memories.</p>
@@ -144,9 +134,11 @@
 @code {
     private List<Club> clubs = new();
     private List<Event> events = new();
+    private List<User> users = new();
     private Dictionary<int, string> clubNames = new();
     private bool isLoading = true;
     private bool eventsLoading = true;
+    private bool usersLoading = true;
     private string? errorMessage = null;
 
     protected override async Task OnInitializedAsync()
@@ -211,6 +203,22 @@
         finally
         {
             eventsLoading = false;
+        }
+
+        // Load users count
+        try
+        {
+            Console.WriteLine("Starting to load users...");
+            users = await UserApi.GetUsersAsync();
+            Console.WriteLine($"Loaded {users.Count} users");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading users: {ex.Message}");
+        }
+        finally
+        {
+            usersLoading = false;
         }
     }
 
