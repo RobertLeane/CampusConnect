@@ -1,3 +1,7 @@
-Campus Connect is a clubs and events portal for colleges. Members can sign up to the portal, view and join clubs and get tickets for events
+Campus Connect encompasses 6 Blazor Razor pages, Login, Register, Home, Clubs, Events and Dashboard, and is hosted on the Azure App Service platform. The Blazor Web API framework utilizes a .NET 8 environment, with C# for the backend and HTML/CSS for the frontend. The content on the pages will be dynamically retrieved from our Azure SQL Database, using Azure Data API Builder (DAB)
 
-Test Static Web App is here at https://jolly-forest-05a7e0503.2.azurestaticapps.net/ 
+For our image files, we will be using Azure Blob Storage, and this will interface with our Azure SQL Database. Authentication will be provided in a secure manner from a members table in the database, as Entra ID is not allowed by the college. For observability, we will be using Azure Application Insights, which will provide us with real-time operational statistics for our Web App. Our application will be packeged in a docker container and deployed using an Azure CI/CD pipeline to Azure App Serivces. Testing will be done using the bUnit framework
+
+Users will be able to log in or will be prompted to first register for an account. Once logged in they will be able to browse the various clubs available and select clubs to join. Once the user is a member of a club, the user will be able to sign up for that club's events. On the dashboard page, the user will be able to see what clubs they are a member of and what upcoming events they have
+
+The live site will be here: campusconnect-a5gmchaahpf4ajem.uksouth-01.azurewebsites.net
