@@ -187,12 +187,12 @@ public class EventParticipantApi(HttpClient http)
         }
     }
 
-    public async Task<EventParticipant?> RegisterForEventAsync(EventParticipant participant, CancellationToken ct = default)
+    public async Task<EventParticipant?> RegisterForEventAsync(object registrationRequest, CancellationToken ct = default)
     {
         try
         {
             Console.WriteLine($"Making API call to: {http.BaseAddress}api/eventparticipants/register");
-            var response = await http.PostAsJsonAsync("/api/eventparticipants/register", participant, ct);
+            var response = await http.PostAsJsonAsync("/api/eventparticipants/register", registrationRequest, ct);
             Console.WriteLine($"Response status: {response.StatusCode}");
 
             if (response.IsSuccessStatusCode)

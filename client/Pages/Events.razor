@@ -1,25 +1,32 @@
 @page "/events"
 @using Client.Models
 @using Client.Services
+@inject ClubApi ClubApi
 @inject EventApi EventApi
+@inject UserApi UserApi
 @inject EventRegistrationService EventRegistration
+@inject AuthService AuthService
 @inject IJSRuntime JS
 
-<PageTitle>Events</PageTitle>
 
 <section class="hero">
   <div class="container">
     <h1>What’s On <span>This Week</span></h1>
     <p>Talks, meetups, workshops, socials, and more. Find your next campus event.</p>
-    <form class="hero-search">
-      <input type="search" placeholder="Search by title, club, or tag…" />
-      <button type="button">Search</button>
-    </form>
     <div class="stats">
-      <div class="stat"><div class="stat__num">42</div><div class="stat__label">This Week</div></div>
-      <div class="stat"><div class="stat__num">120+</div><div class="stat__label">This Month</div></div>
-      <div class="stat"><div class="stat__num">20</div><div class="stat__label">Clubs Hosting</div></div>
-    </div>
+      <div class="stat">
+          <div class="stat__num">@clubsCount.Count</div>
+          <div class="stat__label">Active Clubs</div>
+            </div>
+          <div class="stat">
+              <div class="stat__num">@eventsCount.Count</div>
+              <div class="stat__label">Events</div>
+          </div>
+          <div class="stat">
+              <div class="stat__num">@usersCount.Count</div>
+              <div class="stat__label">Active Members</div>
+          </div>
+      </div>
   </div>
 </section>
 
@@ -64,7 +71,15 @@
   {
     try
     {
+      // Initialize authentication state
+      await AuthService.InitializeAsync();
+      
       events = await EventApi.GetEventsAsync();
+      
+      // Load stats data
+      clubsCount = await ClubApi.GetClubsAsync();
+      eventsCount = await EventApi.GetEventsAsync();
+      usersCount = await UserApi.GetUsersAsync();
     }
     catch (Exception ex)
     {
@@ -73,11 +88,24 @@
     }
   }
 
-  private int CurrentUserId => 1;
+  private int CurrentUserId => AuthService.CurrentUser?.UserId ?? 0;
 
   private async Task HandleRsvpClickAsync(int eventId, int clubId)
   {
+    if (!AuthService.IsAuthenticated || CurrentUserId == 0)
+    {
+      await JS.InvokeVoidAsync("alert", "Please log in to RSVP for events.");
+      return;
+    }
+    
     await EventRegistration.HandleRsvpAsync(eventId, clubId, CurrentUserId);
   }
   
+}
+
+@code {
+
+    private List<Club> clubsCount = new();
+    private List<Event> eventsCount = new();
+    private List<User> usersCount = new();
 }

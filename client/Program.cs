@@ -36,5 +36,6 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<MemberApi>();
 builder.Services.AddScoped<EventParticipantApi>();
 builder.Services.AddScoped<EventRegistrationService>();
+builder.Services.AddScoped<UserApi>();
 
 await builder.Build().RunAsync();

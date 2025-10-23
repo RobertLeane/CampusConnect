@@ -46,7 +46,7 @@ public class AuthController : ControllerBase
                 Message = "User registered"
             };
 
-            return CreatedAtAction(nameof(GetUser), "Users", new { id = userId }, resp);
+            return Ok(resp);
         }
         catch (InvalidOperationException dup) when (dup.Message.Contains("exists", StringComparison.OrdinalIgnoreCase))
         {
@@ -89,12 +89,5 @@ public class AuthController : ControllerBase
             _logger.LogError(ex, "Error during login");
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
-    }
-
-    // Placeholder for GetUser action referenced in CreatedAtAction
-    private IActionResult GetUser(int id)
-    {
-        // This would be implemented in UsersController
-        return Ok();
     }
 }

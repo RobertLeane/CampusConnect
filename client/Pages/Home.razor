@@ -2,6 +2,10 @@
 @using Client.Models
 @using Client.Services
 @inject ClubApi ClubApi
+@inject EventApi EventApi
+@inject UserApi UserApi
+@inject AuthService AuthService
+@inject IJSRuntime JS
 
 <PageTitle>Home</PageTitle>
 
@@ -10,10 +14,6 @@
     <div class="container">
         <h1>Discover Your <span>Campus Community</span></h1>
         <p>Join clubs, attend events, and connect with fellow students. Your college experience starts here.</p>
-        <form class="hero-search">
-            <input type="search" placeholder="Search for clubs, events, or interests..." />
-            <button type="button">Search</button>
-        </form>
 
         <div class="stats">
             <div class="stat">
@@ -21,11 +21,11 @@
                 <div class="stat__label">Active Clubs</div>
             </div>
             <div class="stat">
-                <div class="stat__num">10+</div>
-                <div class="stat__label">Monthly Events</div>
+                <div class="stat__num">@events.Count</div>
+                <div class="stat__label">Events</div>
             </div>
             <div class="stat">
-                <div class="stat__num">5+</div>
+                <div class="stat__num">@users.Count</div>
                 <div class="stat__label">Active Members</div>
             </div>
         </div>
@@ -36,7 +36,7 @@
 <section class="container">
     <div class="section-head">
         <h2>Featured Clubs</h2>
-        <NavLink href='/Clubs' >class="link-btn">View All clubs</NavLink>
+        <NavLink href='/Clubs'class="link-btn">View All clubs</NavLink>
     </div>
 
     @if (isLoading)
@@ -76,67 +76,51 @@
 <!-- Upcoming Events -->
 <section class="container">
     <div class="section-head">
-        <h2>Upcoming Events</h2>
+        <h2>Featured Events</h2>
         <NavLink href="/Events" class="link-btn">View All Events</NavLink>
     </div>
 
-    <div class="grid grid-2">
-        <!-- Event 1 -->
-        <article class="card">
-            <div class="card__media card__media--wide">
-                <img src="https://picsum.photos/seed/event1/1100/480" alt="Tech Conference" />
-            </div>
-            <div class="card__body">
-                <h3>Annual Tech Conference</h3>
-                <p class="sub">by Computer Science Society</p>
-                <p>Keynotes, workshops, and networking opportunities in technology.</p>
-                <ul class="meta">
-                    <li>Oct 18, 2024</li>
-                    <li>9:00 AM – 5:00 PM</li>
-                    <li>Engineering Auditorium</li>
-                    <li>145/200 attending</li>
-                </ul>
-                <div class="actions">
-                    <a href="/events" class="btn" >See more Events</a>
-                </div>
-            </div>
-        </article>
-
-        <!-- Event 2 -->
-        <article class="card">
-            <div class="card__media card__media--wide">
-                <img src="https://picsum.photos/seed/event2/1100/480" alt="Photography Workshop" />
-            </div>
-            <div class="card__body">
-                <h3>Photography Workshop: Portrait Lighting</h3>
-                <p class="sub">by Photography Club</p>
-                <p>Learn professional portrait lighting techniques with hands-on practice.</p>
-                <ul class="meta">
-                    <li>Oct 20, 2024</li>
-                    <li>2:00 PM – 5:00 PM</li>
-                    <li>Art Studio 205</li>
-                    <li>12/15 attending</li>
-                </ul>
-                <div class="actions">
-                    <a href="/events" class="btn">See more Events</a>
-                </div>
-            </div>
-        </article>
-    </div>
+    @if (eventsLoading)
+    {
+        <div class="loading">Loading events...</div>
+    }
+    else if (!events.Any())
+    {
+        <div class="no-results">No events found.</div>
+    }
+    else
+    {
+        <div class="grid grid-2">
+            @foreach (var eventItem in events.Take(2))
+            {
+                <article class="card">
+                    <div class="card__media card__media--wide">
+                        <img src="@GetEventImage(eventItem)" alt="@eventItem.EventName" onerror="this.src='@GetFallbackEventImage(eventItem)'" />
+                    </div>
+                    <div class="card__body">
+                        <h3>@eventItem.EventName</h3>
+                        <p class="sub">by @GetClubName(eventItem.ClubId)</p>
+                        <p>@(eventItem.EventDescription ?? "No description available.")</p>
+                        <ul class="meta">
+                            <li>@eventItem.EventDateTime.ToString("MMM dd, yyyy")</li>
+                            <li>@eventItem.EventDateTime.ToString("h:mm tt")</li>
+                        </ul>
+                        <div class="actions">
+                            <button class="btn btn--primary" @onclick="() => HandleRsvpClickAsync(eventItem.EventId, eventItem.ClubId)">RSVP For Event</button>
+                            <a href="/events" class="btn btn--light">See more Events</a>
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+    }
 </section>
 
 <!-- Categories + CTA -->
 <section class="container">
-    <h2 class="center">Explore by Category</h2>
-    <div class="chips">
-        <span class="chip">Technology</span>
-        <span class="chip">Arts &amp; Culture</span>
-        <span class="chip">Sports</span>
-        <span class="chip">Community Service</span>
-        <span class="chip">Professional</span>
-        <span class="chip">Environment</span>
+    <div>
+    <p></p>
     </div>
-
     <div class="cta">
         <h3>Ready to Get Involved?</h3>
         <p>Join the vibrant campus community. Connect with students, develop new skills, and create lasting memories.</p>
@@ -149,16 +133,27 @@
 
 @code {
     private List<Club> clubs = new();
+    private List<Event> events = new();
+    private List<User> users = new();
+    private Dictionary<int, string> clubNames = new();
     private bool isLoading = true;
+    private bool eventsLoading = true;
+    private bool usersLoading = true;
     private string? errorMessage = null;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            // Initialize authentication state
+            await AuthService.InitializeAsync();
+            
             Console.WriteLine("Starting to load clubs...");
             clubs = await ClubApi.GetClubsAsync();
             Console.WriteLine($"Loaded {clubs.Count} clubs");
+            
+            // Build club name dictionary for quick lookup
+            clubNames = clubs.ToDictionary(c => c.ClubId, c => c.ClubName);
         }
         catch (Exception ex)
         {
@@ -169,6 +164,105 @@
         {
             isLoading = false;
         }
+
+        // Load events
+        try
+        {
+            Console.WriteLine("Starting to load events...");
+            var allEvents = await EventApi.GetEventsAsync();
+            Console.WriteLine($"Total events from API: {allEvents.Count}");
+            
+            // Debug: Print all event dates
+            foreach (var ev in allEvents.Take(5))
+            {
+                Console.WriteLine($"Event: {ev.EventName}, Date: {ev.EventDateTime}, Current: {DateTime.Now}");
+            }
+            
+            // Filter for events that are today or in the future (more lenient)
+            var today = DateTime.Today;
+            events = allEvents
+                .Where(e => e.EventDateTime.Date >= today)
+                .OrderBy(e => e.EventDateTime)
+                .ToList();
+                
+            Console.WriteLine($"Loaded {events.Count} upcoming events (from {today:yyyy-MM-dd})");
+            
+            // If no upcoming events, show recent events for demo purposes
+            if (events.Count == 0)
+            {
+                Console.WriteLine("No upcoming events found, showing all events for demo");
+                events = allEvents
+                    .OrderByDescending(e => e.EventDateTime)
+                    .ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading events: {ex.Message}");
+        }
+        finally
+        {
+            eventsLoading = false;
+        }
+
+        // Load users count
+        try
+        {
+            Console.WriteLine("Starting to load users...");
+            users = await UserApi.GetUsersAsync();
+            Console.WriteLine($"Loaded {users.Count} users");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading users: {ex.Message}");
+        }
+        finally
+        {
+            usersLoading = false;
+        }
+    }
+
+    private int CurrentUserId => AuthService.CurrentUser?.UserId ?? 0;
+
+    private async Task HandleRsvpClickAsync(int eventId, int clubId)
+    {
+        if (!AuthService.IsAuthenticated || CurrentUserId == 0)
+        {
+            await JS.InvokeVoidAsync("alert", "Please log in to RSVP for events.");
+            return;
+        }
+        
+        try
+        {
+            var response = await EventApi.RsvpAsync(eventId, CurrentUserId);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync("alert", "Successfully RSVP'd to the event!");
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                await JS.InvokeVoidAsync("alert", "You must join the club first to RSVP to this event.");
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                await JS.InvokeVoidAsync("alert", "You have already RSVP'd to this event.");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Failed to RSVP to the event. Please try again.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error RSVPing to event: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", "An error occurred while RSVPing. Please try again.");
+        }
+    }
+
+    private string GetClubName(int clubId)
+    {
+        return clubNames.TryGetValue(clubId, out var clubName) ? clubName : "Unknown Club";
     }
 
     private string GetClubImage(Club club)
@@ -191,5 +285,25 @@
     {
         // Generate a consistent placeholder image based on club name
         return $"https://picsum.photos/seed/{club.ClubName.ToLower().Replace(" ", "-")}/800/480";
+    }
+
+    private string GetEventImage(Event eventItem)
+    {
+        // Use the event's image URL from Azure Blob Storage if available
+        if (!string.IsNullOrEmpty(eventItem.EventImgURL))
+        {
+            // URL decode the image URL to handle encoded characters like %20 and %26
+            var decodedUrl = Uri.UnescapeDataString(eventItem.EventImgURL);
+            return decodedUrl;
+        }
+        
+        // Fallback to a placeholder if no image URL is provided
+        return GetFallbackEventImage(eventItem);
+    }
+    
+    private string GetFallbackEventImage(Event eventItem)
+    {
+        // Generate a consistent placeholder image based on event name
+        return $"https://picsum.photos/seed/{eventItem.EventName.ToLower().Replace(" ", "-")}/1100/480";
     }
 }

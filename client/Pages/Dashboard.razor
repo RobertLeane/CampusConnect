@@ -1,10 +1,11 @@
 @page "/dashboard"
 
 @using Client.Services
+@using Client.Models
 @inject AuthService AuthService
 @inject NavigationManager Navigation
-
-<PageTitle>Dashboard</PageTitle>
+@inject ClubApi ClubApi
+@inject EventApi EventApi
 
 @if (!AuthService.IsAuthenticated)
 {
@@ -27,23 +28,32 @@ else
     <!-- Stats (below the blue) -->
     <section class="stats-section">
         <div class="container">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-meta">
-                        <div class="stat-title">Clubs Joined</div>
-                        <div class="stat-num">2</div>
-                    </div>
-                    <div class="stat-icon" aria-hidden="true">👥</div>
+            @if (isLoading)
+            {
+                <div class="text-center">
+                    <p>Loading your dashboard...</p>
                 </div>
+            }
+            else
+            {
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-meta">
+                            <div class="stat-title">Clubs Joined</div>
+                            <div class="stat-num">@userClubs.Count</div>
+                        </div>
+                        <div class="stat-icon" aria-hidden="true">👥</div>
+                    </div>
 
-                <div class="stat-card">
-                    <div class="stat-meta">
-                        <div class="stat-title">Events Registered</div>
-                        <div class="stat-num">2</div>
+                    <div class="stat-card">
+                        <div class="stat-meta">
+                            <div class="stat-title">Events Registered</div>
+                            <div class="stat-num">@userEvents.Count</div>
+                        </div>
+                        <div class="stat-icon green" aria-hidden="true">📅</div>
                     </div>
-                    <div class="stat-icon green" aria-hidden="true">📅</div>
                 </div>
-            </div>
+            }
         </div>
     </section>
 
@@ -54,31 +64,37 @@ else
         <section class="dashboard-card">
             <div class="section-head">
                 <h3>My Clubs</h3>
-                <a href="#">View All</a>
+                <a href="/clubs">View All</a>
             </div>
 
             <div class="list">
-                <div class="list-item">
-                    <img src="https://picsum.photos/seed/club-cs/64" alt="Computer Science Society" />
-                    <div class="info">
-                        <h4>Computer Science Society</h4>
-                        <span class="badge">Member</span>
-                        <small>Oct 18 · Hackathon</small>
+                @if (userClubs.Any())
+                {
+                    @foreach (var club in userClubs.Take(3))
+                    {
+                        <div class="list-item">
+                            <img src="@(!string.IsNullOrEmpty(club.ClubImgURL) ? club.ClubImgURL : $"https://picsum.photos/seed/club-{club.ClubId}/64")" alt="@club.ClubName" />
+                            <div class="info">
+                                <h4>@club.ClubName</h4>
+                                <span class="badge">Member</span>
+                                <small>@(club.ClubDescription ?? "Active member")</small>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="list-item">
+                        <div class="info">
+                            <h4>No clubs joined yet</h4>
+                            <small>Join your first club to get started!</small>
+                        </div>
                     </div>
-                </div>
-
-                <div class="list-item">
-                    <img src="https://picsum.photos/seed/club-biz/64" alt="Business Club" />
-                    <div class="info">
-                        <h4>Business Club</h4>
-                        <span class="badge">Vice President</span>
-                        <small>Oct 19 · Networking</small>
-                    </div>
-                </div>
+                }
             </div>
 
             <div class="actions">
-                <a class="btn" href="#">Discover More Clubs</a>
+                <a class="btn" href="/clubs">Discover More Clubs</a>
             </div>
         </section>
 
@@ -86,37 +102,79 @@ else
         <section class="dashboard-card">
             <div class="section-head">
                 <h3>Attending Events</h3>
-                <a href="#">View All</a>
+                <a href="/events">View All</a>
             </div>
 
             <div class="list">
-                <div class="list-item">
-                    <div class="info">
-                        <h4>Annual Tech Conference</h4>
-                        <small>Oct 18, 2024 · 9:00 AM</small><br />
-                        <small>Engineering Auditorium · by Computer Science Society</small>
+                @if (userEvents.Any())
+                {
+                    @foreach (var eventItem in userEvents.Take(3))
+                    {
+                        <div class="list-item">
+                            <div class="info">
+                                <h4>@eventItem.EventName</h4>
+                                <small>@eventItem.EventDateTime.ToString("MMM dd, yyyy · h:mm tt")</small><br />
+                                <small>@(eventItem.EventDescription ?? "Event details")</small>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="list-item">
+                        <div class="info">
+                            <h4>No events registered</h4>
+                            <small>RSVP to events to see them here!</small>
+                        </div>
                     </div>
-                </div>
-
-                <div class="list-item">
-                    <div class="info">
-                        <h4>Business Networking Night</h4>
-                        <small>Oct 19, 2024 · 7:00 PM</small><br />
-                        <small>Business School Atrium · by Business Club</small>
-                    </div>
-                </div>
+                }
             </div>
 
             <div class="actions">
-                <a class="btn" href="#">Find More Events</a>
+                <a class="btn" href="/events">Find More Events</a>
             </div>
         </section>
     </main>
 }
 
 @code {
+    private List<Club> userClubs = new();
+    private List<Event> userEvents = new();
+    private bool isLoading = true;
+
     protected override async Task OnInitializedAsync()
     {
         await AuthService.InitializeAsync();
+        
+        if (AuthService.IsAuthenticated && AuthService.CurrentUser != null)
+        {
+            await LoadUserData();
+        }
+        
+        isLoading = false;
+    }
+
+    private async Task LoadUserData()
+    {
+        try
+        {
+            var userId = AuthService.CurrentUser!.UserId;
+            
+            // Load user's joined clubs and RSVP'd events in parallel
+            var clubsTask = ClubApi.GetUserJoinedClubsAsync(userId);
+            var eventsTask = EventApi.GetUserRsvpEventsAsync(userId);
+            
+            await Task.WhenAll(clubsTask, eventsTask);
+            
+            userClubs = await clubsTask;
+            userEvents = await eventsTask;
+            
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user data: {ex.Message}");
+            // Keep empty lists on error
+        }
     }
 }

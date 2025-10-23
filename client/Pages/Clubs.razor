@@ -2,32 +2,33 @@
 @using Client.Models
 @using Client.Services
 @inject ClubApi ClubApi
+@inject EventApi EventApi
+@inject UserApi UserApi
+@inject MemberApi MemberApi
+@inject AuthService AuthService
+@inject IJSRuntime JS
 
 <PageTitle>Clubs</PageTitle>
 
 <section class="hero">
     <div class="container">
-        <h1>Discover Your <span>Campus Community</span></h1>
-        <p>Join clubs, attend events, and connect with fellow students. Your college experience starts here.</p>
-        <form class="hero-search">
-            <input type="search" placeholder="Search for clubs, events, or interests..." />
-            <button type="button">Search</button>
-        </form>
+        <h1>Discover Your <span>Clubs</span></h1>
+        <p>Join the clubs that interest you. Your college experience starts here.</p>
 
         <div class="stats">
-            <div class="stat">
-                <div class="stat__num">@clubs.Count</div>
-                <div class="stat__label">Active Clubs</div>
+        <div class="stat">
+          <div class="stat__num">@clubsCount.Count</div>
+          <div class="stat__label">Active Clubs</div>
             </div>
-            <div class="stat">
-                <div class="stat__num">500+</div>
-                <div class="stat__label">Monthly Events</div>
-            </div>
-            <div class="stat">
-                <div class="stat__num">5k+</div>
-                <div class="stat__label">Active Members</div>
-            </div>
-        </div>
+          <div class="stat">
+              <div class="stat__num">@eventsCount.Count</div>
+              <div class="stat__label">Events</div>
+          </div>
+          <div class="stat">
+              <div class="stat__num">@usersCount.Count</div>
+              <div class="stat__label">Active Members</div>
+          </div>
+      </div>
     </div>
 </section>
 
@@ -64,7 +65,7 @@
                             <h3>@club.ClubName</h3>
                             <p>@(club.ClubDescription ?? "No description available.")</p>
                             <div class="actions">
-                                <a href="#" class="btn">Join Club</a>
+                                <button class="btn btn--primary" @onclick="() => HandleJoinClubAsync(club.ClubId)">Join Club</button>
                             </div>
                         </div>
                     </article>
@@ -75,6 +76,10 @@
 </main>
 
 @code {
+
+    private List<Club> clubsCount = new();
+    private List<Event> eventsCount = new();
+    private List<User> usersCount = new();
     private List<Club> clubs = new();
     private bool isLoading = true;
     private string? errorMessage = null;
@@ -83,9 +88,17 @@
     {
         try
         {
+            // Initialize authentication state
+            await AuthService.InitializeAsync();
+            
             Console.WriteLine("Starting to load clubs...");
             clubs = await ClubApi.GetClubsAsync();
             Console.WriteLine($"Loaded {clubs.Count} clubs");
+            
+            // Load stats data
+            clubsCount = await ClubApi.GetClubsAsync();
+            eventsCount = await EventApi.GetEventsAsync();
+            usersCount = await UserApi.GetUsersAsync();
         }
         catch (Exception ex)
         {
@@ -95,6 +108,41 @@
         finally
         {
             isLoading = false;
+        }
+    }
+
+    private int CurrentUserId => AuthService.CurrentUser?.UserId ?? 0;
+
+    private async Task HandleJoinClubAsync(int clubId)
+    {
+        if (!AuthService.IsAuthenticated || CurrentUserId == 0)
+        {
+            await JS.InvokeVoidAsync("alert", "Please log in to join clubs.");
+            return;
+        }
+
+        try
+        {
+            Console.WriteLine($"Attempting to join club {clubId} with user {CurrentUserId}");
+            var member = await MemberApi.AddMemberToClubAsync(CurrentUserId, clubId);
+            if (member != null)
+            {
+                await JS.InvokeVoidAsync("alert", "Successfully joined the club!");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Failed to join club - no member returned");
+            }
+        }
+        catch (HttpRequestException httpEx)
+        {
+            Console.WriteLine($"HTTP Error: {httpEx.Message}");
+            await JS.InvokeVoidAsync("alert", $"Error joining club: {httpEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"General Error: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", $"Error joining club: {ex.Message}");
         }
     }
 

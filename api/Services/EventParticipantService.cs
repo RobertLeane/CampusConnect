@@ -1,6 +1,7 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using CampusConnect.Api.Models;
 
 namespace CampusConnect.Api.Services;
@@ -8,14 +9,12 @@ namespace CampusConnect.Api.Services;
 public class EventParticipantService : IEventParticipantService
 {
     private readonly ILogger<EventParticipantService> _logger;
-    private readonly string _server;
-    private readonly string _database;
+    private readonly IConfiguration _configuration;
 
-    public EventParticipantService(ILogger<EventParticipantService> logger)
+    public EventParticipantService(ILogger<EventParticipantService> logger, IConfiguration configuration)
     {
         _logger = logger;
-        _server = Environment.GetEnvironmentVariable("Sql__Server")!;
-        _database = Environment.GetEnvironmentVariable("Sql__Database")!;
+        _configuration = configuration;
     }
 
     // TODO: Implement all methods from IEventParticipantService interface  
@@ -25,13 +24,8 @@ public class EventParticipantService : IEventParticipantService
         try
         {
             _logger.LogInformation("Retrieving active event participants");
-            if (string.IsNullOrWhiteSpace(_server) || string.IsNullOrWhiteSpace(_database))
-            {
-                _logger.LogError("Database configuration is missing");
-                throw new InvalidOperationException("Database configuration is missing");
-            }
 
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            await using var conn = await SqlService.CreateConnection(_configuration);
             await using var cmd = new SqlCommand("SELECT MemberId, EventId, ClubId FROM dbo.EventParticipants", conn);
             await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -60,7 +54,7 @@ public class EventParticipantService : IEventParticipantService
         try
         {
             _logger.LogInformation("Getting UserId for MemberId {MemberId}", memberId);
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            await using var conn = await SqlService.CreateConnection(_configuration);
             await using var cmd = new SqlCommand("SELECT UserId FROM dbo.Members WHERE MemberId = @MemberId", conn);
             cmd.Parameters.Add(new SqlParameter("@MemberId", SqlDbType.Int) { Value = memberId });
             var scalar = await cmd.ExecuteScalarAsync();
@@ -78,7 +72,7 @@ public class EventParticipantService : IEventParticipantService
         try
         {
             _logger.LogInformation("Getting member ids for UserId {UserId}", userId);
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            await using var conn = await SqlService.CreateConnection(_configuration);
             await using var cmd = new SqlCommand("SELECT MemberId FROM dbo.Members WHERE UserId = @UserId", conn);
             cmd.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = userId });
             await using var reader = await cmd.ExecuteReaderAsync();
@@ -108,7 +102,7 @@ public class EventParticipantService : IEventParticipantService
             var memberIdList = memberIds?.ToList() ?? new List<int>();
             if (memberIdList.Count == 0) return eventDetails;
 
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            await using var conn = await SqlService.CreateConnection(_configuration);
 
             // Efficient single query: join EventParticipants -> Events
             // Build parameterized IN clause
@@ -158,7 +152,7 @@ public class EventParticipantService : IEventParticipantService
         try
         {
             _logger.LogInformation("Getting club id for EventId {EventId}", eventId);
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            await using var conn = await SqlService.CreateConnection(_configuration);
             await using var cmd = new SqlCommand("SELECT ClubId FROM dbo.Events WHERE EventId = @EventId", conn);
             cmd.Parameters.Add(new SqlParameter("@EventId", SqlDbType.Int) { Value = eventId });
             var scalar = await cmd.ExecuteScalarAsync();
@@ -176,7 +170,7 @@ public class EventParticipantService : IEventParticipantService
         try
         {
             _logger.LogInformation("Getting MemberId for UserId {UserId} and ClubId {ClubId}", userId, clubId);
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            await using var conn = await SqlService.CreateConnection(_configuration);
             await using var cmd = new SqlCommand("SELECT MemberId FROM dbo.Members WHERE UserId = @UserId AND ClubId = @ClubId", conn);
             cmd.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = userId });
             cmd.Parameters.Add(new SqlParameter("@ClubId", SqlDbType.Int) { Value = clubId });
@@ -195,12 +189,12 @@ public class EventParticipantService : IEventParticipantService
         try
         {
             _logger.LogInformation("Registering MemberId {MemberId} for EventId {EventId} in ClubId {ClubId}", memberId, eventId, clubId);
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database);
+            await using var conn = await SqlService.CreateConnection(_configuration);
 
-            await using (var checkCmd = new SqlCommand("SELECT MemberId FROM dbo.EventParticipants WHERE EventId = @EventId AND ClubId = @ClubId", conn))
+            await using (var checkCmd = new SqlCommand("SELECT MemberId FROM dbo.EventParticipants WHERE EventId = @EventId AND MemberId = @MemberId", conn))
             {
                 checkCmd.Parameters.Add(new SqlParameter("@EventId", SqlDbType.Int) { Value = eventId });
-                checkCmd.Parameters.Add(new SqlParameter("@ClubId", SqlDbType.Int) { Value = clubId });
+                checkCmd.Parameters.Add(new SqlParameter("@MemberId", SqlDbType.Int) { Value = memberId });
                 var exists = await checkCmd.ExecuteScalarAsync();
                 if (exists != null && exists != DBNull.Value)
                 {

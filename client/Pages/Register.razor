@@ -11,7 +11,7 @@
         <h1>Create Your Account</h1>
         <p>Join clubs, RSVP to events, and build your campus profile.</p>
     </div>
- </section>
+</section>
 
 <main class="container auth-container">
     <EditForm Model="model" OnValidSubmit="OnSubmit">
@@ -33,33 +33,43 @@
                 </div>
             </div>
 
-            <label for="email">Email</label>
-            <InputText id="email" @bind-Value="model.Email" type="email" placeholder="abc@email.com" />
-            <ValidationMessage For="() => model.Email" />
+            <div class="auth-field">
+                <label for="email">Email</label>
+                <InputText id="email" @bind-Value="model.Email" type="email" placeholder="abc@email.com" />
+                <ValidationMessage For="() => model.Email" />
+            </div>
 
-            <label for="password">Password</label>
-            <InputText id="password" @bind-Value="model.Password" type="password" placeholder="At least 8 characters" />
-            <ValidationMessage For="() => model.Password" />
+            <div class="auth-field">
+                <label for="password">Password</label>
+                <InputText id="password" @bind-Value="model.Password" type="password" placeholder="At least 8 characters" />
+                <ValidationMessage For="() => model.Password" />
+            </div>
 
-            <label for="confirm">Confirm password</label>
-            <InputText id="confirm" @bind-Value="confirm" type="password" placeholder="Repeat your password" />
-            @if (!string.IsNullOrEmpty(confirmError))
-            {
-                <div class="validation-message">@confirmError</div>
-            }
+            <div class="auth-field">
+                <label for="confirm">Confirm password</label>
+                <InputText id="confirm" @bind-Value="confirm" type="password" placeholder="Repeat your password" />
+                @if (!string.IsNullOrEmpty(confirmError))
+                {
+                    <div class="validation-message">@confirmError</div>
+                }
+            </div>
 
-            <label class="form-check">
-                <input type="checkbox" @bind="accept" />
-                <span>I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</span>
-            </label>
-            @if (!string.IsNullOrEmpty(acceptError))
-            {
-                <div class="validation-message">@acceptError</div>
-            }
+            <div class="auth-field">
+                <label class="form-check">
+                    <input type="checkbox" @bind="accept" />
+                    <span>I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</span>
+                </label>
+                @if (!string.IsNullOrEmpty(acceptError))
+                {
+                    <div class="validation-message">@acceptError</div>
+                }
+            </div>
 
-            <button type="submit" class="btn" disabled="@submitting">
-                <span>@(submitting ? "Creating..." : "Create Account")</span>
-            </button>
+            <div class="auth-field">
+                <button type="submit" class="btn" disabled="@submitting">
+                    <span>@(submitting ? "Creating..." : "Create Account")</span>
+                </button>
+            </div>
 
             @if (!string.IsNullOrEmpty(serverMessage))
             {

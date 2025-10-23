@@ -26,16 +26,15 @@ public class EventRegistrationService
 
         try 
         {
-            // First try to RSVP through the event system
+            // RSVP through the event system - this handles everything including registration
             var resp = await _eventApi.RsvpAsync(eventId, currentUserId);
             
             if (!resp.IsSuccessStatusCode)
             {
                 var msg = ((int)resp.StatusCode) switch
                 {
-                    401 => "Please register or sign in to RSVP.",
                     403 => "You must join this club to RSVP.",
-                    404 => "Event not found.",
+                    404 => "Event or user not found.",
                     409 => "You already RSVPed.",
                     _   => $"RSVP failed: {resp.StatusCode}"
                 };
@@ -43,23 +42,8 @@ public class EventRegistrationService
                 return;
             }
 
-            // If RSVP successful, register the user for the event
-            var participant = new EventParticipant
-            {
-                EventId = eventId,
-                ClubId = clubId
-                // MemberId will be determined server-side based on authenticated user
-            };
-
-            var result = await _eventParticipantApi.RegisterForEventAsync(participant);
-            if (result != null)
-            {
-                await _js.InvokeVoidAsync("alert", "RSVP successful 🎉");
-            }
-            else 
-            {
-                await _js.InvokeVoidAsync("alert", "RSVP recorded but event registration failed. Please try again.");
-            }
+            // RSVP was successful
+            await _js.InvokeVoidAsync("alert", "RSVP successful 🎉");
         }
         catch (Exception ex)
         {

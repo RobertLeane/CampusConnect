@@ -25,17 +25,22 @@ public class EventApi
         throw new Exception("Error retrieving events");
     }
 
+    // Method to get user's RSVP'd events
+    public async Task<List<Event>> GetUserRsvpEventsAsync(int userId)
+    {
+        var response = await _httpClient.GetAsync($"api/events/user/{userId}/rsvps");
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<List<Event>>() ?? new List<Event>();
+        }
+        return new List<Event>(); // Return empty list if error or no events
+    }
+
     // Method to RSVP for an event
     public async Task<HttpResponseMessage> RsvpAsync(int eventId, int userId)
     {
-        // Construct the request body as JSON string
-        var content = new StringContent($"{{\"EventId\": {eventId}, \"UserId\": {userId}}}", Encoding.UTF8, "application/json");
-
-        // Set content type header
-        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
-
-        // Send the POST request
-        var response = await _httpClient.PostAsync($"api/events/rsvp", content);
+        // Send the POST request with userId as query parameter to match server expectation
+        var response = await _httpClient.PostAsync($"api/events/{eventId}/rsvp?userId={userId}", null);
         return response;
     }
 }
