@@ -54,15 +54,8 @@ steps:
   inputs:
     command: 'test'
     projects: 'CampusConnect_Tests/CampusConnect_Tests.csproj'
-    arguments: '--configuration $(buildConfiguration) --logger trx --results-directory $(Agent.TempDirectory)'
-
-# Publish test results
-- task: PublishTestResults@2
-  displayName: 'Publish Test Results'
-  inputs:
+    arguments: '--configuration $(buildConfiguration)'
+    publishTestResults: true
     testResultsFormat: 'VSTest'
-    testResultsFiles: '**/*.trx'
-    searchFolder: '$(Agent.TempDirectory)'
-  condition: succeededOrFailed()
 
     
