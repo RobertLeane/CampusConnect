@@ -16,7 +16,14 @@ steps:
   displayName: 'Install .NET 8 SDK'
   inputs:
     packageType: 'sdk'
-    version: '8.x'
+    version: '8.0.x'
+    performMultiLevelLookup: true
+
+# Verify .NET version
+- script: |
+    dotnet --version
+    dotnet --list-sdks
+  displayName: 'Verify .NET SDK version'
 
 # Restore dependencies
 - task: DotNetCoreCLI@2
