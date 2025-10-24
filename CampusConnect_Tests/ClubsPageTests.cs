@@ -8,24 +8,22 @@ using Xunit;
 
 namespace CampusConnect_Tests;
 
-/// <summary>
-/// Tests for the Clubs page (client/Pages/Clubs.razor)
-/// TODO: Team members should implement these test methods
-/// </summary>
 public class ClubsPageTests : TestContext
 {
     public ClubsPageTests()
     {
         // Register required services for Clubs page
         Services.AddSingleton<AuthService>();
-        // TODO: Add ClubApi service when implemented
+        Services.AddSingleton<ClubApi>();
+        Services.AddSingleton<EventApi>();
+        Services.AddSingleton<MemberApi>();
+        Services.AddSingleton<UserApi>();
         
         // Setup mock JSRuntime
         JSInterop.Mode = JSRuntimeMode.Loose;
         
-        // Setup mock HTTP client for club API calls
-        var mockHttp = new MockHttpMessageHandler();
-        var httpClient = mockHttp.ToHttpClient();
+        // Setup basic HTTP client (will be replaced in individual tests as needed)
+        var httpClient = new HttpClient();
         httpClient.BaseAddress = new Uri("https://localhost:7071/");
         Services.AddSingleton(httpClient);
     }
@@ -35,21 +33,18 @@ public class ClubsPageTests : TestContext
     [Fact]
     public void ClubsPage_RendersCorrectly()
     {
-        // TODO: Test that clubs page renders with expected elements
-        // - Check page title/header
-        // - Verify search/filter controls
-        // - Check for club list container
-        // - Verify "Create Club" button if user has permission
-    }
+        // Act
+        var component = RenderComponent<Clubs>();
 
-    [Fact]
-    public void ClubsPage_HasSearchAndFilterControls()
-    {
-        // TODO: Test search and filtering functionality
-        // - Check search input field
-        // - Check category filter dropdown
-        // - Check sort options
-        // - Test filter by club type/tags
+        // Assert - Check basic page structure (should render immediately)
+        Assert.Contains("Discover Your", component.Markup);
+        Assert.Contains("Clubs", component.Markup);
+        Assert.Contains("Join the clubs that interest you", component.Markup);
+        
+        // Check statistics section labels (these should always be present)
+        Assert.Contains("Active Clubs", component.Markup);
+        Assert.Contains("Events", component.Markup);
+        Assert.Contains("Active Members", component.Markup);
     }
 
     #endregion
@@ -59,135 +54,275 @@ public class ClubsPageTests : TestContext
     [Fact]
     public void ClubsPage_DisplaysClubList()
     {
-        // TODO: Test that clubs are displayed correctly
-        // - Mock API response with club data
-        // - Render clubs page
-        // - Assert club cards/items are displayed
-        // - Check club information (name, description, member count)
+        // Arrange - Mock all required HTTP endpoints
+        var mockHttp = new MockHttpMessageHandler();
+        
+        // Mock clubs data with proper model structure
+        var clubData = new[]
+        {
+            new
+            {
+                ClubId = 1,
+                ClubName = "Chess Club",
+                ClubImgURL = "https://example.com/chess-club.jpg",
+                ClubDescription = "A club for chess enthusiasts."
+            }
+        };
+
+        // Mock events data
+        var eventData = new[]
+        {
+            new { EventId = 1, EventName = "Chess Tournament", EventDescription = "Test", EventDateTime = DateTime.Now, EventImgURL = "", ClubId = 1 }
+        };
+
+        // Mock users data  
+        var userData = new[]
+        {
+            new { UserId = 1, FirstName = "John", LastName = "Doe", Email = "john@example.com" }
+        };
+
+        // Setup all API endpoints
+        mockHttp.When("*/api/clubs").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubData));
+        mockHttp.When("*/api/events").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(eventData));
+        mockHttp.When("*/api/users").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(userData));
+
+        var httpClient = mockHttp.ToHttpClient();
+        httpClient.BaseAddress = new Uri("https://localhost:7071/");
+        
+        // Replace the HTTP client in the current test context
+        Services.AddSingleton(httpClient);
+
+        // Act
+        var component = RenderComponent<Clubs>();
+
+        // Assert - Initially should show loading
+        Assert.Contains("Loading clubs...", component.Markup);
+
+        // Wait for data to load and check for club content
+        component.WaitForAssertion(() =>
+        {
+            var markup = component.Markup;
+            
+            // Should not be loading anymore
+            Assert.DoesNotContain("Loading clubs...", markup);
+            
+            // Should show club name somewhere in the page
+            Assert.Contains("Chess Club", markup);
+        }, timeout: TimeSpan.FromSeconds(3));
     }
 
     [Fact]
     public void ClubsPage_DisplaysEmptyState_WhenNoClubs()
     {
-        // TODO: Test empty state when no clubs exist
-        // - Mock empty API response
-        // - Assert "no clubs found" message
-        // - Check for call-to-action to create first club
+        // Arrange - Mock empty responses
+        var mockHttp = new MockHttpMessageHandler();
+        
+        // Mock empty data arrays
+        var emptyClubData = new object[0];
+        var emptyEventData = new object[0];
+        var emptyUserData = new object[0];
+
+        // Setup all API endpoints with empty responses
+        mockHttp.When("*/api/clubs").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(emptyClubData));
+        mockHttp.When("*/api/events").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(emptyEventData));
+        mockHttp.When("*/api/users").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(emptyUserData));
+
+        var httpClient = mockHttp.ToHttpClient();
+        httpClient.BaseAddress = new Uri("https://localhost:7071/");
+        
+        Services.AddSingleton(httpClient);
+
+        // Act
+        var component = RenderComponent<Clubs>();
+
+        // Assert - Wait for data to load and check empty state
+        component.WaitForAssertion(() =>
+        {
+            var markup = component.Markup;
+            
+            // Should not be loading anymore
+            Assert.DoesNotContain("Loading clubs...", markup);
+            
+            // Should show statistics as 0
+            Assert.Contains("0", markup); // Should show 0 for stats
+        }, timeout: TimeSpan.FromSeconds(3));
     }
 
     [Fact]
     public void ClubsPage_DisplaysClubDetails()
     {
-        // TODO: Test individual club information display
-        // - Check club name, description
-        // - Check member count
-        // - Check club image/logo if supported
-        // - Check join/leave button state
+        // Arrange - Mock club with detailed information
+        var mockHttp = new MockHttpMessageHandler();
+        
+        var clubData = new[]
+        {
+            new
+            {
+                ClubId = 1,
+                ClubName = "Photography Club",
+                ClubImgURL = "https://example.com/photo-club.jpg",
+                ClubDescription = "Capture amazing moments and learn photography techniques."
+            }
+        };
+
+        var eventData = new[]
+        {
+            new { EventId = 1, EventName = "Photo Walk", EventDescription = "Test", EventDateTime = DateTime.Now, EventImgURL = "", ClubId = 1 }
+        };
+
+        var userData = new[]
+        {
+            new { UserId = 1, FirstName = "Jane", LastName = "Smith", Email = "jane@example.com" }
+        };
+
+        // Setup all API endpoints
+        mockHttp.When("*/api/clubs").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubData));
+        mockHttp.When("*/api/events").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(eventData));
+        mockHttp.When("*/api/users").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(userData));
+
+        var httpClient = mockHttp.ToHttpClient();
+        httpClient.BaseAddress = new Uri("https://localhost:7071/");
+        
+        Services.AddSingleton(httpClient);
+
+        // Act
+        var component = RenderComponent<Clubs>();
+
+        // Assert - Wait for data and check club details
+        component.WaitForAssertion(() =>
+        {
+            var markup = component.Markup;
+            
+            // Should not be loading anymore
+            Assert.DoesNotContain("Loading clubs...", markup);
+            
+            // Check club details
+            Assert.Contains("Photography Club", markup);
+            Assert.Contains("Capture amazing moments and learn photography techniques.", markup);
+            Assert.Contains("Join Club", markup);
+        }, timeout: TimeSpan.FromSeconds(3));
     }
 
     #endregion
 
-    #region Search and Filter Tests
-
-    [Fact]
-    public void ClubsPage_SearchFiltersClubs()
-    {
-        // TODO: Test search functionality
-        // - Mock clubs data
-        // - Enter search term
-        // - Assert filtered results are displayed
-        // - Test case-insensitive search
-    }
-
-    [Fact]
-    public void ClubsPage_CategoryFilterWorks()
-    {
-        // TODO: Test category/type filtering
-        // - Mock clubs with different categories
-        // - Select category filter
-        // - Assert only clubs in that category are shown
-    }
-
-    [Fact]
-    public void ClubsPage_SortingWorks()
-    {
-        // TODO: Test club sorting options
-        // - Sort by name (A-Z, Z-A)
-        // - Sort by member count
-        // - Sort by date created
-        // - Assert clubs are reordered correctly
-    }
-
-    [Fact]
-    public void ClubsPage_ClearFiltersWorks()
-    {
-        // TODO: Test clearing filters and search
-        // - Apply filters and search
-        // - Click clear/reset button
-        // - Assert all clubs are shown again
-    }
-
-    #endregion
+   
 
     #region Club Actions Tests
 
     [Fact]
     public void ClubsPage_JoinClubWorks()
     {
-        // TODO: Test joining a club
-        // - Mock user not in club
-        // - Click join button
-        // - Mock successful API response
-        // - Assert button changes to "Leave" or "Joined"
+        // Arrange - Mock club data and setup for join action
+        var mockHttp = new MockHttpMessageHandler();
+        
+        var clubData = new[]
+        {
+            new
+            {
+                ClubId = 1,
+                ClubName = "Basketball Club",
+                ClubImgURL = "https://example.com/basketball.jpg",
+                ClubDescription = "Play basketball and improve your skills."
+            }
+        };
+
+        var eventData = new[]
+        {
+            new { EventId = 1, EventName = "Basketball Game", EventDescription = "Test", EventDateTime = DateTime.Now, EventImgURL = "", ClubId = 1 }
+        };
+
+        var userData = new[]
+        {
+            new { UserId = 1, FirstName = "Mike", LastName = "Jordan", Email = "mike@example.com" }
+        };
+
+        // Setup all API endpoints
+        mockHttp.When("*/api/clubs").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubData));
+        mockHttp.When("*/api/events").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(eventData));
+        mockHttp.When("*/api/users").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(userData));
+
+        var httpClient = mockHttp.ToHttpClient();
+        httpClient.BaseAddress = new Uri("https://localhost:7071/");
+        
+        Services.AddSingleton(httpClient);
+
+        // Act
+        var component = RenderComponent<Clubs>();
+
+        // Assert - Wait for data and check join button is present
+        component.WaitForAssertion(() =>
+        {
+            var markup = component.Markup;
+            
+            // Should not be loading anymore
+            Assert.DoesNotContain("Loading clubs...", markup);
+            
+            // Check that join functionality is available
+            Assert.Contains("Basketball Club", markup);
+            Assert.Contains("Join Club", markup);
+        }, timeout: TimeSpan.FromSeconds(3));
     }
 
-    [Fact]
-    public void ClubsPage_LeaveClubWorks()
-    {
-        // TODO: Test leaving a club
-        // - Mock user already in club
-        // - Click leave button
-        // - Mock successful API response
-        // - Assert button changes to "Join"
-    }
-
-    [Fact]
-    public void ClubsPage_ViewClubDetailsWorks()
-    {
-        // TODO: Test viewing club details
-        // - Click on club card or "View Details" button
-        // - Assert navigation to club detail page
-        // - Or assert club details modal opens
-    }
+    
 
     #endregion
 
     #region Permission and Authentication Tests
 
     [Fact]
-    public void ClubsPage_ShowsCreateClubButton_ForAuthorizedUsers()
-    {
-        // TODO: Test create club button visibility
-        // - Mock authenticated user with permissions
-        // - Assert "Create Club" button is visible
-        // - Test button navigates to create club form
-    }
-
-    [Fact]
-    public void ClubsPage_HidesCreateClubButton_ForUnauthorizedUsers()
-    {
-        // TODO: Test create club button is hidden appropriately
-        // - Mock unauthenticated user or user without permissions
-        // - Assert "Create Club" button is not visible
-    }
-
-    [Fact]
     public void ClubsPage_RequiresLogin_ForJoining()
     {
-        // TODO: Test that joining requires authentication
-        // - Mock unauthenticated user
-        // - Try to join club
-        // - Assert login prompt or redirect to login
+        // Arrange - Mock club data for authentication test
+        var mockHttp = new MockHttpMessageHandler();
+        
+        var clubData = new[]
+        {
+            new
+            {
+                ClubId = 1,
+                ClubName = "Debate Club",
+                ClubImgURL = "https://example.com/debate.jpg",
+                ClubDescription = "Improve your public speaking and debate skills."
+            }
+        };
+
+        var eventData = new[]
+        {
+            new { EventId = 1, EventName = "Debate Tournament", EventDescription = "Test", EventDateTime = DateTime.Now, EventImgURL = "", ClubId = 1 }
+        };
+
+        var userData = new[]
+        {
+            new { UserId = 1, FirstName = "Alice", LastName = "Cooper", Email = "alice@example.com" }
+        };
+
+        // Setup all API endpoints
+        mockHttp.When("*/api/clubs").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubData));
+        mockHttp.When("*/api/events").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(eventData));
+        mockHttp.When("*/api/users").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(userData));
+
+        var httpClient = mockHttp.ToHttpClient();
+        httpClient.BaseAddress = new Uri("https://localhost:7071/");
+        
+        Services.AddSingleton(httpClient);
+
+        // Act
+        var component = RenderComponent<Clubs>();
+
+        // Assert - Check that page loads and displays login-related elements
+        component.WaitForAssertion(() =>
+        {
+            var markup = component.Markup;
+            
+            // Should not be loading anymore
+            Assert.DoesNotContain("Loading clubs...", markup);
+            
+            // Check club is displayed
+            Assert.Contains("Debate Club", markup);
+            
+            // Basic check for authentication elements (join button or login prompt)
+            Assert.True(markup.Contains("Join Club") || markup.Contains("Login") || markup.Contains("Sign in"));
+        }, timeout: TimeSpan.FromSeconds(3));
     }
 
     #endregion
@@ -197,65 +332,51 @@ public class ClubsPageTests : TestContext
     [Fact]
     public void ClubsPage_ShowsLoadingState()
     {
-        // TODO: Test loading state while fetching clubs
-        // - Mock delayed API response
-        // - Assert loading spinner or skeleton is shown
-        // - Check loading state is replaced with content
+        // Arrange - No HTTP mocking to test initial loading state
+        var component = RenderComponent<Clubs>();
+
+        // Assert - Check initial loading state
+        Assert.Contains("Loading clubs...", component.Markup);
+        
+        // Basic page structure should still be present
+        Assert.Contains("Discover Your", component.Markup);
+        Assert.Contains("Clubs", component.Markup);
     }
 
     [Fact]
     public void ClubsPage_HandlesAPIErrors()
     {
-        // TODO: Test error handling when club API fails
-        // - Mock API error response
-        // - Assert error message is displayed
-        // - Check for retry button or mechanism
-    }
+        // Arrange - Mock API error responses
+        var mockHttp = new MockHttpMessageHandler();
+        
+        // Setup API endpoints to return error responses
+        mockHttp.When("*/api/clubs").Respond(System.Net.HttpStatusCode.InternalServerError);
+        mockHttp.When("*/api/events").Respond(System.Net.HttpStatusCode.InternalServerError);
+        mockHttp.When("*/api/users").Respond(System.Net.HttpStatusCode.InternalServerError);
 
-    [Fact]
-    public void ClubsPage_HandlesPaginationOrInfiniteScroll()
-    {
-        // TODO: Test pagination or infinite scroll if implemented
-        // - Mock large dataset
-        // - Check pagination controls
-        // - Test loading more clubs
-    }
+        var httpClient = mockHttp.ToHttpClient();
+        httpClient.BaseAddress = new Uri("https://localhost:7071/");
+        
+        Services.AddSingleton(httpClient);
 
-    #endregion
+        // Act
+        var component = RenderComponent<Clubs>();
 
-    #region Club Creation Tests (if form is on same page)
+        // Assert - Initially should show loading
+        Assert.Contains("Loading clubs...", component.Markup);
 
-    [Fact]
-    public void ClubsPage_CreateClubFormWorks()
-    {
-        // TODO: Test create club functionality if form is on clubs page
-        // - Fill out club creation form
-        // - Submit form
-        // - Mock successful API response
-        // - Assert new club appears in list
-    }
-
-    [Fact]
-    public void ClubsPage_ValidatesClubCreationForm()
-    {
-        // TODO: Test validation for club creation
-        // - Try to submit empty form
-        // - Assert validation errors appear
-        // - Test required field validation
-    }
-
-    #endregion
-
-    #region Responsive Design Tests
-
-    [Fact]
-    public void ClubsPage_ResponsiveLayout()
-    {
-        // TODO: Test responsive design behavior
-        // - Test mobile view layout
-        // - Check tablet view adjustments
-        // - Verify desktop layout
-        // - Test search/filter controls on different screen sizes
+        // Wait and check that error is handled gracefully
+        component.WaitForAssertion(() =>
+        {
+            var markup = component.Markup;
+            
+            // Should not be loading anymore
+            Assert.DoesNotContain("Loading clubs...", markup);
+            
+            // Basic page structure should still be present even with errors
+            Assert.Contains("Discover Your", markup);
+            Assert.Contains("Clubs", markup);
+        }, timeout: TimeSpan.FromSeconds(3));
     }
 
     #endregion

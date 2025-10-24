@@ -88,18 +88,6 @@ public class MemberApi(HttpClient http)
             throw;
         }
     }
-      // TODO: Implement methods to call the Member API endpoints
-
-
-    // Examples:
-    // public async Task<List<Member>> GetClubMembersAsync(int clubId, CancellationToken ct = default)
-    // public async Task<List<Member>> GetUserMembershipsAsync(int userId, CancellationToken ct = default)
-    // public async Task<Member> AddMemberToClubAsync(int userId, int clubId,CancellationToken ct = default)
-    //
-   
-    
-    // Use ClubApi.cs as a reference for the structure
-    // Remember to use the correct HTTP methods (GET, POST, PUT, DELETE)
 
 }
 
