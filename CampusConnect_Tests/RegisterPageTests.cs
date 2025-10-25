@@ -290,12 +290,14 @@ public class RegisterPageTests : TestContext
         var emailInput = component.Find("input#email");
         var passwordInput = component.Find("input#password");
         var confirmPasswordInput = component.Find("input#confirm");
+        var acceptCheckbox = component.Find("input[type='checkbox']");
 
         firstNameInput.Change("John");
         lastNameInput.Change("Doe");
         emailInput.Change("test@example.com");
         passwordInput.Change("password123");
         confirmPasswordInput.Change("password123");
+        acceptCheckbox.Change(true); // Check the accept terms checkbox
 
         form.Submit();
 
@@ -342,6 +344,7 @@ public class RegisterPageTests : TestContext
         var emailInput = component.Find("input#email");
         var passwordInput = component.Find("input#password");
         var confirmPasswordInput = component.Find("input#confirm");
+        var acceptCheckbox = component.Find("input[type='checkbox']");
         var form = component.Find("form");
 
         firstNameInput.Change("John");
@@ -349,6 +352,7 @@ public class RegisterPageTests : TestContext
         emailInput.Change("existing@example.com");
         passwordInput.Change("password123");
         confirmPasswordInput.Change("password123");
+        acceptCheckbox.Change(true); // Check the accept terms checkbox
 
         form.Submit();
 
@@ -379,6 +383,7 @@ public class RegisterPageTests : TestContext
         var emailInput = component.Find("input#email");
         var passwordInput = component.Find("input#password");
         var confirmPasswordInput = component.Find("input#confirm");
+        var acceptCheckbox = component.Find("input[type='checkbox']");
         var form = component.Find("form");
 
         firstNameInput.Change("John");
@@ -386,6 +391,7 @@ public class RegisterPageTests : TestContext
         emailInput.Change("test@example.com");
         passwordInput.Change("password123");
         confirmPasswordInput.Change("password123");
+        acceptCheckbox.Change(true); // Check the accept terms checkbox
 
         form.Submit();
 
@@ -432,6 +438,9 @@ public class RegisterPageTests : TestContext
         emailInput.Change("test@example.com");
         passwordInput.Change("password123");
         confirmPasswordInput.Change("password123");
+        
+        var acceptCheckbox = component.Find("input[type='checkbox']");
+        acceptCheckbox.Change(true); // Check the accept terms checkbox
 
         form.Submit();
 
