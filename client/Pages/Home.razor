@@ -4,6 +4,7 @@
 @inject ClubApi ClubApi
 @inject EventApi EventApi
 @inject UserApi UserApi
+@inject MemberApi MemberApi
 @inject AuthService AuthService
 @inject IJSRuntime JS
 
@@ -64,7 +65,7 @@
                             <h3>@club.ClubName</h3>
                             <p>@(club.ClubDescription ?? "No description available.")</p>
                             <div class="actions">
-                                <a href="#" class="btn">Join Club</a>
+                                <button class="btn" @onclick="() => HandleJoinClubAsync(club.ClubId)">Join Club</button>
                             </div>
                         </div>
                     </article>
@@ -223,6 +224,40 @@
     }
 
     private int CurrentUserId => AuthService.CurrentUser?.UserId ?? 0;
+
+    private async Task HandleJoinClubAsync(int clubId)
+    {
+        if (!AuthService.IsAuthenticated || CurrentUserId == 0)
+        {
+            await JS.InvokeVoidAsync("alert", "Please log in to join clubs.");
+            return;
+        }
+
+        try
+        {
+            Console.WriteLine($"Attempting to join club {clubId} with user {CurrentUserId}");
+            var member = await MemberApi.AddMemberToClubAsync(CurrentUserId, clubId);
+            if (member != null)
+            {
+                await JS.InvokeVoidAsync("alert", "Successfully joined the club!");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Failed to join club - no member returned");
+            }
+        }
+        catch (HttpRequestException httpEx)
+        {
+            Console.WriteLine($"HTTP Error: {httpEx.Message}");
+            await JS.InvokeVoidAsync("alert", $"Error joining club: {httpEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"General Error: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", $"Error joining club: {ex.Message}");
+        }
+    }
+
 
     private async Task HandleRsvpClickAsync(int eventId, int clubId)
     {

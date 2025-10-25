@@ -734,3 +734,27 @@ a {
         padding: 22px;
     }
 }
+
+/* ======================
+      Alert Messages
+/*==========================*/
+.alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 16px 0;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid;
+}
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.alert-error {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}

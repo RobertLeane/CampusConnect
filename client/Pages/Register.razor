@@ -16,7 +16,6 @@
 <main class="container auth-container">
     <EditForm Model="model" OnValidSubmit="OnSubmit">
         <DataAnnotationsValidator />
-        <ValidationSummary />
         <div class="auth-card">
             <h2>Sign Up</h2>
 
@@ -50,20 +49,10 @@
                 <InputText id="confirm" @bind-Value="confirm" type="password" placeholder="Repeat your password" />
                 @if (!string.IsNullOrEmpty(confirmError))
                 {
-                    <div class="validation-message">@confirmError</div>
+                    <div class="alert alert-error">@confirmError</div>
                 }
             </div>
 
-            <div class="auth-field">
-                <label class="form-check">
-                    <input type="checkbox" @bind="accept" />
-                    <span>I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</span>
-                </label>
-                @if (!string.IsNullOrEmpty(acceptError))
-                {
-                    <div class="validation-message">@acceptError</div>
-                }
-            </div>
 
             <div class="auth-field">
                 <button type="submit" class="btn" disabled="@submitting">
@@ -73,7 +62,9 @@
 
             @if (!string.IsNullOrEmpty(serverMessage))
             {
-                <p class="auth-links">@serverMessage</p>
+                <div class="@(GetMessageClass())">
+                    @serverMessage
+                </div>
             }
 
             <p class="auth-links">
@@ -86,23 +77,25 @@
 @code {
     private RegisterVm model = new();
     private string confirm = string.Empty;
-    private bool accept;
+
     private bool submitting;
     private string? serverMessage;
-    private string? acceptError;
+    private bool isSuccess;
+
     private string? confirmError;
+
+    private string GetMessageClass()
+    {
+        return isSuccess ? "alert alert-success" : "alert alert-error";
+    }
 
     private async Task OnSubmit()
     {
         serverMessage = null;
-        acceptError = null;
         confirmError = null;
+        isSuccess = false;
 
-        if (!accept)
-        {
-            acceptError = "You must accept the terms to continue.";
-            return;
-        }
+       
         if (!string.Equals(model.Password, confirm, StringComparison.Ordinal))
         {
             confirmError = "Passwords do not match.";
@@ -123,10 +116,10 @@
             var resp = await Http.PostAsJsonAsync("/api/auth/register", payload);
             if (resp.IsSuccessStatusCode)
             {
-                serverMessage = "Account created successfully. Redirecting to login...";
+                isSuccess = true;
+                serverMessage = "Account created successfully! Redirecting to login...";
                 model = new();
                 confirm = string.Empty;
-                accept = false;
                 
                 // Navigate to login after a brief delay
                 await Task.Delay(1500);
@@ -134,22 +127,25 @@
             }
             else if ((int)resp.StatusCode == 409)
             {
-                serverMessage = "That email is already registered.";
+                isSuccess = false;
+                serverMessage = "An account with this email already exists. Please use a different email or try logging in.";
             }
             else if ((int)resp.StatusCode == 400)
             {
+                isSuccess = false;
                 var text = await resp.Content.ReadAsStringAsync();
-                serverMessage = $"Validation failed: {text}";
+                serverMessage = "Please check your information and try again.";
             }
             else
             {
-                var text = await resp.Content.ReadAsStringAsync();
-                serverMessage = $"Registration failed: {(int)resp.StatusCode} {text}";
+                isSuccess = false;
+                serverMessage = "Registration failed. Please try again later.";
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            serverMessage = $"Error: {ex.Message}";
+            isSuccess = false;
+            serverMessage = "Unable to create account. Please check your internet connection and try again.";
         }
         finally
         {
