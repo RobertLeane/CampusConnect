@@ -64,30 +64,6 @@ public class HomePageTests : TestContext
 
     #endregion
 
-    #region Features Section Tests
-
-    [Fact]
-    public void HomePage_DisplaysFeatureHighlights()
-    {
-        // TODO: Test feature showcase section
-        // - Check club management features
-        // - Check event organization features
-        // - Check member collaboration features
-        // - Verify feature icons and descriptions
-    }
-
-    [Fact]
-    public void HomePage_HasAboutSection()
-    {
-        // TODO: Test about/description section
-        // - Check platform description
-        // - Verify benefits listed
-        // - Check target audience messaging
-        // - Test section layout and readability
-    }
-
-    #endregion
-
     #region Navigation Tests
 
     [Fact]
@@ -105,8 +81,8 @@ public class HomePageTests : TestContext
     {
         // TODO: Test personalized content for logged in users
         // - Mock authenticated user
-        // - Check for personalized greeting
-        // - Verify "Go to Dashboard" instead of "Sign Up"
+        // - Check for dashboard in nav bar
+        
         // - Test quick access to user's clubs/events
     }
 
