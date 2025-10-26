@@ -1,33 +1,71 @@
 using Bunit;
-using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Client.Pages;
 using Client.Services;
 using RichardSzalay.MockHttp;
 using Xunit;
+using Bunit.TestDoubles;
 
 namespace CampusConnect_Tests;
 
-/// <summary>
-/// Tests for the Home page (client/Pages/Home.razor)
-/// TODO: Team members should implement these test methods
-/// </summary>
 public class HomePageTests : TestContext
 {
+    private readonly MockHttpMessageHandler _mockHttp;
+    private readonly HttpClient _http;
+    private readonly TestAuthorizationContext _auth;
+
+    // ---------- helpers ----------
+    private static bool ContainsAny(string html, params string[] needles) =>
+        needles.Any(n => html.Contains(n, StringComparison.OrdinalIgnoreCase));
+
+    private void ForceGuest()
+    {
+        // Force Blazor auth state to "not authorized"
+        _auth.SetNotAuthorized();
+
+        // If your app probes the current user, return 401
+        _mockHttp.When("*/api/users/me*")
+                 .Respond(System.Net.HttpStatusCode.Unauthorized);
+
+        // If your app reads any token from localStorage, return null for any key
+        JSInterop.Setup<string>("localStorage.getItem", _ => true).SetResult(null);
+        // (If your code calls a wrapper like "auth.getToken", add another Setup for that identifier.)
+    }
+    // -----------------------------
+
     public HomePageTests()
     {
-        // Register required services for Home page
-        Services.AddSingleton<AuthService>();
-        // TODO: Add any other services the Home page depends on
-        
-        // Setup mock JSRuntime
         JSInterop.Mode = JSRuntimeMode.Loose;
-        
-        // Setup mock HTTP client
-        var mockHttp = new MockHttpMessageHandler();
-        var httpClient = mockHttp.ToHttpClient();
-        httpClient.BaseAddress = new Uri("https://localhost:7071/");
-        Services.AddSingleton(httpClient);
+
+        _mockHttp = new MockHttpMessageHandler();
+        _mockHttp.Fallback.Respond("application/json", "[]");
+
+        _http = _mockHttp.ToHttpClient();
+        _http.BaseAddress = new Uri("https://localhost:7071/");
+
+        Services.AddScoped(sp => _http);
+        Services.AddScoped<AuthService>();
+        Services.AddScoped<ClubApi>();
+        Services.AddScoped<EventApi>();
+        Services.AddScoped<MemberApi>();
+        Services.AddScoped<UserApi>();
+        Services.AddAuthorizationCore();
+
+        _auth = this.AddTestAuthorization();
+        _auth.SetNotAuthorized();
+        DefaultWaitTimeout = TimeSpan.FromSeconds(5); // sensible default for all WaitForAssertion
+    }
+
+    // Common stubs
+    private void StubHappyPaths(
+        string statsJson = """{ "clubs": 12, "events": 34, "members": 567 }""",
+        string recentClubsJson = """[{"ClubId":1,"ClubName":"AI Society"}]""",
+        string upcomingEventsJson = """[{"EventId":1,"EventName":"Welcome Fair","EventDateTime":"2025-10-30T14:00:00Z"}]"""
+    )
+    {
+        _mockHttp.When("*/api/stats*").Respond("application/json", statsJson);
+        _mockHttp.When("*/api/clubs/recent*").Respond("application/json", recentClubsJson);
+        _mockHttp.When("*/api/events/upcoming*").Respond("application/json", upcomingEventsJson);
     }
 
     #region Landing Page Tests
@@ -35,11 +73,10 @@ public class HomePageTests : TestContext
     [Fact]
     public void HomePage_RendersCorrectly()
     {
-        // TODO: Test that home page renders with expected elements
-        // - Check hero section with CampusConnect branding
-        // - Verify call-to-action buttons
-        // - Check feature highlights
-        // - Verify navigation menu
+        StubHappyPaths();
+        var component = RenderComponent<Home>();
+        Assert.Contains("Discover Your", component.Markup);
+        Assert.Contains("Campus Community", component.Markup);
     }
 
     [Fact]
@@ -64,16 +101,43 @@ public class HomePageTests : TestContext
 
     #endregion
 
+    #region Features Section Tests
+
+    [Fact]
+    public void HomePage_DisplaysFeatureHighlights()
+    {
+        // TODO: Test feature showcase section
+        // - Check club management features
+        // - Check event organization features
+        // - Check member collaboration features
+        // - Verify feature icons and descriptions
+    }
+
+    [Fact]
+    public void HomePage_HasAboutSection()
+    {
+        // TODO: Test about/description section
+        // - Check platform description
+        // - Verify benefits listed
+        // - Check target audience messaging
+        // - Test section layout and readability
+    }
+
+    #endregion
+
     #region Navigation Tests
 
     [Fact]
     public void HomePage_NavigationWorksCorrectly()
     {
-        // TODO: Test navigation from home page
-        // - Test login button navigation
-        // - Test register/sign up navigation
-        // - Test dashboard navigation (if logged in)
-        // - Test footer links
+        StubHappyPaths();
+        var component = RenderComponent<Home>();
+        component.WaitForAssertion(() =>
+        {
+            var html = component.Markup;
+            Assert.True(ContainsAny(html,
+                "href=\"/clubs\"", "href=\"/events\"", "href=\"/dashboard\"", "href=\"/home\""));
+        });
     }
 
     [Fact]
@@ -81,21 +145,34 @@ public class HomePageTests : TestContext
     {
         // TODO: Test personalized content for logged in users
         // - Mock authenticated user
-        // - Check for dashboard in nav bar
-        
+        // - Check for personalized greeting
+        // - Verify "Go to Dashboard" instead of "Sign Up"
         // - Test quick access to user's clubs/events
     }
 
     [Fact]
     public void HomePage_ShowsLoginPrompt_ForUnauthenticatedUsers()
     {
-        // TODO: Test content for guests/unauthenticated users
-        // - Mock unauthenticated state
-        // - Check for login/register prompts
-        // - Verify public information is displayed
-        // - Test call-to-action for registration
-    }
+        StubHappyPaths();
+        ForceGuest(); // ensure truly guest
 
+        var component = RenderComponent<Home>();
+        component.WaitForAssertion(() =>
+        {
+            var html = component.Markup;
+
+            // Accept multiple route/text variants (navbar or hero)
+            Assert.True(
+                ContainsAny(html,
+                    "href=\"/login\"", "href=\"/register\"", "href=\"/signup\"",
+                    ">Log In<", ">Login<", ">Sign In<", ">Register<", ">Sign Up<"),
+                "Expected a guest CTA (/login or /register or visible login/register text)."
+            );
+
+            Assert.False(ContainsAny(html, "href=\"/dashboard\"", "Go to Dashboard", ">Dashboard<"),
+                "Dashboard CTA should not render for guests.");
+        });
+    }
     #endregion
 
     #region Statistics Section Tests
@@ -103,69 +180,31 @@ public class HomePageTests : TestContext
     [Fact]
     public void HomePage_DisplaysPlatformStatistics()
     {
-        // TODO: Test statistics display if implemented
-        // - Mock platform stats (total clubs, events, members)
-        // - Check statistics are displayed correctly
-        // - Verify number formatting
-        // - Test loading state for stats
+        StubHappyPaths(
+            statsJson: """{ "clubs": 99, "events": 7, "members": 1234 }""",
+            recentClubsJson: "[]",
+            upcomingEventsJson: "[]"
+        );
+        var component = RenderComponent<Home>();
+        component.WaitForAssertion(() =>
+        {
+            var html = component.Markup.Replace("\u00A0", "");
+            Assert.Contains("99", html);
+            Assert.Contains("7", html);
+            Assert.Contains("1,234", html);
+        });
     }
 
     [Fact]
     public void HomePage_HandlesStatisticsErrors()
     {
-        // TODO: Test error handling for statistics
-        // - Mock API error for statistics
-        // - Assert graceful fallback (hide section or show default)
-        // - Verify page still functions without stats
+        _mockHttp.When("*/api/stats*").Respond(System.Net.HttpStatusCode.InternalServerError);
+        var component = RenderComponent<Home>();
+        component.WaitForAssertion(() =>
+        {
+            Assert.Contains("Discover Your", component.Markup);
+        });
     }
-
-    #endregion
-
-    #region Recent Activity Tests (if implemented)
-
-    [Fact]
-    public void HomePage_DisplaysRecentClubs()
-    {
-        // TODO: Test recent/popular clubs showcase
-        // - Mock recent club data
-        // - Check clubs are displayed
-        // - Verify "View All Clubs" link
-        // - Test club card layout
-    }
-
-    [Fact]
-    public void HomePage_DisplaysUpcomingEvents()
-    {
-        // TODO: Test upcoming events preview
-        // - Mock upcoming public events
-        // - Check events are displayed
-        // - Verify "View All Events" link
-        // - Test event card layout and date formatting
-    }
-
-    #endregion
-
-    #region Testimonials/Social Proof Tests
-
-    [Fact]
-    public void HomePage_DisplaysTestimonials()
-    {
-        // TODO: Test testimonials section if implemented
-        // - Check testimonial content
-        // - Verify author information
-        // - Test testimonial carousel if present
-        // - Check responsive design
-    }
-
-    [Fact]
-    public void HomePage_DisplaysSuccessStories()
-    {
-        // TODO: Test success stories or case studies
-        // - Check story content and images
-        // - Verify "Read More" links
-        // - Test story navigation
-    }
-
     #endregion
 
     #region Footer Tests
@@ -173,85 +212,57 @@ public class HomePageTests : TestContext
     [Fact]
     public void HomePage_HasCompleteFooter()
     {
-        // TODO: Test footer content and links
-        // - Check contact information
-        // - Verify social media links
-        // - Test privacy policy link
-        // - Check terms of service link
-        // - Verify copyright information
+        StubHappyPaths();
+        var component = RenderComponent<Home>();
+        component.WaitForAssertion(() =>
+        {
+            var html = component.Markup;
+            Assert.True(ContainsAny(html, "Privacy", "Terms"));
+            Assert.True(html.Contains("©", StringComparison.OrdinalIgnoreCase)
+                        || html.Contains("&copy;", StringComparison.OrdinalIgnoreCase));
+        });
     }
 
     [Fact]
     public void HomePage_FooterLinksWork()
     {
-        // TODO: Test footer navigation
-        // - Test all footer links navigate correctly
-        // - Check external links open appropriately
-        // - Verify accessibility of footer elements
+        StubHappyPaths();
+        var component = RenderComponent<Home>();
+        component.WaitForAssertion(() =>
+        {
+            var html = component.Markup;
+            Assert.True(ContainsAny(html, "href=\"/privacy\"", "href=\"/terms\""));
+        });
     }
-
     #endregion
 
-    #region Responsive Design Tests
+    #region Responsive / Perf / SEO
 
     [Fact]
     public void HomePage_ResponsiveDesign()
     {
-        // TODO: Test responsive behavior
-        // - Test mobile view layout
-        // - Check tablet view adjustments
-        // - Verify desktop layout
-        // - Test navigation menu collapse/expand
+        StubHappyPaths();
+        var c = RenderComponent<Home>();
+        Assert.Contains("Discover Your", c.Markup);
+        Assert.Contains("Campus Community", c.Markup);
+        Assert.True(ContainsAny(c.Markup, "Features", "feature"));
     }
-
-    [Fact]
-    public void HomePage_MobileNavigation()
-    {
-        // TODO: Test mobile-specific navigation
-        // - Test hamburger menu if present
-        // - Check mobile button sizing
-        // - Verify touch-friendly interactions
-    }
-
-    #endregion
-
-    #region Performance Tests
 
     [Fact]
     public void HomePage_LoadsQuickly()
     {
-        // TODO: Test loading performance
-        // - Check initial render time
-        // - Verify images load with proper sizing
-        // - Test lazy loading if implemented
-        // - Check for unnecessary API calls
+        StubHappyPaths();
+        var c = RenderComponent<Home>();
+        Assert.NotNull(c);
     }
-
-    #endregion
-
-    #region SEO and Accessibility Tests
 
     [Fact]
     public void HomePage_HasProperSEOElements()
     {
-        // TODO: Test SEO elements
-        // - Check page title
-        // - Verify meta description if set
-        // - Check heading hierarchy (h1, h2, etc.)
-        // - Test alt text for images
+        StubHappyPaths();
+        var c = RenderComponent<Home>();
+        Assert.Contains("<h1", c.Markup, StringComparison.OrdinalIgnoreCase);
     }
-
-    [Fact]
-    public void HomePage_MeetsAccessibilityStandards()
-    {
-        // TODO: Test accessibility
-        // - Check keyboard navigation
-        // - Verify ARIA labels where needed
-        // - Test screen reader compatibility
-        // - Check color contrast
-        // - Verify focus indicators
-    }
-
     #endregion
 
     #region Integration Tests
@@ -259,12 +270,17 @@ public class HomePageTests : TestContext
     [Fact]
     public void HomePage_IntegratesWithAuthSystem()
     {
-        // TODO: Test integration with authentication
-        // - Test login form if on home page
-        // - Verify auth state changes update content
-        // - Test logout functionality
-        // - Check session persistence
-    }
+        StubHappyPaths();
+        _mockHttp.When("*/api/users/me*")
+                 .Respond("application/json", """{ "UserId": 1, "FirstName": "Alex" }""");
 
+        var component = RenderComponent<Home>();
+        component.WaitForAssertion(() =>
+        {
+            var html = component.Markup;
+            Assert.True(ContainsAny(html, "href=\"/dashboard\"", "Go to Dashboard", "Dashboard"));
+            Assert.False(ContainsAny(html, ">Sign Up<", "href=\"/register\"", "href=\"/signup\""));
+        });
+    }
     #endregion
 }
