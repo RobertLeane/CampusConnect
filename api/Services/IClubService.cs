@@ -8,9 +8,4 @@ public interface IClubService
     Task<ClubDto?> GetClubByIdAsync(int clubId);
     Task<ClubDto> CreateClubAsync(ClubDto club);
     Task<List<ClubDto>> GetUserJoinedClubsAsync(int userId);
-
-
-
-    //Task<ClubDto?> UpdateClubAsync(int clubId, ClubDto club);
-    //Task<bool> DeleteClubAsync(int clubId);
 }

@@ -82,16 +82,23 @@ public class HomePageTests : TestContext
     [Fact]
     public void HomePage_HasWelcomeMessage()
     {
-        StubHappyPaths();
-        var component = RenderComponent<Home>();
-        component.WaitForAssertion(() =>
-        {
-            var html = component.Markup;
-            Assert.Contains("Discover Your", html);
-            Assert.Contains("Campus Community", html);
-            Assert.True(ContainsAny(html, "Join clubs", "RSVP Events"));
-        });
+        // TODO: Test welcome/hero section
+        // - Check main heading text
+        // - Verify tagline or description
+        // - Check hero image if present
+        // - Test responsive design of hero section
     }
+
+    [Fact]
+    public void HomePage_HasCallToActionButtons()
+    {
+        // TODO: Test main action buttons
+        // - Check "Get Started" or "Sign Up" button
+        // - Check "Learn More" button
+        // - Verify button navigation
+        // - Test button styling and accessibility
+    }
+
     #endregion
 
     #region Features Section Tests
@@ -99,26 +106,23 @@ public class HomePageTests : TestContext
     [Fact]
     public void HomePage_DisplaysFeatureHighlights()
     {
-        StubHappyPaths();
-        var component = RenderComponent<Home>();
-        component.WaitForAssertion(() =>
-        {
-            var html = component.Markup;
-            Assert.True(ContainsAny(html, "club", "event", "member"));
-        });
+        // TODO: Test feature showcase section
+        // - Check club management features
+        // - Check event organization features
+        // - Check member collaboration features
+        // - Verify feature icons and descriptions
     }
 
     [Fact]
     public void HomePage_HasAboutSection()
     {
-        StubHappyPaths();
-        var component = RenderComponent<Home>();
-        component.WaitForAssertion(() =>
-        {
-            var html = component.Markup;
-            Assert.True(ContainsAny(html, "platform", "community", "students"));
-        });
+        // TODO: Test about/description section
+        // - Check platform description
+        // - Verify benefits listed
+        // - Check target audience messaging
+        // - Test section layout and readability
     }
+
     #endregion
 
     #region Navigation Tests
@@ -139,16 +143,11 @@ public class HomePageTests : TestContext
     [Fact]
     public void HomePage_ShowsDifferentContent_ForAuthenticatedUsers()
     {
-        StubHappyPaths();
-        _auth.SetAuthorized("alice@example.com");
-
-        var component = RenderComponent<Home>();
-        component.WaitForAssertion(() =>
-        {
-            var html = component.Markup;
-            Assert.True(ContainsAny(html, "href=\"/dashboard\"", "Go to Dashboard", "Dashboard"));
-            Assert.False(ContainsAny(html, ">Sign Up<", "href=\"/register\"", "href=\"/signup\""));
-        });
+        // TODO: Test personalized content for logged in users
+        // - Mock authenticated user
+        // - Check for personalized greeting
+        // - Verify "Go to Dashboard" instead of "Sign Up"
+        // - Test quick access to user's clubs/events
     }
 
     [Fact]

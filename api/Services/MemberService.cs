@@ -16,15 +16,6 @@ public class MemberService : IMemberService
         _configuration = configuration;
     }
 
-    // TODO: Implement all methods from IMemberService interface
-    // Use the ClubService.cs as a reference for database operations
-    // Remember to:
-    // 1. Check for null/empty server and database
-    // 2. Use SqlService.OpenTokenConnectionAsync for database connections
-    // 3. Use parameterized queries to prevent SQL injection
-    // 4. Handle exceptions and log errors
-    // 5. Return appropriate data types as defined in the interface
-
     public async Task<List<MemberDto>> GetMembersByClubIdAsync(int clubId)
     {
         try
@@ -182,11 +173,4 @@ public class MemberService : IMemberService
             throw;
         }
     }
-
-   /* public Task<bool> RemoveMemberFromClubAsync(int memberId)
-    {
-        _logger.LogInformation("RemoveMemberFromClubAsync called for member {MemberId}", memberId);
-        throw new NotImplementedException("RemoveMemberFromClubAsync is not implemented yet");
-    }
-    */
 }
