@@ -5,7 +5,5 @@ namespace Client.Models
         public int MemberId { get; set; }
         public int EventId { get; set; }
         public int ClubId { get; set; }
-        
-        // Optional: UserName, EventName for display purposes
     }
 }

@@ -17,8 +17,6 @@ public class EventParticipantService : IEventParticipantService
         _configuration = configuration;
     }
 
-    // TODO: Implement all methods from IEventParticipantService interface  
-
     public async Task<List<EventParticipantDto>> GetActiveEventParticipantsAsync()
     {
         try

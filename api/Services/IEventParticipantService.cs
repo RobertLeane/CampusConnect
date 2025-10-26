@@ -11,11 +11,5 @@ public interface IEventParticipantService
     Task<int?> GetClubIdByEventIdAsync(int eventId);
     Task<int?> GetMemberIdByUserIdAndClubIdAsync(int userId, int clubId);
     Task RegisterUserForEventAsync(int memberId, int clubId, int eventId);
-    
-    // TODO: Add method signatures for EventParticipant operations
-    // Examples:
-    // Task<List<EventParticipantDto>> GetParticipantsByEventIdAsync(int eventId);
-    // Task<List<EventParticipantDto>> GetEventsByUserIdAsync(int userId);
-    // Task<EventParticipantDto?> GetParticipantByIdAsync(int participantId);
-    // Task<EventParticipantDto> RegisterUserForEventAsync(int userId, int eventId);
+
 }
