@@ -15,19 +15,29 @@
         <p>Join clubs, attend events, and connect with fellow students. Your college experience starts here.</p>
 
         <div class="stats">
-        <div class="stat">
-          <div class="stat__num">@clubsCount.Count</div>
-          <div class="stat__label">Active Clubs</div>
-            </div>
-          <div class="stat">
-              <div class="stat__num">@eventsCount.Count</div>
-              <div class="stat__label">Events</div>
-          </div>
-          <div class="stat">
-              <div class="stat__num">@usersCount.Count</div>
-              <div class="stat__label">Active Members</div>
-          </div>
-      </div>
+            @if (isLoading)
+            {
+                <div class="stat">
+                    <div class="stat__num">...</div>
+                    <div class="stat__label">Loading...</div>
+                </div>
+            }
+            else
+            {
+                <div class="stat">
+                    <div class="stat__num">@clubsCount.Count</div>
+                    <div class="stat__label">Active Clubs</div>
+                </div>
+                <div class="stat">
+                    <div class="stat__num">@eventsCount.Count</div>
+                    <div class="stat__label">Events</div>
+                </div>
+                <div class="stat">
+                    <div class="stat__num">@usersCount.Count</div>
+                    <div class="stat__label">Active Members</div>
+                </div>
+            }
+        </div>
     </div>
 </section>
 

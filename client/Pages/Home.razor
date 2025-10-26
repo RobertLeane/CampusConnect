@@ -139,7 +139,6 @@
     private Dictionary<int, string> clubNames = new();
     private bool isLoading = true;
     private bool eventsLoading = true;
-    private bool usersLoading = true;
     private string? errorMessage = null;
 
     protected override async Task OnInitializedAsync()
@@ -216,10 +215,6 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading users: {ex.Message}");
-        }
-        finally
-        {
-            usersLoading = false;
         }
     }
 

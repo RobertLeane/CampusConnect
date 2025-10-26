@@ -30,6 +30,8 @@ public class LoginPageTests : TestContext
         Services.AddSingleton(httpClient);
     }
 
+    #region Rendering Tests
+
     [Fact]
     public void LoginPage_RendersCorrectly()
     {
@@ -74,12 +76,16 @@ public class LoginPageTests : TestContext
         // Assert
         var forgotPasswordLink = component.Find("a[href='/forgot-password']");
         var registerLink = component.Find("a[href='/register']");
-        
+
         Assert.NotNull(forgotPasswordLink);
         Assert.NotNull(registerLink);
         Assert.Equal("Forgot password?", forgotPasswordLink.TextContent);
         Assert.Equal("Create an account", registerLink.TextContent);
     }
+    
+    #endregion
+
+    #region Validation Tests
 
     [Fact]
     public void LoginPage_ShowsValidationErrors_WhenFieldsEmpty()
@@ -127,6 +133,8 @@ public class LoginPageTests : TestContext
         Assert.Equal("test@example.com", emailInput.GetAttribute("value"));
         Assert.Equal("password123", passwordInput.GetAttribute("value"));
     }
+
+    #endregion
 
     [Fact]
     public void LoginPage_SuccessfulLogin_NavigatesToHome()
@@ -196,7 +204,7 @@ public class LoginPageTests : TestContext
         // Assert - Wait for error message to appear
         component.WaitForAssertion(() =>
         {
-            var errorText = component.Find("p[style*='color: red']");
+            var errorText = component.Find(".alert.alert-error");
             Assert.Contains("Invalid email or password", errorText.TextContent);
         });
     }
@@ -228,7 +236,7 @@ public class LoginPageTests : TestContext
         // Assert - Wait for error message to appear
         component.WaitForAssertion(() =>
         {
-            var errorText = component.Find("p[style*='color: red']");
+            var errorText = component.Find(".alert.alert-error");
             Assert.Contains("Invalid email or password", errorText.TextContent);
         });
     }
