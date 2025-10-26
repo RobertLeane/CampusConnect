@@ -204,7 +204,7 @@ public class LoginPageTests : TestContext
         // Assert - Wait for error message to appear
         component.WaitForAssertion(() =>
         {
-            var errorText = component.Find("p[style*='color: red']");
+            var errorText = component.Find(".alert.alert-error");
             Assert.Contains("Invalid email or password", errorText.TextContent);
         });
     }
@@ -236,7 +236,7 @@ public class LoginPageTests : TestContext
         // Assert - Wait for error message to appear
         component.WaitForAssertion(() =>
         {
-            var errorText = component.Find("p[style*='color: red']");
+            var errorText = component.Find(".alert.alert-error");
             Assert.Contains("Invalid email or password", errorText.TextContent);
         });
     }
