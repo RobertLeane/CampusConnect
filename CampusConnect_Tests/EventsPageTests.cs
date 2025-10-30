@@ -46,16 +46,6 @@ public class EventsPageTests : TestContext
         Assert.Contains("Active Members", component.Markup);
     }
 
-    [Fact]
-    public void EventsPage_HasDateAndFilterControls()
-    {
-        // TODO: Test date filtering and other controls
-        // - Check date range picker
-        // - Check event type/category filter
-        // - Check location filter
-        // - Check search input for event names
-    }
-
     #endregion
 
     #region Event List Display Tests
@@ -197,58 +187,8 @@ public class EventsPageTests : TestContext
     Assert.Contains("Bring your camera for a campus photo tour.", markup);
 }
 
-    [Fact]
-    public void EventsPage_GroupsEventsByDate()
-    {
-        // TODO: Test event grouping by date if implemented
-        // - Mock events across different dates
-        // - Assert events are grouped by day/week/month
-        // - Check date headers are displayed
-    }
-
     #endregion
 
-    #region Date and Filter Tests
-
-    [Fact]
-    public void EventsPage_DateFilterWorks()
-    {
-        // TODO: Test date range filtering
-        // - Mock events across multiple dates
-        // - Select date range
-        // - Assert only events in range are displayed
-        // - Test single date selection
-    }
-
-    [Fact]
-    public void EventsPage_CategoryFilterWorks()
-    {
-        // TODO: Test event category/type filtering
-        // - Mock events with different categories
-        // - Select category filter
-        // - Assert only events in that category are shown
-    }
-
-    [Fact]
-    public void EventsPage_LocationFilterWorks()
-    {
-        // TODO: Test location-based filtering
-        // - Mock events at different locations
-        // - Select location filter
-        // - Assert only events at that location are shown
-    }
-
-    [Fact]
-    public void EventsPage_SearchFilterWorks()
-    {
-        // TODO: Test event search functionality
-        // - Mock events with different names/descriptions
-        // - Enter search term
-        // - Assert filtered results are displayed
-        // - Test case-insensitive search
-    }
-
-    #endregion
 
     #region Event Actions Tests
 
@@ -301,16 +241,6 @@ public class EventsPageTests : TestContext
 }
 
     [Fact]
-    public void EventsPage_CancelRSVPWorks()
-    {
-        // TODO: Test canceling RSVP
-        // - Mock user already registered for event
-        // - Click cancel RSVP button
-        // - Mock successful API response
-        // - Assert button changes back to "RSVP"
-    }
-
-    [Fact]
     public void EventsPage_ViewEventDetailsWorks()
     {
        // arrange
@@ -352,49 +282,6 @@ public class EventsPageTests : TestContext
 
     #endregion
 
-    #region Calendar View Tests (if implemented)
-
-    [Fact]
-    public void EventsPage_CalendarViewWorks()
-    {
-        // TODO: Test calendar view if implemented
-        // - Switch to calendar view
-        // - Assert events are displayed on calendar
-        // - Check date navigation (previous/next month)
-        // - Test clicking on calendar dates
-    }
-
-    [Fact]
-    public void EventsPage_ToggleBetweenListAndCalendarView()
-    {
-        // TODO: Test view switching
-        // - Switch between list and calendar views
-        // - Assert correct view is displayed
-        // - Check that filters persist across views
-    }
-
-    #endregion
-
-    #region Event Creation Tests
-
-    [Fact]
-    public void EventsPage_ShowsCreateEventButton_ForAuthorizedUsers()
-    {
-        // TODO: Test create event button visibility
-        // - Mock authenticated user with permissions
-        // - Assert "Create Event" button is visible
-        // - Test button navigates to create event form
-    }
-
-    [Fact]
-    public void EventsPage_HidesCreateEventButton_ForUnauthorizedUsers()
-    {
-        // TODO: Test create event button is hidden appropriately
-        // - Mock unauthenticated user or user without permissions
-        // - Assert "Create Event" button is not visible
-    }
-
-    #endregion
 
     #region Authentication and Permissions Tests
 
@@ -456,15 +343,6 @@ public class EventsPageTests : TestContext
         }, timeout: TimeSpan.FromSeconds(3));
     }
 
-
-    [Fact]
-    public void EventsPage_ShowsMyEvents_WhenFiltered()
-    {
-        // TODO: Test "My Events" filter if implemented
-        // - Mock user with registered events
-        // - Apply "My Events" filter
-        // - Assert only user's events are shown
-    }
 
     #endregion
 
@@ -739,34 +617,4 @@ public class EventsPageTests : TestContext
 
     #endregion
 
-    #region Event Status Tests
-
-    [Fact]
-    public void EventsPage_DisplaysPastEvents()
-    {
-        // TODO: Test display of past events
-        // - Mock past events
-        // - Assert past events are marked differently
-        // - Check that RSVP is disabled for past events
-    }
-
-    [Fact]
-    public void EventsPage_DisplaysUpcomingEvents()
-    {
-        // TODO: Test upcoming events display
-        // - Mock upcoming events
-        // - Assert upcoming events allow RSVP
-        // - Check countdown timer if implemented
-    }
-
-    [Fact]
-    public void EventsPage_DisplaysCancelledEvents()
-    {
-        // TODO: Test cancelled event display
-        // - Mock cancelled events
-        // - Assert cancelled events are marked appropriately
-        // - Check that RSVP is disabled
-    }
-
-    #endregion
 }
