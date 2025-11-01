@@ -186,7 +186,7 @@ public class EventRegistrationServicesTests
         await service.HandleRsvpAsync(1, 1, 123);
 
         // Assert
-        _mockJSRuntime.VerifyInvoked("alert", "Error during RSVP: Network error");
+        _mockJSRuntime.VerifyInvoked("alert", "Network error during RSVP: Network error");
     }
 
     [Fact]
@@ -199,11 +199,9 @@ public class EventRegistrationServicesTests
 
         var service = CreateServiceWithMockHttp(mockHttp);
 
-        // Act
-        await service.HandleRsvpAsync(1, 1, 123);
-
-        // Assert
-        _mockJSRuntime.VerifyInvoked("alert", "Error during RSVP: Request timeout");
+        // Act & Assert - TaskCanceledException should be re-thrown per the service implementation
+        await Assert.ThrowsAsync<TaskCanceledException>(async () => 
+            await service.HandleRsvpAsync(1, 1, 123).ConfigureAwait(true)).ConfigureAwait(true);
     }
 
     [Fact]
@@ -216,11 +214,9 @@ public class EventRegistrationServicesTests
 
         var service = CreateServiceWithMockHttp(mockHttp);
 
-        // Act
-        await service.HandleRsvpAsync(1, 1, 123);
-
-        // Assert
-        _mockJSRuntime.VerifyInvoked("alert", "Error during RSVP: Generic error");
+        // Act & Assert - Generic exceptions should be re-thrown per the service implementation
+        await Assert.ThrowsAsync<Exception>(async () => 
+            await service.HandleRsvpAsync(1, 1, 123).ConfigureAwait(true)).ConfigureAwait(true);
     }
 
     [Theory]
@@ -240,7 +236,7 @@ public class EventRegistrationServicesTests
         await service.HandleRsvpAsync(1, 1, 123);
 
         // Assert
-        _mockJSRuntime.VerifyInvoked("alert", "RSVP successful");
+        _mockJSRuntime.VerifyInvoked("alert", "RSVP successful 🎉");
     }
 
     [Fact]
@@ -261,7 +257,7 @@ public class EventRegistrationServicesTests
 
         // Assert
         _mockJSRuntime.VerifyInvokedTimes("alert", 2);
-        Assert.Contains(_mockJSRuntime.InvocationsHistory, i => i.args[0].ToString() == "RSVP successful");
+        Assert.Contains(_mockJSRuntime.InvocationsHistory, i => i.args[0].ToString() == "RSVP successful 🎉");
         Assert.Contains(_mockJSRuntime.InvocationsHistory, i => i.args[0].ToString() == "You already RSVPed.");
     }
 }

@@ -19,28 +19,32 @@ public class EventsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllEvents()
+    public async Task<IActionResult> GetAllEventsAsync()
     {
         try
         {
             _logger.LogInformation("Getting all events");
-            var events = await _eventService.GetAllEventsAsync();
+            var events = await _eventService.GetAllEventsAsync().ConfigureAwait(false);
             return Ok(events);
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
             _logger.LogError(ex, "Error retrieving events");
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
+        catch
+        {
+            throw;
+        }
     }
 
     [HttpGet("{eventId:int}")]
-    public async Task<IActionResult> GetEventById(int eventId)
+    public async Task<IActionResult> GetEventByIdAsync(int eventId)
     {
         try
         {
             _logger.LogInformation($"Getting event with ID {eventId}");
-            var eventDto = await _eventService.GetEventByIdAsync(eventId);
+            var eventDto = await _eventService.GetEventByIdAsync(eventId).ConfigureAwait(false);
 
             if (eventDto == null)
             {
@@ -48,38 +52,46 @@ public class EventsController : ControllerBase
             }
             return Ok(eventDto);
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
             _logger.LogError(ex, $"Error retrieving event with ID {eventId}");
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
+        catch
+        {
+            throw;
+        }
     }
 
     [HttpGet("clubs/{clubId:int}/events")]
-    public async Task<IActionResult> GetEventsByClub(int clubId)
+    public async Task<IActionResult> GetEventsByClubAsync(int clubId)
     {
         try
         {
             _logger.LogInformation($"Getting events for club ID {clubId}");
             // Verify club exists
-            var club = await _clubService.GetClubByIdAsync(clubId);
+            var club = await _clubService.GetClubByIdAsync(clubId).ConfigureAwait(false);
             if (club == null)
             {
                 return NotFound("Club not found");
             }
 
-            var events = await _eventService.GetEventsByClubIdAsync(clubId);
+            var events = await _eventService.GetEventsByClubIdAsync(clubId).ConfigureAwait(false);
             return Ok(events);
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
             _logger.LogError(ex, $"Error retrieving events for club ID {clubId}");
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
+        catch
+        {
+            throw;
+        }
     }
 
     [HttpPost("{eventId:int}/rsvp")]
-    public async Task<IActionResult> RsvpToEvent(int eventId, [FromQuery] int userId)
+    public async Task<IActionResult> RsvpToEventAsync(int eventId, [FromQuery] int userId)
     {
         try
         {
@@ -88,7 +100,7 @@ public class EventsController : ControllerBase
                 return BadRequest("Invalid or missing userId");
             }
 
-            var result = await _eventService.RsvpToEventAsync(eventId, userId);
+            var result = await _eventService.RsvpToEventAsync(eventId, userId).ConfigureAwait(false);
             return result switch
             {
                 IEventService.RsvpResult.Success => Ok(),
@@ -99,26 +111,34 @@ public class EventsController : ControllerBase
                 _ => StatusCode(StatusCodes.Status500InternalServerError),
             };
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
             _logger.LogError(ex, $"Error RSVPing to event ID {eventId}");
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
+        catch
+        {
+            throw;
+        }
     }
 
     [HttpGet("user/{userId:int}/rsvps")]
-    public async Task<IActionResult> GetUserRsvpEvents(int userId)
+    public async Task<IActionResult> GetUserRsvpEventsAsync(int userId)
     {
         try
         {
             _logger.LogInformation($"Getting RSVP'd events for user ID {userId}");
-            var events = await _eventService.GetUserRsvpEventsAsync(userId);
+            var events = await _eventService.GetUserRsvpEventsAsync(userId).ConfigureAwait(false);
             return Ok(events);
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
             _logger.LogError(ex, $"Error retrieving RSVP'd events for user ID {userId}");
             return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        catch
+        {
+            throw;
         }
     }
 }

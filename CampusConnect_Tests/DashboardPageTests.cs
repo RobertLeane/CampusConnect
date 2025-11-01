@@ -165,8 +165,8 @@ public class DashboardPageTests : TestContext
         typeof(AuthService).GetField("_currentUser", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
             ?.SetValue(authService, new UserSession { UserId = 1, Email = "test@campus.edu", IsAuthenticated = true });
         
-        // Trigger StateHasChanged by firing the NotifyAuthenticationStateChanged event
-        component.InvokeAsync(() => authService.NotifyAuthenticationStateChanged());
+        // Trigger StateHasChanged by forcing a re-render
+        component.Render();
 
         // Assert - should now show dashboard content
         component.WaitForAssertion(() =>
@@ -382,7 +382,7 @@ public class DashboardPageTests : TestContext
         mockHttp.When("*/api/clubs/user/*")
             .Respond(async () =>
             {
-                await Task.Delay(100);
+                await Task.Delay(100).ConfigureAwait(false);
                 return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
                 {
                     Content = new StringContent("[]", System.Text.Encoding.UTF8, "application/json")

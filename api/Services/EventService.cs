@@ -15,8 +15,8 @@ namespace CampusConnect.Api.Services
 
         public EventService(ILogger<EventService> logger, IConfiguration configuration)
         {
-            _logger = logger;
-            _configuration = configuration;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
         public async Task<List<EventDto>> GetAllEventsAsync()
@@ -26,25 +26,29 @@ namespace CampusConnect.Api.Services
                 FROM dbo.Events
                 ORDER BY EventDateTime";
 
-            using var conn = await SqlService.CreateConnection(_configuration);
-            using var cmd = new SqlCommand(sql, conn);
-            using var rdr = await cmd.ExecuteReaderAsync();
-
-            var events = new List<EventDto>();
-            while (await rdr.ReadAsync())
+            var conn = await SqlService.CreateConnectionAsync(_configuration).ConfigureAwait(false);
+            await using (conn.ConfigureAwait(false))
             {
-                events.Add(new EventDto
+                using var cmd = new SqlCommand(sql, conn);
+                var rdr = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+                await using (rdr.ConfigureAwait(false))
                 {
-                    EventId = (int)rdr["EventId"],
-                    EventName = (string)rdr["EventName"],
-                    EventDescription = rdr["EventDescription"] as string ?? "",
-                    EventDateTime = (DateTime)rdr["EventDateTime"],
-                    EventImgURL = rdr["EventImgURL"] as string ?? "",
-                    ClubId = (int)rdr["ClubId"]
-                });
+                    var events = new List<EventDto>();
+                    while (await rdr.ReadAsync().ConfigureAwait(false))
+                    {
+                        events.Add(new EventDto
+                        {
+                            EventId = (int)rdr["EventId"],
+                            EventName = (string)rdr["EventName"],
+                            EventDescription = rdr["EventDescription"] as string ?? "",
+                            EventDateTime = (DateTime)rdr["EventDateTime"],
+                            EventImgURL = rdr["EventImgURL"] as string ?? "",
+                            ClubId = (int)rdr["ClubId"]
+                        });
+                    }
+                    return events;
+                }
             }
-            return events;
-     
         }
         private static EventDto MapEvent(SqlDataReader rdr)
         {
@@ -63,33 +67,37 @@ namespace CampusConnect.Api.Services
         {
             try
             {
-                await using var conn = await SqlService.CreateConnection(_configuration);
-                await using var cmd = new SqlCommand(
-                    "SELECT * FROM dbo.Events WHERE EventId = @EventId",
-                    conn);
-                cmd.Parameters.Add(new SqlParameter("@EventId", SqlDbType.Int) { Value = eventId });
-                await using var reader = await cmd.ExecuteReaderAsync();
-
-                if (await reader.ReadAsync())
+                var conn = await SqlService.CreateConnectionAsync(_configuration).ConfigureAwait(false);
+                await using (conn.ConfigureAwait(false))
                 {
-                    return new EventDto
+                    using var cmd = new SqlCommand(
+                        "SELECT * FROM dbo.Events WHERE EventId = @EventId",
+                        conn);
+                    cmd.Parameters.Add(new SqlParameter("@EventId", SqlDbType.Int) { Value = eventId });
+                    var reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+                    await using (reader.ConfigureAwait(false))
                     {
-                        EventId = (int)reader["EventId"],
-                        EventName = (string)reader["EventName"],
-                        EventDescription = reader["EventDescription"] as string ?? "",
-                        EventDateTime = (DateTime)reader["EventDateTime"],
-                        EventImgURL = reader["EventImgURL"] as string ?? "",
-                        ClubId = (int)reader["ClubId"]
-                    };
+                        if (await reader.ReadAsync().ConfigureAwait(false))
+                        {
+                            return new EventDto
+                            {
+                                EventId = (int)reader["EventId"],
+                                EventName = (string)reader["EventName"],
+                                EventDescription = reader["EventDescription"] as string ?? "",
+                                EventDateTime = (DateTime)reader["EventDateTime"],
+                                EventImgURL = reader["EventImgURL"] as string ?? "",
+                                ClubId = (int)reader["ClubId"]
+                            };
+                        }
+                        return null;
+                    }
                 }
-                return null;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error retrieving event {eventId}");
-                throw;
+                _logger.LogError(ex, "Error retrieving event {EventId}", eventId);
+                throw new InvalidOperationException($"An error occurred while retrieving event {eventId}", ex);
             }
-            
         }
 
         public async Task<List<EventDto>> GetEventsByClubIdAsync(int clubId)
@@ -99,18 +107,23 @@ namespace CampusConnect.Api.Services
                 FROM dbo.Events WHERE ClubId = @ClubId
                 ORDER BY EventDateTime";
 
-            using var conn = await SqlService.CreateConnection(_configuration);
-            using var cmd = new SqlCommand(sql, conn);
-            cmd.Parameters.Add(new SqlParameter("@ClubId", SqlDbType.Int) { Value = clubId });
-
-            using var rdr = await cmd.ExecuteReaderAsync();
-
-            var list = new List<EventDto>();
-            while (await rdr.ReadAsync())
+            var conn = await SqlService.CreateConnectionAsync(_configuration).ConfigureAwait(false);
+            await using (conn.ConfigureAwait(false))
             {
-                list.Add(MapEvent(rdr));
+                using var cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.Add(new SqlParameter("@ClubId", SqlDbType.Int) { Value = clubId });
+
+                var rdr = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+                await using (rdr.ConfigureAwait(false))
+                {
+                    var list = new List<EventDto>();
+                    while (await rdr.ReadAsync().ConfigureAwait(false))
+                    {
+                        list.Add(MapEvent(rdr));
+                    }
+                    return list;
+                }
             }
-            return list;
         }
         public Task<IEventService.RsvpResult> RsvpToEventAsync(int eventId, int userId)
         {
@@ -128,18 +141,23 @@ namespace CampusConnect.Api.Services
                 WHERE m.UserId = @UserId
                 ORDER BY e.EventDateTime";
 
-            using var conn = await SqlService.CreateConnection(_configuration);
-            using var cmd = new SqlCommand(sql, conn);
-            cmd.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = userId });
-
-            using var rdr = await cmd.ExecuteReaderAsync();
-
-            var events = new List<EventDto>();
-            while (await rdr.ReadAsync())
+            var conn = await SqlService.CreateConnectionAsync(_configuration).ConfigureAwait(false);
+            await using (conn.ConfigureAwait(false))
             {
-                events.Add(MapEvent(rdr));
+                using var cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = userId });
+
+                var rdr = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+                await using (rdr.ConfigureAwait(false))
+                {
+                    var events = new List<EventDto>();
+                    while (await rdr.ReadAsync().ConfigureAwait(false))
+                    {
+                        events.Add(MapEvent(rdr));
+                    }
+                    return events;
+                }
             }
-            return events;
         }
 
         private async Task<IEventService.RsvpResult> RsvpAsync(int eventId, int userId)
@@ -163,55 +181,62 @@ namespace CampusConnect.Api.Services
             WHERE m.UserId = @UserId AND m.ClubId = e.ClubId";
             try
             {
-                using var conn = await SqlService.CreateConnection(_configuration);
-
-                // Event exists?
-                using (var checkEvent = new SqlCommand(checkEventSql, conn))
+                var conn = await SqlService.CreateConnectionAsync(_configuration).ConfigureAwait(false);
+                await using (conn.ConfigureAwait(false))
                 {
-                    checkEvent.Parameters.Add(new SqlParameter("@EventId", SqlDbType.Int) { Value = eventId });
-                    if ((int)(await checkEvent.ExecuteScalarAsync() ?? 0) == 0)
-                        return IEventService.RsvpResult.EventNotFound;
-                }
+                    // Event exists?
+                    using (var checkEvent = new SqlCommand(checkEventSql, conn))
+                    {
+                        checkEvent.Parameters.Add(new SqlParameter("@EventId", SqlDbType.Int) { Value = eventId });
+                        if ((int)(await checkEvent.ExecuteScalarAsync().ConfigureAwait(false) ?? 0) == 0)
+                            return IEventService.RsvpResult.EventNotFound;
+                    }
 
-                // User exists?
-                using (var checkUser = new SqlCommand(checkUserSql, conn))
-                {
-                    checkUser.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = userId });
-                    if ((int)(await checkUser.ExecuteScalarAsync() ?? 0) == 0)
-                        return IEventService.RsvpResult.UserNotFound;
-                }
+                    // User exists?
+                    using (var checkUser = new SqlCommand(checkUserSql, conn))
+                    {
+                        checkUser.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = userId });
+                        if ((int)(await checkUser.ExecuteScalarAsync().ConfigureAwait(false) ?? 0) == 0)
+                            return IEventService.RsvpResult.UserNotFound;
+                    }
 
-                // Is member of the event's club?
-                using (var checkMember = new SqlCommand(checkMemberSql, conn))
-                {
-                    checkMember.Parameters.Add(new SqlParameter("@EventId", SqlDbType.Int) { Value = eventId });
-                    checkMember.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = userId });
-                    if ((int)(await checkMember.ExecuteScalarAsync() ?? 0) == 0)
-                        return IEventService.RsvpResult.NotClubMember;
-                }
+                    // Is member of the event's club?
+                    using (var checkMember = new SqlCommand(checkMemberSql, conn))
+                    {
+                        checkMember.Parameters.Add(new SqlParameter("@EventId", SqlDbType.Int) { Value = eventId });
+                        checkMember.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = userId });
+                        if ((int)(await checkMember.ExecuteScalarAsync().ConfigureAwait(false) ?? 0) == 0)
+                            return IEventService.RsvpResult.NotClubMember;
+                    }
 
-                // Already RSVPed?
-                using (var checkRsvp = new SqlCommand(checkRsvpSql, conn))
-                {
-                    checkRsvp.Parameters.Add(new SqlParameter("@EventId", SqlDbType.Int) { Value = eventId });
-                    checkRsvp.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = userId });
-                    if ((int)(await checkRsvp.ExecuteScalarAsync() ?? 0) > 0)
-                        return IEventService.RsvpResult.AlreadyRsvped;
-                }
+                    // Already RSVPed?
+                    using (var checkRsvp = new SqlCommand(checkRsvpSql, conn))
+                    {
+                        checkRsvp.Parameters.Add(new SqlParameter("@EventId", SqlDbType.Int) { Value = eventId });
+                        checkRsvp.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = userId });
+                        if ((int)(await checkRsvp.ExecuteScalarAsync().ConfigureAwait(false) ?? 0) > 0)
+                            return IEventService.RsvpResult.AlreadyRsvped;
+                    }
 
-                // Insert RSVP
-                using (var insert = new SqlCommand(insertRsvpSql, conn))
-                {
-                    insert.Parameters.Add(new SqlParameter("@EventId", SqlDbType.Int) { Value = eventId });
-                    insert.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = userId });
-                    var rows = await insert.ExecuteNonQueryAsync();
-                    return rows == 1 ? IEventService.RsvpResult.Success : IEventService.RsvpResult.Error;
+                    // Insert RSVP
+                    using (var insert = new SqlCommand(insertRsvpSql, conn))
+                    {
+                        insert.Parameters.Add(new SqlParameter("@EventId", SqlDbType.Int) { Value = eventId });
+                        insert.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = userId });
+                        var rows = await insert.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        return rows == 1 ? IEventService.RsvpResult.Success : IEventService.RsvpResult.Error;
+                    }
                 }
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "Database error processing RSVP for EventId {EventId} and UserId {UserId}", eventId, userId);
+                return IEventService.RsvpResult.Error;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing RSVP");
-                return IEventService.RsvpResult.Error;
+                _logger.LogError(ex, "Unexpected error processing RSVP for EventId {EventId} and UserId {UserId}", eventId, userId);
+                throw new InvalidOperationException($"An error occurred while processing RSVP for event {eventId}", ex);
             }
         }
     }

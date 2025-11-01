@@ -17,43 +17,51 @@ public class MembersController : ControllerBase
     }
 
     [HttpGet("clubs/{clubId:int}/members")]
-    public async Task<IActionResult> GetClubMembers(int clubId)
+    public async Task<IActionResult> GetClubMembersAsync(int clubId)
     {
         try
         {
             _logger.LogInformation($"Getting members for club {clubId} from database");
-            var members = await _memberService.GetMembersByClubIdAsync(clubId);
+            var members = await _memberService.GetMembersByClubIdAsync(clubId).ConfigureAwait(false);
             _logger.LogInformation($"Retrieved {members?.Count ?? 0} members for club {clubId}");
             return Ok(members);
         }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Invalid operation while retrieving members for club {ClubId}", clubId);
+            return BadRequest("Invalid operation: " + ex.Message);
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving members for club {ClubId}", clubId);
-            return StatusCode(StatusCodes.Status500InternalServerError, 
-                "An error occurred while retrieving club members");
+            _logger.LogError(ex, "Unexpected error retrieving members for club {ClubId}", clubId);
+            throw; // Rethrow to let ASP.NET Core handle unexpected exceptions
         }
     }
 
     [HttpGet("users/{userId:int}/memberships")]
-    public async Task<IActionResult> GetUserMemberships(int userId)
+    public async Task<IActionResult> GetUserMembershipsAsync(int userId)
     {
         try
         {
             _logger.LogInformation($"Getting memberships for user {userId} from database");
-            var memberships = await _memberService.GetMembersByUserIdAsync(userId);
+            var memberships = await _memberService.GetMembersByUserIdAsync(userId).ConfigureAwait(false);
             _logger.LogInformation($"Retrieved {memberships?.Count ?? 0} memberships for user {userId}");
             return Ok(memberships);
         }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Invalid operation while retrieving memberships for user {UserId}", userId);
+            return BadRequest("Invalid operation: " + ex.Message);
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving memberships for user {UserId}", userId);
-            return StatusCode(StatusCodes.Status500InternalServerError, 
-                "An error occurred while retrieving user memberships");
+            _logger.LogError(ex, "Unexpected error retrieving memberships for user {UserId}", userId);
+            throw; // Rethrow to let ASP.NET Core handle unexpected exceptions
         }
     }
 
     [HttpPost("clubs/{clubId:int}/members")]
-    public async Task<IActionResult> AddMemberToClub(int clubId, [FromBody] AddMemberRequest request)
+    public async Task<IActionResult> AddMemberToClubAsync(int clubId, [FromBody] AddMemberRequest request)
     {
         try
         {
@@ -63,14 +71,18 @@ public class MembersController : ControllerBase
             }
 
             _logger.LogInformation($"Adding user {request.UserId} to club {clubId} with role '{request.Role}'");
-            var member = await _memberService.AddMemberToClubAsync(request.UserId, clubId, request.Role ?? "Member");
-            return CreatedAtAction(nameof(GetClubMembers), new { clubId = clubId }, member);
+            var member = await _memberService.AddMemberToClubAsync(request.UserId, clubId, request.Role ?? "Member").ConfigureAwait(false);
+            return CreatedAtAction(nameof(GetClubMembersAsync), new { clubId = clubId }, member);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Invalid operation while adding member to club {ClubId}", clubId);
+            return BadRequest("Invalid operation: " + ex.Message);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error adding member to club {ClubId}", clubId);
-            return StatusCode(StatusCodes.Status500InternalServerError, 
-                "An error occurred while adding the member to the club");
+            throw; // Rethrow to let ASP.NET Core handle unexpected exceptions
         }
     }
 

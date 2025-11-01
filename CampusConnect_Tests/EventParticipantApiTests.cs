@@ -199,7 +199,7 @@ public class EventParticipantApiTests
 
         var api = CreateApiWithMockHttp(mockHttp);
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         // Act & Assert
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
@@ -932,7 +932,7 @@ public class EventParticipantApiTests
 
         var api = CreateApiWithMockHttp(mockHttp);
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         // Act & Assert
         await Assert.ThrowsAnyAsync<OperationCanceledException>(

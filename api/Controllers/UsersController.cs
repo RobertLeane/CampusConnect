@@ -17,19 +17,23 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet("count")]
-    public async Task<ActionResult<int>> GetUserCount()
+    public async Task<ActionResult<int>> GetUserCountAsync()
     {
         try
         {
             _logger.LogInformation("Getting user count");
-            var count = await _userService.GetUserCountAsync();
+            var count = await _userService.GetUserCountAsync().ConfigureAwait(false);
             _logger.LogInformation($"Returning user count: {count}");
             return Ok(count);
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
-            _logger.LogError(ex, "Error getting user count");
+            _logger.LogError(ex, "Invalid operation while getting user count");
             return StatusCode(500, "Internal server error");
+        }
+        catch
+        {
+            throw;
         }
     }
 }

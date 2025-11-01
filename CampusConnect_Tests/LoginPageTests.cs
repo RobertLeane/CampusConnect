@@ -205,7 +205,7 @@ public class LoginPageTests : TestContext
         component.WaitForAssertion(() =>
         {
             var errorText = component.Find(".alert.alert-error");
-            Assert.Contains("Invalid email or password", errorText.TextContent);
+            Assert.Contains("Invalid email or password.", errorText.TextContent);
         });
     }
 
@@ -237,7 +237,8 @@ public class LoginPageTests : TestContext
         component.WaitForAssertion(() =>
         {
             var errorText = component.Find(".alert.alert-error");
-            Assert.Contains("Invalid email or password", errorText.TextContent);
+            Assert.Contains("Login failed:", errorText.TextContent);
+            Assert.Contains("Network error", errorText.TextContent);
         }, timeout: TimeSpan.FromSeconds(10));
     }
 

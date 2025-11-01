@@ -17,30 +17,34 @@ public class ClubsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetClubs()
+    public async Task<IActionResult> GetClubsAsync()
     {
         try
         {
             _logger.LogInformation("Getting clubs from database");
-            var clubs = await _clubService.GetActiveClubsAsync();
+            var clubs = await _clubService.GetActiveClubsAsync().ConfigureAwait(false);
             _logger.LogInformation($"Retrieved {clubs.Count} active clubs from database");
             return Ok(clubs);
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
-            _logger.LogError(ex, "Error retrieving clubs from database");
+            _logger.LogError(ex, "Invalid operation while retrieving clubs from database");
             return StatusCode(StatusCodes.Status500InternalServerError, 
                 "An error occurred while retrieving clubs");
+        }
+        catch
+        {
+            throw;
         }
     }
 
     [HttpGet("{clubId:int}")]
-    public async Task<IActionResult> GetClubById(int clubId)
+    public async Task<IActionResult> GetClubByIdAsync(int clubId)
     {
         try
         {
             _logger.LogInformation($"Getting club {clubId} from database");
-            var club = await _clubService.GetClubByIdAsync(clubId);
+            var club = await _clubService.GetClubByIdAsync(clubId).ConfigureAwait(false);
             
             if (club == null)
             {
@@ -49,27 +53,36 @@ public class ClubsController : ControllerBase
 
             return Ok(club);
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
-            _logger.LogError(ex, $"Error retrieving club {clubId} from database");
+            _logger.LogError(ex, $"Invalid operation while retrieving club {clubId} from database");
             return StatusCode(StatusCodes.Status500InternalServerError, 
                 "An error occurred while retrieving the club");
+        }
+        catch
+        {
+            throw;
         }
     }
 
     [HttpGet("user/{userId:int}")]
-    public async Task<IActionResult> GetUserJoinedClubs(int userId)
+    public async Task<IActionResult> GetUserJoinedClubsAsync(int userId)
     {
         try
         {
             _logger.LogInformation($"Getting clubs for user ID {userId}");
-            var clubs = await _clubService.GetUserJoinedClubsAsync(userId);
+            var clubs = await _clubService.GetUserJoinedClubsAsync(userId).ConfigureAwait(false);
             return Ok(clubs);
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
-            _logger.LogError(ex, $"Error retrieving clubs for user ID {userId}");
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            _logger.LogError(ex, $"Invalid operation while retrieving clubs for user ID {userId}");
+            return StatusCode(StatusCodes.Status500InternalServerError, 
+                "An error occurred while retrieving clubs for the user");
+        }
+        catch
+        {
+            throw;
         }
     }
 }

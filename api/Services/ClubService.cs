@@ -14,8 +14,8 @@ public class ClubService : IClubService
 
     public ClubService(ILogger<ClubService> logger, IConfiguration configuration)
     {
-        _logger = logger;
-        _configuration = configuration;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         
         // Try different configuration sources for database settings
         _server = _configuration["Values:Sql__Server"]
@@ -32,7 +32,7 @@ public class ClubService : IClubService
                  ?? Environment.GetEnvironmentVariable("SQL_DATABASE") 
                  ?? "campusconnect-database";
                  
-        _logger.LogInformation($"Database config - Server: {_server}, Database: {_database}");
+        _logger.LogInformation("Database config - Server: {Server}, Database: {Database}", _server, _database);
     }
 
     public async Task<List<ClubDto>> GetActiveClubsAsync()
@@ -40,7 +40,7 @@ public class ClubService : IClubService
         try
         {
             _logger.LogInformation("Starting to retrieve active clubs");
-            _logger.LogInformation($"Using server: {_server}, database: {_database}");
+            _logger.LogInformation("Using server: {Server}, database: {Database}", _server, _database);
             
             if (string.IsNullOrEmpty(_server) || string.IsNullOrEmpty(_database))
             {
@@ -49,28 +49,36 @@ public class ClubService : IClubService
                 throw new InvalidOperationException(error);
             }
 
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database, _configuration);
-            _logger.LogInformation("Database connection established successfully");
-            
-            await using var cmd = new SqlCommand(
-                "SELECT ClubId, ClubName, ClubImgURL, ClubDescription FROM dbo.Clubs", 
-                conn);
-            await using var reader = await cmd.ExecuteReaderAsync();
-
-            var clubs = new List<ClubDto>();
-            while (await reader.ReadAsync())
+            var conn = await SqlService.OpenTokenConnectionAsync(_server, _database, _configuration).ConfigureAwait(false);
+            await using (conn.ConfigureAwait(false))
             {
-                clubs.Add(new ClubDto
+                _logger.LogInformation("Database connection established successfully");
+                
+                using var cmd = new SqlCommand(
+                    "SELECT ClubId, ClubName, ClubImgURL, ClubDescription FROM dbo.Clubs", 
+                    conn);
+                var reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+                await using (reader.ConfigureAwait(false))
                 {
-                    ClubId = reader.GetInt32(0),
-                    ClubName = reader.GetString(1),
-                    ClubImgURL = reader.IsDBNull(2) ? null : reader.GetString(2),
-                    ClubDescription = reader.IsDBNull(3) ? null : reader.GetString(3),
-                });
-            }
+                    var clubs = new List<ClubDto>();
+                    while (await reader.ReadAsync().ConfigureAwait(false))
+                    {
+                        var isImgNull = await reader.IsDBNullAsync(2).ConfigureAwait(false);
+                        var isDescNull = await reader.IsDBNullAsync(3).ConfigureAwait(false);
+                        
+                        clubs.Add(new ClubDto
+                        {
+                            ClubId = reader.GetInt32(0),
+                            ClubName = reader.GetString(1),
+                            ClubImgURL = isImgNull ? null : reader.GetString(2),
+                            ClubDescription = isDescNull ? null : reader.GetString(3),
+                        });
+                    }
 
-            _logger.LogInformation($"Successfully retrieved {clubs.Count} clubs");
-            return clubs;
+                    _logger.LogInformation("Successfully retrieved {Count} clubs", clubs.Count);
+                    return clubs;
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -89,30 +97,39 @@ public class ClubService : IClubService
                 throw new InvalidOperationException("Database configuration is missing");
             }
 
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database, _configuration);
-            await using var cmd = new SqlCommand(
-                "SELECT ClubId, ClubName, ClubImgURL, ClubDescription FROM dbo.Clubs WHERE ClubId = @clubId", 
-                conn);
-            cmd.Parameters.AddWithValue("@clubId", clubId);
-            await using var reader = await cmd.ExecuteReaderAsync();
-
-            if (await reader.ReadAsync())
+            var conn = await SqlService.OpenTokenConnectionAsync(_server, _database, _configuration).ConfigureAwait(false);
+            await using (conn.ConfigureAwait(false))
             {
-                return new ClubDto
+                using var cmd = new SqlCommand(
+                    "SELECT ClubId, ClubName, ClubImgURL, ClubDescription FROM dbo.Clubs WHERE ClubId = @clubId", 
+                    conn);
+                cmd.Parameters.AddWithValue("@clubId", clubId);
+                
+                var reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+                await using (reader.ConfigureAwait(false))
                 {
-                    ClubId = reader.GetInt32(0),  // ClubId
-                    ClubName = reader.GetString(1),  // ClubName
-                    ClubImgURL = reader.IsDBNull(2) ? null : reader.GetString(2),  // ClubImgURL
-                    ClubDescription = reader.IsDBNull(3) ? null : reader.GetString(3),  // ClubDescription
-                };
-            }
+                    if (await reader.ReadAsync().ConfigureAwait(false))
+                    {
+                        var isImgNull = await reader.IsDBNullAsync(2).ConfigureAwait(false);
+                        var isDescNull = await reader.IsDBNullAsync(3).ConfigureAwait(false);
+                        
+                        return new ClubDto
+                        {
+                            ClubId = reader.GetInt32(0),
+                            ClubName = reader.GetString(1),
+                            ClubImgURL = isImgNull ? null : reader.GetString(2),
+                            ClubDescription = isDescNull ? null : reader.GetString(3),
+                        };
+                    }
 
-            return null;
+                    return null;
+                }
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving club {ClubId}", clubId);
-            throw;
+            throw new InvalidOperationException($"An error occurred while retrieving club {clubId}: {ex.Message}", ex);
         }
     }
 
@@ -126,7 +143,7 @@ public class ClubService : IClubService
     {
         try
         {
-            _logger.LogInformation($"Getting clubs for user ID {userId}");
+            _logger.LogInformation("Getting clubs for user ID {UserId}", userId);
             
             if (string.IsNullOrEmpty(_server) || string.IsNullOrEmpty(_database))
             {
@@ -140,30 +157,39 @@ public class ClubService : IClubService
                 INNER JOIN dbo.Members m ON c.ClubId = m.ClubId
                 WHERE m.UserId = @UserId";
 
-            await using var conn = await SqlService.OpenTokenConnectionAsync(_server, _database, _configuration);
-            await using var cmd = new SqlCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@UserId", userId);
-            await using var reader = await cmd.ExecuteReaderAsync();
-
-            var clubs = new List<ClubDto>();
-            while (await reader.ReadAsync())
+            var conn = await SqlService.OpenTokenConnectionAsync(_server, _database, _configuration).ConfigureAwait(false);
+            await using (conn.ConfigureAwait(false))
             {
-                clubs.Add(new ClubDto
+                using var cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@UserId", userId);
+                
+                var reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+                await using (reader.ConfigureAwait(false))
                 {
-                    ClubId = reader.GetInt32(0),
-                    ClubName = reader.GetString(1),
-                    ClubImgURL = reader.IsDBNull(2) ? null : reader.GetString(2),
-                    ClubDescription = reader.IsDBNull(3) ? null : reader.GetString(3),
-                });
-            }
+                    var clubs = new List<ClubDto>();
+                    while (await reader.ReadAsync().ConfigureAwait(false))
+                    {
+                        var isImgNull = await reader.IsDBNullAsync(2).ConfigureAwait(false);
+                        var isDescNull = await reader.IsDBNullAsync(3).ConfigureAwait(false);
+                        
+                        clubs.Add(new ClubDto
+                        {
+                            ClubId = reader.GetInt32(0),
+                            ClubName = reader.GetString(1),
+                            ClubImgURL = isImgNull ? null : reader.GetString(2),
+                            ClubDescription = isDescNull ? null : reader.GetString(3),
+                        });
+                    }
 
-            _logger.LogInformation($"Successfully retrieved {clubs.Count} clubs for user {userId}");
-            return clubs;
+                    _logger.LogInformation("Successfully retrieved {Count} clubs for user {UserId}", clubs.Count, userId);
+                    return clubs;
+                }
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving clubs for user {UserId}", userId);
-            throw;
+            throw new InvalidOperationException($"An error occurred while retrieving clubs for user {userId}: {ex.Message}", ex);
         }
     }
 }

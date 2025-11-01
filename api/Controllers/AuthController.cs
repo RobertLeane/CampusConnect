@@ -19,7 +19,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest model)
+    public async Task<IActionResult> RegisterAsync([FromBody] RegisterRequest model)
     {
         try
         {
@@ -35,10 +35,10 @@ public class AuthController : ControllerBase
                 return BadRequest(new { Message = "Validation failed", Errors = errors });
             }
 
-            if (await _userService.EmailExistsAsync(model.Email))
+            if (await _userService.EmailExistsAsync(model.Email).ConfigureAwait(false))
                 return Conflict(new { Message = "Email already exists" });
 
-            var userId = await _userService.RegisterAsync(model);
+            var userId = await _userService.RegisterAsync(model).ConfigureAwait(false);
             var resp = new AuthResponse
             {
                 UserId = userId,
@@ -55,12 +55,12 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during registration");
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            throw; // Rethrow the exception to let the middleware handle it
         }
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest model)
+    public async Task<IActionResult> LoginAsync([FromBody] LoginRequest model)
     {
         try
         {
@@ -76,7 +76,7 @@ public class AuthController : ControllerBase
                 return BadRequest(new { Message = "Validation failed", Errors = errors });
             }
 
-            var authResponse = await _userService.LoginAsync(model);
+            var authResponse = await _userService.LoginAsync(model).ConfigureAwait(false);
             if (authResponse == null)
             {
                 return Unauthorized(new { Message = "Invalid email or password" });
@@ -84,7 +84,7 @@ public class AuthController : ControllerBase
 
             return Ok(authResponse);
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
             _logger.LogError(ex, "Error during login");
             return StatusCode(StatusCodes.Status500InternalServerError);

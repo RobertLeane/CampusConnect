@@ -18,49 +18,52 @@ public class EventParticipantsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetEventParticipants()
+    public async Task<IActionResult> GetEventParticipantsAsync()
     {
         try
         {
             _logger.LogInformation("Getting Event Participants from database");
-            var eventparticipants = await _eventParticipantService.GetActiveEventParticipantsAsync();
+            var eventparticipants = await _eventParticipantService.GetActiveEventParticipantsAsync().ConfigureAwait(false);
             _logger.LogInformation($"Retrieved {eventparticipants.Count} active EventParticipants from database");
             return Ok(eventparticipants);
         }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Invalid operation while retrieving event participants from database");
+            return BadRequest("Invalid operation: " + ex.Message);
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving event participants from database");
-            return StatusCode(StatusCodes.Status500InternalServerError, 
-                "An error occurred while retrieving event participants");
+            _logger.LogError(ex, "Unexpected error retrieving event participants from database");
+            throw; // Rethrow to let ASP.NET Core handle unexpected exceptions
         }
     }
 
     [HttpGet("users/{memberId}/events")]
-    public async Task<IActionResult> GetUserEventRegistrations(int memberId)
+    public async Task<IActionResult> GetUserEventRegistrationsAsync(int memberId)
     {
         try
         {
             _logger.LogInformation($"Getting event registrations for member {memberId} from database");
-            var userId = await _eventParticipantService.GetUserByMemberIdAsync(memberId);
+            var userId = await _eventParticipantService.GetUserByMemberIdAsync(memberId).ConfigureAwait(false);
             if (userId == null)
             {
                 return NotFound("Member not found");
             }
 
-            var memberIds = await _eventParticipantService.GetMemberIdsByUserIdAsync(userId.Value);
-            var events = await _eventParticipantService.GetEventsByMemberIdsAsync(memberIds);
+            var memberIds = await _eventParticipantService.GetMemberIdsByUserIdAsync(userId.Value).ConfigureAwait(false);
+            var events = await _eventParticipantService.GetEventsByMemberIdsAsync(memberIds).ConfigureAwait(false);
             return Ok(events);
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
-            _logger.LogError(ex, "Error retrieving event registrations");
-            return StatusCode(StatusCodes.Status500InternalServerError, 
-                "An error occurred while retrieving the event registrations");
+            _logger.LogError(ex, "Invalid operation while retrieving event registrations");
+            return BadRequest("Invalid operation: " + ex.Message);
         }
     }
     
     [HttpPost("register")]
-    public async Task<IActionResult> RegisterForEvent([FromBody] RegisterEventRequest request)
+    public async Task<IActionResult> RegisterForEventAsync([FromBody] RegisterEventRequest request)
     {
         try
         {
@@ -68,13 +71,13 @@ public class EventParticipantsController : ControllerBase
                 request.UserId, request.EventId, request.ClubId);
 
             // Get the memberId for this user and club
-            var memberId = await _eventParticipantService.GetMemberIdByUserIdAndClubIdAsync(request.UserId, request.ClubId);
+            var memberId = await _eventParticipantService.GetMemberIdByUserIdAndClubIdAsync(request.UserId, request.ClubId).ConfigureAwait(false);
             if (memberId == null)
             {
                 return BadRequest("User is not a member of this club");
             }
 
-            await _eventParticipantService.RegisterUserForEventAsync(memberId.Value, request.ClubId, request.EventId);
+            await _eventParticipantService.RegisterUserForEventAsync(memberId.Value, request.ClubId, request.EventId).ConfigureAwait(false);
             
             // Return the created participant in the format the client expects
             var result = new EventParticipantDto
@@ -92,12 +95,7 @@ public class EventParticipantsController : ControllerBase
                 request.UserId, request.EventId);
             return Conflict(ex.Message);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error registering for event");
-            return StatusCode(StatusCodes.Status500InternalServerError, 
-                "An error occurred while registering for the event");
-        }
+        // Let ASP.NET Core handle unexpected exceptions by not catching Exception here
     }
 
     // Simple request model for registering
@@ -109,28 +107,27 @@ public class EventParticipantsController : ControllerBase
     }
     
     [HttpPost("users/{userId}/events/{eventId}/register")]
-    public async Task<IActionResult> RegisterForEvent(int userId, int eventId)
+    public async Task<IActionResult> RegisterForEventAsync(int userId, int eventId)
     {
         try
         {
             _logger.LogInformation("Registering user {UserId} for event {EventId}", userId, eventId);
 
-            var clubId = await _eventParticipantService.GetClubIdByEventIdAsync(eventId);
+            var clubId = await _eventParticipantService.GetClubIdByEventIdAsync(eventId).ConfigureAwait(false);
             if (clubId == null)
                 return NotFound("Event not found or club not found");
 
-            var memberId = await _eventParticipantService.GetMemberIdByUserIdAndClubIdAsync(userId, clubId.Value);
+            var memberId = await _eventParticipantService.GetMemberIdByUserIdAndClubIdAsync(userId, clubId.Value).ConfigureAwait(false);
             if (memberId == null)
                 return NotFound("User is not a member of the club associated with the event.");
 
-            await _eventParticipantService.RegisterUserForEventAsync(memberId.Value, clubId.Value, eventId);
+            await _eventParticipantService.RegisterUserForEventAsync(memberId.Value, clubId.Value, eventId).ConfigureAwait(false);
             return Ok();
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
-            _logger.LogError(ex, "Error registering user for event");
-            return StatusCode(StatusCodes.Status500InternalServerError, 
-                "An error occurred while registering for the event");
+            _logger.LogError(ex, "Invalid operation while registering user for event");
+            return BadRequest("Invalid operation: " + ex.Message);
         }
     }
 }

@@ -38,9 +38,10 @@ try
     builder.Services.AddScoped<IEventParticipantService, EventParticipantService>();
     builder.Services.AddScoped<IMemberService, MemberService>();
 }
-catch (Exception ex)
+catch (InvalidOperationException ex)
 {
     Console.WriteLine($"Warning: Service registration failed: {ex.Message}");
+    throw;
 }
 
 // Add CORS
@@ -98,7 +99,7 @@ app.Use(async (context, next) =>
 {
     var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
     logger.LogInformation($"Request: {context.Request.Method} {context.Request.Path}");
-    await next();
+    await next().ConfigureAwait(false);
     logger.LogInformation($"Response: {context.Response.StatusCode}");
 });
 
@@ -133,18 +134,18 @@ app.MapGet("/debug/tables", async () =>
 {
     try
     {
-        using var conn = await CampusConnect.Api.Services.SqlService.CreateConnection(app.Services.GetRequiredService<IConfiguration>());
+        using var conn = await CampusConnect.Api.Services.SqlService.CreateConnectionAsync(app.Services.GetRequiredService<IConfiguration>()).ConfigureAwait(false);
         using var cmd = new Microsoft.Data.SqlClient.SqlCommand("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'", conn);
-        using var reader = await cmd.ExecuteReaderAsync();
+        using var reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
         
         var tables = new List<string>();
-        while (await reader.ReadAsync())
+        while (await reader.ReadAsync().ConfigureAwait(false))
         {
             tables.Add(reader.GetString(0));
         }
         return Results.Json(new { tables });
     }
-    catch (Exception ex)
+    catch (Microsoft.Data.SqlClient.SqlException ex)
     {
         return Results.Json(new { error = ex.Message });
     }

@@ -41,7 +41,7 @@ public static class SqlService
             try
             {
                 var conn = new SqlConnection(connectionString);
-                await conn.OpenAsync();
+                await conn.OpenAsync().ConfigureAwait(false);
                 Console.WriteLine("Connection string authentication successful");
                 return conn;
             }
@@ -59,7 +59,7 @@ public static class SqlService
     }
 
     // Convenience factory that reads from configuration and returns an open connection
-    public static Task<SqlConnection> CreateConnection(IConfiguration configuration)
+    public static Task<SqlConnection> CreateConnectionAsync(IConfiguration configuration)
     {
         var server = configuration["Sql:Server"]
                    ?? Environment.GetEnvironmentVariable("SQL_SERVER")
@@ -73,7 +73,7 @@ public static class SqlService
     }
 
     // Legacy method for backward compatibility
-    public static Task<SqlConnection> CreateConnection()
+    public static Task<SqlConnection> CreateConnectionAsync()
     {
         var server = Environment.GetEnvironmentVariable("Sql__Server")
                    ?? Environment.GetEnvironmentVariable("SQL_SERVER")

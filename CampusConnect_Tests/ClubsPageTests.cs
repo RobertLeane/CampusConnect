@@ -53,7 +53,7 @@ public class ClubsPageTests : TestContext
     #region Club List Display Tests
 
     [Fact]
-    public async Task ClubsPage_DisplaysClubList()
+    public void ClubsPage_DisplaysClubList()
     {
         // Arrange - Mock all required HTTP endpoints
         var mockHttp = new MockHttpMessageHandler();
@@ -76,16 +76,12 @@ public class ClubsPageTests : TestContext
             new { EventId = 1, EventName = "Chess Tournament", EventDescription = "Test", EventDateTime = DateTime.Now, EventImgURL = "", ClubId = 1 }
         };
 
-        // Mock users data  
-        var userData = new[]
-        {
-            new { UserId = 1, FirstName = "John", LastName = "Doe", Email = "john@example.com" }
-        };
+        // Mock users count
+        mockHttp.When("*/api/users/count").Respond("application/json", "10");
 
         // Setup all API endpoints
         mockHttp.When("*/api/clubs").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubData));
         mockHttp.When("*/api/events").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(eventData));
-        mockHttp.When("*/api/users").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(userData));
 
         var httpClient = mockHttp.ToHttpClient();
         httpClient.BaseAddress = new Uri("https://localhost:7071/");
@@ -96,11 +92,12 @@ public class ClubsPageTests : TestContext
         // Act
         var component = RenderComponent<Clubs>();
 
-        // Wait for the database or API to be ready
-        await Task.Delay(60000); // Wait for 1 minute
-
-        // Assert
-        Assert.Contains("Chess Club", component.Markup);
+        // Wait for the data to load
+        component.WaitForAssertion(() =>
+        {
+            var markup = component.Markup;
+            Assert.Contains("Chess Club", markup);
+        }, timeout: TimeSpan.FromSeconds(5));
     }
 
     [Fact]
@@ -112,12 +109,13 @@ public class ClubsPageTests : TestContext
         // Mock empty data arrays
         var emptyClubData = new object[0];
         var emptyEventData = new object[0];
-        var emptyUserData = new object[0];
+
+        // Mock users count
+        mockHttp.When("*/api/users/count").Respond("application/json", "0");
 
         // Setup all API endpoints with empty responses
         mockHttp.When("*/api/clubs").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(emptyClubData));
         mockHttp.When("*/api/events").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(emptyEventData));
-        mockHttp.When("*/api/users").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(emptyUserData));
 
         var httpClient = mockHttp.ToHttpClient();
         httpClient.BaseAddress = new Uri("https://localhost:7071/");
@@ -162,15 +160,12 @@ public class ClubsPageTests : TestContext
             new { EventId = 1, EventName = "Photo Walk", EventDescription = "Test", EventDateTime = DateTime.Now, EventImgURL = "", ClubId = 1 }
         };
 
-        var userData = new[]
-        {
-            new { UserId = 1, FirstName = "Jane", LastName = "Smith", Email = "jane@example.com" }
-        };
+        // Mock users count
+        mockHttp.When("*/api/users/count").Respond("application/json", "1");
 
         // Setup all API endpoints
         mockHttp.When("*/api/clubs").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubData));
         mockHttp.When("*/api/events").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(eventData));
-        mockHttp.When("*/api/users").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(userData));
 
         var httpClient = mockHttp.ToHttpClient();
         httpClient.BaseAddress = new Uri("https://localhost:7071/");
@@ -223,15 +218,12 @@ public class ClubsPageTests : TestContext
             new { EventId = 1, EventName = "Basketball Game", EventDescription = "Test", EventDateTime = DateTime.Now, EventImgURL = "", ClubId = 1 }
         };
 
-        var userData = new[]
-        {
-            new { UserId = 1, FirstName = "Mike", LastName = "Jordan", Email = "mike@example.com" }
-        };
+        // Mock users count
+        mockHttp.When("*/api/users/count").Respond("application/json", "1");
 
         // Setup all API endpoints
         mockHttp.When("*/api/clubs").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubData));
         mockHttp.When("*/api/events").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(eventData));
-        mockHttp.When("*/api/users").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(userData));
 
         var httpClient = mockHttp.ToHttpClient();
         httpClient.BaseAddress = new Uri("https://localhost:7071/");
@@ -283,15 +275,12 @@ public class ClubsPageTests : TestContext
             new { EventId = 1, EventName = "Debate Tournament", EventDescription = "Test", EventDateTime = DateTime.Now, EventImgURL = "", ClubId = 1 }
         };
 
-        var userData = new[]
-        {
-            new { UserId = 1, FirstName = "Alice", LastName = "Cooper", Email = "alice@example.com" }
-        };
+        // Mock users count
+        mockHttp.When("*/api/users/count").Respond("application/json", "1");
 
         // Setup all API endpoints
         mockHttp.When("*/api/clubs").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubData));
         mockHttp.When("*/api/events").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(eventData));
-        mockHttp.When("*/api/users").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(userData));
 
         var httpClient = mockHttp.ToHttpClient();
         httpClient.BaseAddress = new Uri("https://localhost:7071/");
@@ -342,9 +331,9 @@ public class ClubsPageTests : TestContext
         var mockHttp = new MockHttpMessageHandler();
         
         // Setup API endpoints to return error responses
+        mockHttp.When("*/api/users/count").Respond(System.Net.HttpStatusCode.InternalServerError);
         mockHttp.When("*/api/clubs").Respond(System.Net.HttpStatusCode.InternalServerError);
         mockHttp.When("*/api/events").Respond(System.Net.HttpStatusCode.InternalServerError);
-        mockHttp.When("*/api/users").Respond(System.Net.HttpStatusCode.InternalServerError);
 
         var httpClient = mockHttp.ToHttpClient();
         httpClient.BaseAddress = new Uri("https://localhost:7071/");

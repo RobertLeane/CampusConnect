@@ -72,16 +72,12 @@ public class EventsPageTests : TestContext
             new { EventId = 1, EventName = "Hackathon", EventDescription = "24h coding event.",
                   EventDateTime = DateTime.Now.AddDays(2), EventImgURL = "", ClubId = 2, Location = "Main Hall" },
        };
-       
-        // Mock users data  
-        var userData = new[]
-        {
-            new { UserId = 1, FirstName = "John", LastName = "Doe", Email = "john@example.com" }
-        };
+
+        // Mock users count
+        mockHttp.When("*/api/users/count").Respond("application/json", "1");
 
         mockHttp.When("*/api/clubs").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubData));
         mockHttp.When("*/api/events").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(eventData));
-        mockHttp.When("*/api/users").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(userData));
 
         var httpClient = mockHttp.ToHttpClient();
         httpClient.BaseAddress = new Uri("https://localhost:7071/");
@@ -111,12 +107,13 @@ public class EventsPageTests : TestContext
         //Mock empty data array
         var emptyClubData = new object[0];
         var emptyEventData = new object[0];
-        var emptyUserData = new object[0];
+
+        // Mock users count
+        mockHttp.When("*/api/users/count").Respond("application/json", "0");
 
         //Setup all API endpoints with empty respones
         mockHttp.When("*/api/clubs").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(emptyClubData));
         mockHttp.When("*/api/events").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(emptyEventData));
-        mockHttp.When("*/api/users").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(emptyUserData));
 
         var httpClient = mockHttp.ToHttpClient();
         httpClient.BaseAddress = new Uri("https://localhost:7071/");
@@ -159,11 +156,13 @@ public class EventsPageTests : TestContext
         new { ClubId = 1, ClubName = "Photography Club", ClubImgURL = "", ClubDescription = "Pics!" }
     };
 
+    // Mock users count
+    mockHttp.When("*/api/users/count").Respond("application/json", "1");
+
     mockHttp.When("*/api/events*")
         .Respond("application/json", System.Text.Json.JsonSerializer.Serialize(eventData));
     mockHttp.When("*/api/clubs*")
         .Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubs));
-    mockHttp.When("*/api/users*").Respond("application/json", "[]");
     mockHttp.When("*/api/eventparticipants*").Respond("application/json", "[]");
     mockHttp.When("*/api/eventregistrations*").Respond("application/json", "[]");
     mockHttp.When("*").Respond("application/json", "[]"); // safety net
@@ -208,15 +207,12 @@ public class EventsPageTests : TestContext
         new { EventId = 1, EventName = "Basketball Game", EventDescription = "Test", EventDateTime = DateTime.Now, EventImgURL = "", ClubId = 1 }
     };
 
-    var userData = new[]
-    {
-        new { UserId = 1, FirstName = "Mike", LastName = "Jordan", Email = "mike@example.com" }
-    };
+    // Mock users count
+    mockHttp.When("*/api/users/count").Respond("application/json", "1");
 
     // Mock all endpoints the page/services hit (note the trailing * for query strings)
     mockHttp.When("*/api/clubs*").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubData));
     mockHttp.When("*/api/events*").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(eventData));
-    mockHttp.When("*/api/users*").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(userData));
     mockHttp.When("*/api/eventparticipants*").Respond("application/json", "[]");
     mockHttp.When("*/api/eventregistrations*").Respond("application/json", "[]");
 
@@ -256,12 +252,14 @@ public class EventsPageTests : TestContext
         new { ClubId = 1, ClubName = "Basketball Club", ClubImgURL = "", ClubDescription = "Play!" }
     };
 
+    // Mock users count
+    mockHttp.When("*/api/users/count").Respond("application/json", "1");
+
     // use * to catch query params
     mockHttp.When("*/api/events*")
         .Respond("application/json", System.Text.Json.JsonSerializer.Serialize(eventData));
     mockHttp.When("*/api/clubs*")
         .Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubs));
-    mockHttp.When("*/api/users*").Respond("application/json", "[]");
     mockHttp.When("*/api/eventparticipants*").Respond("application/json", "[]");
     mockHttp.When("*/api/eventregistrations*").Respond("application/json", "[]");
     mockHttp.When("*").Respond("application/json", "[]"); // safety net
@@ -315,8 +313,9 @@ public class EventsPageTests : TestContext
             }
         };
 
-        // unauthenticated user → no users returned
-        mockHttp.When("*/api/users").Respond("application/json", "[]");
+        // Mock users count for unauthenticated user
+        mockHttp.When("*/api/users/count").Respond("application/json", "0");
+
         mockHttp.When("*/api/clubs").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubData));
         mockHttp.When("*/api/events").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(eventData));
         mockHttp.When("*/api/eventparticipants").Respond("application/json", "[]");
@@ -359,11 +358,14 @@ public class EventsPageTests : TestContext
             new { EventId = 1, EventName = "Loading Test Event", EventDescription = "Test", EventDateTime = DateTime.Now.AddHours(1), EventImgURL = "", ClubId = 1 }
         };
 
+        // Mock users count
+        mockHttp.When("*/api/users/count").Respond("application/json", "1");
+
         // Events endpoint responds after a short delay
         mockHttp.When("*/api/events*")
             .Respond(async _ =>
             {
-                await Task.Delay(800); // simulate network delay
+                await Task.Delay(800).ConfigureAwait(false); // simulate network delay
                 return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
                 {
                     Content = new StringContent(
@@ -375,7 +377,6 @@ public class EventsPageTests : TestContext
 
         // Other endpoints return immediately (empty) so only events are delayed
         mockHttp.When("*/api/clubs*").Respond("application/json", "[]");
-        mockHttp.When("*/api/users*").Respond("application/json", "[]");
         mockHttp.When("*/api/eventparticipants*").Respond("application/json", "[]");
         mockHttp.When("*/api/eventregistrations*").Respond("application/json", "[]");
         mockHttp.When("*").Respond("application/json", "[]"); // safety net
@@ -402,12 +403,14 @@ public class EventsPageTests : TestContext
         // Arrange – /api/events fails with 500
         var mockHttp = new MockHttpMessageHandler();
 
+        // Mock users count
+        mockHttp.When("*/api/users/count").Respond("application/json", "0");
+
         mockHttp.When("*/api/events*")
             .Respond(System.Net.HttpStatusCode.InternalServerError);
 
         // other endpoints OK (empty)
         mockHttp.When("*/api/clubs*").Respond("application/json", "[]");
-        mockHttp.When("*/api/users*").Respond("application/json", "[]");
         mockHttp.When("*/api/eventparticipants*").Respond("application/json", "[]");
         mockHttp.When("*/api/eventregistrations*").Respond("application/json", "[]");
         mockHttp.When("*").Respond("application/json", "[]"); // safety net
@@ -471,9 +474,11 @@ public class EventsPageTests : TestContext
             Location = "Hall"
         }).ToArray();
 
+        // Mock users count
+        mockHttp.When("*/api/users/count").Respond("application/json", "1");
+
         mockHttp.When("*/api/clubs*").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubData));
         mockHttp.When("*/api/events*").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(eventData));
-        mockHttp.When("*/api/users*").Respond("application/json", "[]");
         mockHttp.When("*/api/eventparticipants*").Respond("application/json", "[]");
         mockHttp.When("*/api/eventregistrations*").Respond("application/json", "[]");
         mockHttp.When("*").Respond("application/json", "[]"); // safety net
@@ -589,10 +594,12 @@ public class EventsPageTests : TestContext
             Location = "Hall"
         }).ToArray();
 
+        // Mock users count
+        mockHttp.When("*/api/users/count").Respond("application/json", "1");
+
         // Mock endpoints
         mockHttp.When("*/api/events*").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(bigList));
         mockHttp.When("*/api/clubs*").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubs));
-        mockHttp.When("*/api/users*").Respond("application/json", "[]");
         mockHttp.When("*/api/eventparticipants*").Respond("application/json", "[]");
         mockHttp.When("*/api/eventregistrations*").Respond("application/json", "[]");
         mockHttp.When("*").Respond("application/json", "[]"); // safety net
