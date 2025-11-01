@@ -54,7 +54,7 @@ steps:
   inputs:
     command: 'test'
     projects: 'CampusConnect_Tests/CampusConnect_Tests.csproj'
-    arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage" --results-directory $(Agent.TempDirectory)/TestResults'
+    arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage"'
     publishTestResults: true
 
 # Install ReportGenerator tool
@@ -67,7 +67,7 @@ steps:
 
 # Generate Code Coverage Report
 - script: |
-    reportgenerator -reports:$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml -targetdir:$(Agent.TempDirectory)/CoverageReport -reporttypes:"HtmlInline_AzurePipelines;Cobertura;Badges"
+    reportgenerator -reports:$(Agent.TempDirectory)/**/coverage.cobertura.xml -targetdir:$(Agent.TempDirectory)/CoverageReport -reporttypes:"HtmlInline_AzurePipelines;Cobertura;Badges"
   displayName: 'Generate Code Coverage Report'
 
 # Publish Code Coverage Results
