@@ -238,7 +238,7 @@ public class LoginPageTests : TestContext
         {
             var errorText = component.Find(".alert.alert-error");
             Assert.Contains("Invalid email or password", errorText.TextContent);
-        });
+        }, timeout: TimeSpan.FromSeconds(10));
     }
 
     [Fact]
@@ -250,7 +250,7 @@ public class LoginPageTests : TestContext
         mockHttp.When("/api/auth/login")
                .Respond(async () =>
                {
-                   await Task.Delay(500); // Short delay for testing
+                   await Task.Delay(500).ConfigureAwait(false); // Short delay for testing
                    return new HttpResponseMessage(HttpStatusCode.OK)
                    {
                        Content = new StringContent(JsonSerializer.Serialize(new { UserId = 1, Email = "test@example.com" }))

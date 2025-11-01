@@ -20,14 +20,14 @@ public class EventRegistrationService
     {
         if (currentUserId == 0)
         {
-            await _js.InvokeVoidAsync("alert", "Please log in to RSVP.");
+            await _js.InvokeVoidAsync("alert", "Please log in to RSVP.").ConfigureAwait(false);
             return;
         }
 
         try 
         {
             // RSVP through the event system - this handles everything including registration
-            var resp = await _eventApi.RsvpAsync(eventId, currentUserId);
+            var resp = await _eventApi.RsvpAsync(eventId, currentUserId).ConfigureAwait(false);
             
             if (!resp.IsSuccessStatusCode)
             {
@@ -38,16 +38,20 @@ public class EventRegistrationService
                     409 => "You already RSVPed.",
                     _   => $"RSVP failed: {resp.StatusCode}"
                 };
-                await _js.InvokeVoidAsync("alert", msg);
+                await _js.InvokeVoidAsync("alert", msg).ConfigureAwait(false);
                 return;
             }
 
             // RSVP was successful
-            await _js.InvokeVoidAsync("alert", "RSVP successful 🎉");
+            await _js.InvokeVoidAsync("alert", "RSVP successful 🎉").ConfigureAwait(false);
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
-            await _js.InvokeVoidAsync("alert", $"Error during RSVP: {ex.Message}");
+            await _js.InvokeVoidAsync("alert", $"Network error during RSVP: {ex.Message}").ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            throw;
         }
     }
 }

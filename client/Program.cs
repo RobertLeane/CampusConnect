@@ -38,4 +38,4 @@ builder.Services.AddScoped<EventParticipantApi>();
 builder.Services.AddScoped<EventRegistrationService>();
 builder.Services.AddScoped<UserApi>();
 
-await builder.Build().RunAsync();
+await builder.Build().RunAsync().ConfigureAwait(false);

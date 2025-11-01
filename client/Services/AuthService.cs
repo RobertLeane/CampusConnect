@@ -24,11 +24,11 @@ public class AuthService
         try
         {
             var loginRequest = new { Email = email, Password = password };
-            var response = await httpClient.PostAsJsonAsync("/api/auth/login", loginRequest);
+            var response = await httpClient.PostAsJsonAsync("/api/auth/login", loginRequest).ConfigureAwait(false);;
 
             if (response.IsSuccessStatusCode)
             {
-                var content = await response.Content.ReadAsStringAsync();
+                var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);;
                 var authResponse = JsonSerializer.Deserialize<AuthResponse>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 
                 if (authResponse != null)
@@ -41,16 +41,24 @@ public class AuthService
                     };
 
                     // Store in browser localStorage for persistence
-                    await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "user", JsonSerializer.Serialize(_currentUser));
+                    await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "user", JsonSerializer.Serialize(_currentUser)).ConfigureAwait(false);
                     
                     AuthStateChanged?.Invoke();
                     return true;
                 }
             }
         }
+        catch (HttpRequestException)
+        {
+            throw;
+        }
+        catch (JsonException)
+        {
+            throw;
+        }
         catch (Exception)
         {
-            // Login failed
+            throw;
         }
 
         return false;
@@ -59,7 +67,7 @@ public class AuthService
     public async Task LogoutAsync()
     {
         _currentUser = null;
-        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "user");
+        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "user").ConfigureAwait(false);
         AuthStateChanged?.Invoke();
     }
 
@@ -67,16 +75,20 @@ public class AuthService
     {
         try
         {
-            var userJson = await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", "user");
+            var userJson = await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", "user").ConfigureAwait(false);
             if (!string.IsNullOrEmpty(userJson))
             {
                 _currentUser = JsonSerializer.Deserialize<UserSession>(userJson);
                 return _currentUser?.IsAuthenticated == true;
             }
         }
-        catch (Exception)
+        catch (JsonException)
         {
-            // Failed to restore session
+            throw;
+        }
+        catch (JSException)
+        {
+            throw;
         }
 
         return false;

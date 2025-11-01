@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Samantha Lyons\\Downloads\\CampusConnect\\client\\Client.csproj": {}
+    "C:\\Users\\leane\\CampusConnect\\client\\Client.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Samantha Lyons\\Downloads\\CampusConnect\\client\\Client.csproj": {
+    "C:\\Users\\leane\\CampusConnect\\client\\Client.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Samantha Lyons\\Downloads\\CampusConnect\\client\\Client.csproj",
+        "projectUniqueName": "C:\\Users\\leane\\CampusConnect\\client\\Client.csproj",
         "projectName": "Client",
-        "projectPath": "C:\\Users\\Samantha Lyons\\Downloads\\CampusConnect\\client\\Client.csproj",
-        "packagesPath": "C:\\Users\\Samantha Lyons\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Samantha Lyons\\Downloads\\CampusConnect\\client\\obj\\",
+        "projectPath": "C:\\Users\\leane\\CampusConnect\\client\\Client.csproj",
+        "packagesPath": "C:\\Users\\leane\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\leane\\CampusConnect\\client\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Samantha Lyons\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\leane\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -26,7 +26,6 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -36,6 +35,7 @@
           }
         },
         "warningProperties": {
+          "allWarningsAsErrors": true,
           "warnAsError": [
             "NU1605"
           ]
@@ -59,6 +59,12 @@
               "target": "Package",
               "version": "[8.0.11, )"
             },
+            "Microsoft.CodeAnalysis.NetAnalyzers": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
             "Microsoft.NET.ILLink.Tasks": {
               "suppressParent": "All",
               "target": "Package",
@@ -70,6 +76,18 @@
               "target": "Package",
               "version": "[8.0.20, )",
               "autoReferenced": true
+            },
+            "Microsoft.VisualStudio.Threading.Analyzers": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[17.8.14, )"
+            },
+            "SecurityCodeScan.VS2019": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[5.6.7, )"
             },
             "bunit": {
               "target": "Package",

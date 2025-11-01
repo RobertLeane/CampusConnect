@@ -7,7 +7,7 @@ using Xunit;
 
 namespace CampusConnect_Tests;
 
-public class MemberApiTests
+public class MemberApiTests : IDisposable
 {
     private readonly MockHttpMessageHandler _mockHttp;
     private readonly HttpClient _httpClient;
@@ -19,6 +19,12 @@ public class MemberApiTests
         _httpClient = _mockHttp.ToHttpClient();
         _httpClient.BaseAddress = new Uri("https://localhost:7071/");
         _memberApi = new MemberApi(_httpClient);
+    }
+
+    public void Dispose()
+    {
+        _httpClient?.Dispose();
+        _mockHttp?.Dispose();
     }
 
     #region GetClubMembersAsync Tests
@@ -120,7 +126,7 @@ public class MemberApiTests
         // Arrange
         var clubId = 1;
         var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         _mockHttp.When($"/api/members/clubs/{clubId}/members")
                 .Respond("application/json", "[]");
@@ -230,7 +236,7 @@ public class MemberApiTests
         // Arrange
         var userId = 1;
         var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         _mockHttp.When($"/api/members/users/{userId}/memberships")
                 .Respond("application/json", "[]");
@@ -323,7 +329,7 @@ public class MemberApiTests
         var userId = 1;
         var clubId = 1;
         var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         _mockHttp.When($"/api/members/clubs/{clubId}/members")
                 .Respond("application/json", "{}");
