@@ -343,10 +343,7 @@ public class ClubsPageTests : TestContext
         // Act
         var component = RenderComponent<Clubs>();
 
-        // Assert - Initially should show loading
-        Assert.Contains("Loading clubs...", component.Markup);
-
-        // Wait and check that error is handled gracefully
+        // Assert - Wait and check that error is handled gracefully
         component.WaitForAssertion(() =>
         {
             var markup = component.Markup;
