@@ -48,14 +48,35 @@ steps:
     projects: 'client/Client.csproj'
     arguments: '--configuration $(buildConfiguration)'
 
-# Run tests
+# Run tests with code coverage
 - task: DotNetCoreCLI@2
-  displayName: 'Run Tests'
+  displayName: 'Run Tests with Code Coverage'
   inputs:
     command: 'test'
     projects: 'CampusConnect_Tests/CampusConnect_Tests.csproj'
-    arguments: '--configuration $(buildConfiguration)'
+    arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage" --results-directory $(Agent.TempDirectory)/TestResults'
     publishTestResults: true
-    testResultsFormat: 'VSTest'
+
+# Install ReportGenerator tool
+- task: DotNetCoreCLI@2
+  displayName: 'Install ReportGenerator'
+  inputs:
+    command: 'custom'
+    custom: 'tool'
+    arguments: 'install --global dotnet-reportgenerator-globaltool'
+
+# Generate Code Coverage Report
+- script: |
+    reportgenerator -reports:$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml -targetdir:$(Agent.TempDirectory)/CoverageReport -reporttypes:"HtmlInline_AzurePipelines;Cobertura;Badges"
+  displayName: 'Generate Code Coverage Report'
+
+# Publish Code Coverage Results
+- task: PublishCodeCoverageResults@2
+  displayName: 'Publish Code Coverage'
+  inputs:
+    codeCoverageTool: 'Cobertura'
+    summaryFileLocation: '$(Agent.TempDirectory)/CoverageReport/Cobertura.xml'
+    reportDirectory: '$(Agent.TempDirectory)/CoverageReport'
+    failIfCoverageEmpty: false
 
     
