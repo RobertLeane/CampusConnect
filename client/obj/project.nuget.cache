@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "hHuQupRnjco=",
+  "dgSpecHash": "JCJ+lSlnrao=",
   "success": true,
-  "projectFilePath": "c:\\Users\\leane\\CampusConnect\\client\\Client.csproj",
+  "projectFilePath": "C:\\Users\\leane\\CampusConnect\\client\\Client.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\leane\\.nuget\\packages\\anglesharp\\1.2.0\\anglesharp.1.2.0.nupkg.sha512",
     "C:\\Users\\leane\\.nuget\\packages\\anglesharp.css\\1.0.0-beta.154\\anglesharp.css.1.0.0-beta.154.nupkg.sha512",

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\leane\\CampusConnect\\client\\Client.csproj": {}
+    "C:\\Users\\leane\\CampusConnect\\client\\Client.csproj": {}
   },
   "projects": {
-    "c:\\Users\\leane\\CampusConnect\\client\\Client.csproj": {
+    "C:\\Users\\leane\\CampusConnect\\client\\Client.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\leane\\CampusConnect\\client\\Client.csproj",
+        "projectUniqueName": "C:\\Users\\leane\\CampusConnect\\client\\Client.csproj",
         "projectName": "Client",
-        "projectPath": "c:\\Users\\leane\\CampusConnect\\client\\Client.csproj",
+        "projectPath": "C:\\Users\\leane\\CampusConnect\\client\\Client.csproj",
         "packagesPath": "C:\\Users\\leane\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\leane\\CampusConnect\\client\\obj\\",
+        "outputPath": "C:\\Users\\leane\\CampusConnect\\client\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
