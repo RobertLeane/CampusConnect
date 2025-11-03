@@ -90,8 +90,7 @@ else
 app.UseCors("AllowAll");
 app.UseAuthorization();
 
-// ✅ Serve Blazor WASM + Controllers
-app.UseStaticFiles();
+// Routing for API controllers
 app.UseRouting();
 
 // Add logging middleware to debug requests
@@ -153,10 +152,24 @@ app.MapGet("/debug/tables", async () =>
 
 app.MapControllers();
 
-// Serve the Blazor app for all non-API routes
-app.MapFallbackToFile("index.html");
+// Root endpoint to confirm API is running
+app.MapGet("/", () => Results.Json(new 
+{ 
+    message = "CampusConnect API is running",
+    version = "1.0.0",
+    timestamp = DateTime.UtcNow,
+    endpoints = new[] 
+    {
+        "/health",
+        "/api/ping",
+        "/api/clubs",
+        "/api/events",
+        "/api/users",
+        "/swagger"
+    }
+}));
 
 logger.LogInformation("=== CampusConnect API Configuration Complete ===");
-logger.LogInformation("Available endpoints: /health, /api/*, /swagger, / (Blazor app)");
+logger.LogInformation("Available endpoints: /health, /api/*, /swagger");
 
 app.Run();
