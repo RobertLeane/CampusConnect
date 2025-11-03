@@ -11,6 +11,12 @@ client/obj/
 
 # VS Code
 
+# Secrets and environment files
+secrets.env
+.env
+*.local.json
+local.settings.json
+
 # User-specific files
 *.suo
 *.user
