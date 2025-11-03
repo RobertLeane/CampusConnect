@@ -65,7 +65,9 @@
                             <h3>@club.ClubName</h3>
                             <p>@(club.ClubDescription ?? "No description available.")</p>
                             <div class="actions">
-                                <button class="btn btn--primary" @onclick="() => HandleJoinClubAsync(club.ClubId)">Join Club</button>
+                                <button class="btn btn--primary" @onclick="() => HandleJoinClubAsync(club.ClubId)" disabled="@isJoining">
+                                    @if (isJoining) { <text>Joining...</text> } else { <text>Join Club</text> }
+                                </button>
                             </div>
                         </div>
                     </article>
@@ -112,6 +114,7 @@
     }
 
     private int CurrentUserId => AuthService.CurrentUser?.UserId ?? 0;
+    private bool isJoining = false;
 
     private async Task HandleJoinClubAsync(int clubId)
     {
@@ -121,8 +124,14 @@
             return;
         }
 
+        if (isJoining)
+        {
+            return; // Prevent multiple concurrent join attempts
+        }
+
         try
         {
+            isJoining = true;
             Console.WriteLine($"Attempting to join club {clubId} with user {CurrentUserId}");
             var member = await MemberApi.AddMemberToClubAsync(CurrentUserId, clubId);
             if (member != null)
@@ -143,6 +152,10 @@
         {
             Console.WriteLine($"General Error: {ex.Message}");
             await JS.InvokeVoidAsync("alert", $"Error joining club: {ex.Message}");
+        }
+        finally
+        {
+            isJoining = false;
         }
     }
 

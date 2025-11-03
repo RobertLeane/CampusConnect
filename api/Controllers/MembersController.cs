@@ -72,7 +72,9 @@ public class MembersController : ControllerBase
 
             _logger.LogInformation($"Adding user {request.UserId} to club {clubId} with role '{request.Role}'");
             var member = await _memberService.AddMemberToClubAsync(request.UserId, clubId, request.Role ?? "Member").ConfigureAwait(false);
-            return CreatedAtAction(nameof(GetClubMembersAsync), new { clubId = clubId }, member);
+            
+            // Use Created instead of CreatedAtAction to avoid route generation issues
+            return Created($"/api/members/clubs/{clubId}/members", member);
         }
         catch (InvalidOperationException ex)
         {

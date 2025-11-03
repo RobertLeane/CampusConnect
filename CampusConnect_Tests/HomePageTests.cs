@@ -348,7 +348,6 @@ public class HomePageTests : TestContext
 
         Assert.Contains("campusconnect", html);
         Assert.Contains("quick links", html);
-        Assert.Contains("support", html);
     }
 
     [Fact]

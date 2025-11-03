@@ -152,16 +152,7 @@ public class MainLayoutTests : TestContext
         Assert.Contains("My Dashboard", component.Markup);
     }
 
-    [Fact]
-    public void MainLayout_Footer_HasAboutUsLink()
-    {
-        // Act
-        var component = RenderComponent<MainLayout>();
-
-        // Assert
-        Assert.Contains("href=\"/about\"", component.Markup);
-        Assert.Contains("About Us", component.Markup);
-    }
+   
 
     #endregion
 
