@@ -11,19 +11,17 @@ builder.Services.AddScoped(sp =>
 {
     var httpClient = new HttpClient();
     
-    // For local development, point to the API running on port 5000
-    // For App Service deployment, both client and API will be on the same domain
     if (builder.HostEnvironment.IsDevelopment())
     {
+        // Local development - point to local API
         httpClient.BaseAddress = new Uri("http://localhost:5000");
     }
     else
     {
-        // For App Service, use the same domain - no subdirectory needed
-        var baseUri = builder.HostEnvironment.BaseAddress;
-        Console.WriteLine($"[DEBUG] Environment BaseAddress: {baseUri}");
-        httpClient.BaseAddress = new Uri(baseUri);
-        Console.WriteLine($"[DEBUG] HttpClient BaseAddress set to: {httpClient.BaseAddress}");
+        // Production - use API_URL from configuration or default
+        var apiUrl = builder.Configuration["API_URL"] ?? "https://campusconnectapp.delightfulsky-c3ec110b.uksouth.azurecontainerapps.io";
+        Console.WriteLine($"[DEBUG] API URL: {apiUrl}");
+        httpClient.BaseAddress = new Uri(apiUrl);
     }
     
     return httpClient;

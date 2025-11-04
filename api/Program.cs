@@ -85,8 +85,9 @@ else
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "CampusConnect API V1");
         c.RoutePrefix = "swagger";
     });
-    // Don't use HTTPS redirection in production (Azure App Service handles this)
+    // Don't use HTTPS redirection in production (Azure Container Apps handles this)
 }
+
 app.UseCors("AllowAll");
 app.UseAuthorization();
 
