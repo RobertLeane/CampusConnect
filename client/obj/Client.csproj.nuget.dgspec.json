@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\StudentRobertLeane(T\\Documents\\CampusConnect\\client\\Client.csproj": {}
+    "C:\\Users\\Samantha Lyons\\Downloads\\CampusConnect\\client\\Client.csproj": {}
   },
   "projects": {
-    "C:\\Users\\StudentRobertLeane(T\\Documents\\CampusConnect\\client\\Client.csproj": {
+    "C:\\Users\\Samantha Lyons\\Downloads\\CampusConnect\\client\\Client.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\StudentRobertLeane(T\\Documents\\CampusConnect\\client\\Client.csproj",
+        "projectUniqueName": "C:\\Users\\Samantha Lyons\\Downloads\\CampusConnect\\client\\Client.csproj",
         "projectName": "Client",
-        "projectPath": "C:\\Users\\StudentRobertLeane(T\\Documents\\CampusConnect\\client\\Client.csproj",
-        "packagesPath": "C:\\Users\\StudentRobertLeane(T\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\StudentRobertLeane(T\\Documents\\CampusConnect\\client\\obj\\",
+        "projectPath": "C:\\Users\\Samantha Lyons\\Downloads\\CampusConnect\\client\\Client.csproj",
+        "packagesPath": "C:\\Users\\Samantha Lyons\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Samantha Lyons\\Downloads\\CampusConnect\\client\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\StudentRobertLeane(T\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Samantha Lyons\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -60,6 +60,10 @@
               "target": "Package",
               "version": "[8.0.11, )"
             },
+            "Microsoft.AspNetCore.Components.WebAssembly.Server": {
+              "target": "Package",
+              "version": "[9.0.10, )"
+            },
             "Microsoft.CodeAnalysis.NetAnalyzers": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
@@ -69,13 +73,13 @@
             "Microsoft.NET.ILLink.Tasks": {
               "suppressParent": "All",
               "target": "Package",
-              "version": "[8.0.21, )",
+              "version": "[8.0.20, )",
               "autoReferenced": true
             },
             "Microsoft.NET.Sdk.WebAssembly.Pack": {
               "suppressParent": "All",
               "target": "Package",
-              "version": "[8.0.21, )",
+              "version": "[8.0.20, )",
               "autoReferenced": true
             },
             "Microsoft.VisualStudio.Threading.Analyzers": {
@@ -113,7 +117,7 @@
           "downloadDependencies": [
             {
               "name": "Microsoft.NETCore.App.Runtime.Mono.browser-wasm",
-              "version": "[8.0.21, 8.0.21]"
+              "version": "[8.0.20, 8.0.20]"
             }
           ],
           "frameworkReferences": {
@@ -121,7 +125,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.415/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.414/PortableRuntimeIdentifierGraph.json"
         }
       },
       "runtimes": {
