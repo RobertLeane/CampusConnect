@@ -5,12 +5,20 @@
     <RestoreTool Condition=" '$(RestoreTool)' == '' ">NuGet</RestoreTool>
     <ProjectAssetsFile Condition=" '$(ProjectAssetsFile)' == '' ">$(MSBuildThisFileDirectory)project.assets.json</ProjectAssetsFile>
     <NuGetPackageRoot Condition=" '$(NuGetPackageRoot)' == '' ">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>
+<<<<<<< HEAD
     <NuGetPackageFolders Condition=" '$(NuGetPackageFolders)' == '' ">C:\Users\leane\.nuget\packages\;C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages</NuGetPackageFolders>
+=======
+    <NuGetPackageFolders Condition=" '$(NuGetPackageFolders)' == '' ">C:\Users\Samantha Lyons\.nuget\packages\;C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages</NuGetPackageFolders>
+>>>>>>> 164df6e7df4457f94dfe01c6dff21b506540ec62
     <NuGetProjectStyle Condition=" '$(NuGetProjectStyle)' == '' ">PackageReference</NuGetProjectStyle>
     <NuGetToolVersion Condition=" '$(NuGetToolVersion)' == '' ">6.11.1</NuGetToolVersion>
   </PropertyGroup>
   <ItemGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
+<<<<<<< HEAD
     <SourceRoot Include="C:\Users\leane\.nuget\packages\" />
+=======
+    <SourceRoot Include="C:\Users\Samantha Lyons\.nuget\packages\" />
+>>>>>>> 164df6e7df4457f94dfe01c6dff21b506540ec62
     <SourceRoot Include="C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\" />
   </ItemGroup>
   <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
@@ -21,6 +29,7 @@
     <Import Project="$(NuGetPackageRoot)microsoft.aspnetcore.components.webassembly\8.0.11\build\net8.0\Microsoft.AspNetCore.Components.WebAssembly.props" Condition="Exists('$(NuGetPackageRoot)microsoft.aspnetcore.components.webassembly\8.0.11\build\net8.0\Microsoft.AspNetCore.Components.WebAssembly.props')" />
   </ImportGroup>
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
+<<<<<<< HEAD
     <PkgSecurityCodeScan_VS2019 Condition=" '$(PkgSecurityCodeScan_VS2019)' == '' ">C:\Users\leane\.nuget\packages\securitycodescan.vs2019\5.6.7</PkgSecurityCodeScan_VS2019>
     <PkgMicrosoft_VisualStudio_Threading_Analyzers Condition=" '$(PkgMicrosoft_VisualStudio_Threading_Analyzers)' == '' ">C:\Users\leane\.nuget\packages\microsoft.visualstudio.threading.analyzers\17.8.14</PkgMicrosoft_VisualStudio_Threading_Analyzers>
     <PkgMicrosoft_NET_Sdk_WebAssembly_Pack Condition=" '$(PkgMicrosoft_NET_Sdk_WebAssembly_Pack)' == '' ">C:\Users\leane\.nuget\packages\microsoft.net.sdk.webassembly.pack\8.0.20</PkgMicrosoft_NET_Sdk_WebAssembly_Pack>
@@ -28,5 +37,14 @@
     <PkgMicrosoft_CodeAnalysis_NetAnalyzers Condition=" '$(PkgMicrosoft_CodeAnalysis_NetAnalyzers)' == '' ">C:\Users\leane\.nuget\packages\microsoft.codeanalysis.netanalyzers\8.0.0</PkgMicrosoft_CodeAnalysis_NetAnalyzers>
     <PkgMicrosoft_AspNetCore_Components_WebAssembly_Server Condition=" '$(PkgMicrosoft_AspNetCore_Components_WebAssembly_Server)' == '' ">C:\Users\leane\.nuget\packages\microsoft.aspnetcore.components.webassembly.server\9.0.10</PkgMicrosoft_AspNetCore_Components_WebAssembly_Server>
     <PkgMicrosoft_AspNetCore_Components_WebAssembly_DevServer Condition=" '$(PkgMicrosoft_AspNetCore_Components_WebAssembly_DevServer)' == '' ">C:\Users\leane\.nuget\packages\microsoft.aspnetcore.components.webassembly.devserver\8.0.11</PkgMicrosoft_AspNetCore_Components_WebAssembly_DevServer>
+=======
+    <PkgSecurityCodeScan_VS2019 Condition=" '$(PkgSecurityCodeScan_VS2019)' == '' ">C:\Users\Samantha Lyons\.nuget\packages\securitycodescan.vs2019\5.6.7</PkgSecurityCodeScan_VS2019>
+    <PkgMicrosoft_VisualStudio_Threading_Analyzers Condition=" '$(PkgMicrosoft_VisualStudio_Threading_Analyzers)' == '' ">C:\Users\Samantha Lyons\.nuget\packages\microsoft.visualstudio.threading.analyzers\17.8.14</PkgMicrosoft_VisualStudio_Threading_Analyzers>
+    <PkgMicrosoft_NET_Sdk_WebAssembly_Pack Condition=" '$(PkgMicrosoft_NET_Sdk_WebAssembly_Pack)' == '' ">C:\Users\Samantha Lyons\.nuget\packages\microsoft.net.sdk.webassembly.pack\8.0.20</PkgMicrosoft_NET_Sdk_WebAssembly_Pack>
+    <PkgMicrosoft_NET_ILLink_Tasks Condition=" '$(PkgMicrosoft_NET_ILLink_Tasks)' == '' ">C:\Users\Samantha Lyons\.nuget\packages\microsoft.net.illink.tasks\8.0.20</PkgMicrosoft_NET_ILLink_Tasks>
+    <PkgMicrosoft_CodeAnalysis_NetAnalyzers Condition=" '$(PkgMicrosoft_CodeAnalysis_NetAnalyzers)' == '' ">C:\Users\Samantha Lyons\.nuget\packages\microsoft.codeanalysis.netanalyzers\8.0.0</PkgMicrosoft_CodeAnalysis_NetAnalyzers>
+    <PkgMicrosoft_AspNetCore_Components_WebAssembly_Server Condition=" '$(PkgMicrosoft_AspNetCore_Components_WebAssembly_Server)' == '' ">C:\Users\Samantha Lyons\.nuget\packages\microsoft.aspnetcore.components.webassembly.server\9.0.10</PkgMicrosoft_AspNetCore_Components_WebAssembly_Server>
+    <PkgMicrosoft_AspNetCore_Components_WebAssembly_DevServer Condition=" '$(PkgMicrosoft_AspNetCore_Components_WebAssembly_DevServer)' == '' ">C:\Users\Samantha Lyons\.nuget\packages\microsoft.aspnetcore.components.webassembly.devserver\8.0.11</PkgMicrosoft_AspNetCore_Components_WebAssembly_DevServer>
+>>>>>>> 164df6e7df4457f94dfe01c6dff21b506540ec62
   </PropertyGroup>
 </Project>

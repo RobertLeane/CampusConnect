@@ -1,12 +1,11 @@
 using Bunit;
-using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Client.Pages;
 using Client.Services;
 using RichardSzalay.MockHttp;
-using Xunit;
 using MudBlazor.Services;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using System.Linq;
 
 namespace CampusConnect_Tests;
 
@@ -340,6 +339,18 @@ public class EventsPageTests : TestContext
             // Check event is displayed
             Assert.Contains("Basketball Game", markup);
         }, timeout: TimeSpan.FromSeconds(3));
+
+        // Additionally, try clicking the RSVP button and assert the guest alert was invoked
+        var rsvpButton = component.FindAll("button").FirstOrDefault(b => (b.TextContent ?? "").Contains("RSVP", StringComparison.OrdinalIgnoreCase));
+        Assert.NotNull(rsvpButton);
+
+        rsvpButton.Click();
+
+    // Verify a JS alert was invoked asking the user to log in
+    var alertInvocation = JSInterop.Invocations.FirstOrDefault(i => (i.Identifier ?? string.Empty).Equals("alert", StringComparison.OrdinalIgnoreCase));
+    Assert.False(string.IsNullOrEmpty(alertInvocation.Identifier), "Expected a JS 'alert' invocation when a guest clicks RSVP.");
+    var alertArg = alertInvocation.Arguments?.FirstOrDefault()?.ToString() ?? string.Empty;
+        Assert.Contains("Please log in to RSVP", alertArg, StringComparison.OrdinalIgnoreCase);
     }
 
 
