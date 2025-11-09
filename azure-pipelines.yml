@@ -1,82 +1,139 @@
 # Azure DevOps Pipeline for CampusConnect
-# Build and test Blazor WebAssembly + ASP.NET Core Web API
+# Build, test, and publish Docker images to Docker Hub
 
 trigger:
 - main
 
 variables:
   buildConfiguration: 'Release'
+  dockerHubServiceConnection: 'DockerHubConnection' # You'll need to create this service connection
+  apiImageName: 'campusconnect-api'
+  clientImageName: 'campusconnect-client'
 
 pool:
   vmImage: ubuntu-latest
 
-steps:
-# Install .NET 8 SDK
-- task: UseDotNet@2
-  displayName: 'Install .NET 8 SDK'
-  inputs:
-    packageType: 'sdk'
-    version: '8.0.x'
-    performMultiLevelLookup: true
+stages:
+- stage: BuildAndTest
+  displayName: 'Build and Test'
+  jobs:
+  - job: BuildAndTest
+    displayName: 'Build and Run Tests'
+    steps:
+    # Install .NET 8 SDK
+    - task: UseDotNet@2
+      displayName: 'Install .NET 8 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '8.0.x'
+        performMultiLevelLookup: true
 
-# Verify .NET version
-- script: |
-    dotnet --version
-    dotnet --list-sdks
-  displayName: 'Verify .NET SDK version'
+    # Verify .NET version
+    - script: |
+        dotnet --version
+        dotnet --list-sdks
+      displayName: 'Verify .NET SDK version'
 
-# Restore dependencies
-- task: DotNetCoreCLI@2
-  displayName: 'Restore dependencies'
-  inputs:
-    command: 'restore'
-    projects: '**/*.csproj'
+    # Restore dependencies
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore dependencies'
+      inputs:
+        command: 'restore'
+        projects: '**/*.csproj'
 
-# Build API project
-- task: DotNetCoreCLI@2
-  displayName: 'Build API'
-  inputs:
-    command: 'build'
-    projects: 'api/api.csproj'
-    arguments: '--configuration $(buildConfiguration)'
+    # Build API project
+    - task: DotNetCoreCLI@2
+      displayName: 'Build API'
+      inputs:
+        command: 'build'
+        projects: 'api/api.csproj'
+        arguments: '--configuration $(buildConfiguration)'
 
-# Build Blazor Client project
-- task: DotNetCoreCLI@2
-  displayName: 'Build Blazor Client'
-  inputs:
-    command: 'build'
-    projects: 'client/Client.csproj'
-    arguments: '--configuration $(buildConfiguration)'
+    # Build Blazor Client project
+    - task: DotNetCoreCLI@2
+      displayName: 'Build Blazor Client'
+      inputs:
+        command: 'build'
+        projects: 'client/Client.csproj'
+        arguments: '--configuration $(buildConfiguration)'
 
-# Run tests with code coverage
-- task: DotNetCoreCLI@2
-  displayName: 'Run Tests with Code Coverage'
-  inputs:
-    command: 'test'
-    projects: 'CampusConnect_Tests/CampusConnect_Tests.csproj'
-    arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage"'
-    publishTestResults: true
+    # Run tests with code coverage
+    - task: DotNetCoreCLI@2
+      displayName: 'Run Tests with Code Coverage'
+      inputs:
+        command: 'test'
+        projects: 'CampusConnect_Tests/CampusConnect_Tests.csproj'
+        arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage"'
+        publishTestResults: true
 
-# Install ReportGenerator tool
-- task: DotNetCoreCLI@2
-  displayName: 'Install ReportGenerator'
-  inputs:
-    command: 'custom'
-    custom: 'tool'
-    arguments: 'install --global dotnet-reportgenerator-globaltool'
+    # Install ReportGenerator tool
+    - task: DotNetCoreCLI@2
+      displayName: 'Install ReportGenerator'
+      inputs:
+        command: 'custom'
+        custom: 'tool'
+        arguments: 'install --global dotnet-reportgenerator-globaltool'
 
-# Generate Code Coverage Report
-- script: |
-    reportgenerator -reports:$(Agent.TempDirectory)/**/coverage.cobertura.xml -targetdir:$(Agent.TempDirectory)/CoverageReport -reporttypes:"HtmlInline_AzurePipelines;Cobertura;Badges"
-  displayName: 'Generate Code Coverage Report'
+    # Generate Code Coverage Report
+    - script: |
+        reportgenerator -reports:$(Agent.TempDirectory)/**/coverage.cobertura.xml -targetdir:$(Agent.TempDirectory)/CoverageReport -reporttypes:"HtmlInline_AzurePipelines;Cobertura;Badges"
+      displayName: 'Generate Code Coverage Report'
 
-# Publish Code Coverage Results
-- task: PublishCodeCoverageResults@2
-  displayName: 'Publish Code Coverage'
-  inputs:
-    codeCoverageTool: 'Cobertura'
-    summaryFileLocation: '$(Agent.TempDirectory)/CoverageReport/Cobertura.xml'
-    reportDirectory: '$(Agent.TempDirectory)/CoverageReport'
-    failIfCoverageEmpty: false
+    # Publish Code Coverage Results
+    - task: PublishCodeCoverageResults@2
+      displayName: 'Publish Code Coverage'
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: '$(Agent.TempDirectory)/CoverageReport/Cobertura.xml'
+        reportDirectory: '$(Agent.TempDirectory)/CoverageReport'
+        failIfCoverageEmpty: false
 
-    
+- stage: PublishToDockerHub
+  displayName: 'Build and Push Docker Images'
+  dependsOn: BuildAndTest
+  condition: succeeded()
+  jobs:
+  - job: DockerBuildPush
+    displayName: 'Build and Push to Docker Hub'
+    steps:
+    # Checkout code
+    - checkout: self
+
+    # Docker Hub Login
+    - task: Docker@2
+      displayName: 'Login to Docker Hub'
+      inputs:
+        command: login
+        containerRegistry: $(dockerHubServiceConnection)
+
+    # Build and Push API Image
+    - task: Docker@2
+      displayName: 'Build and Push API Image'
+      inputs:
+        command: buildAndPush
+        repository: '$(dockerHubUsername)/$(apiImageName)'
+        dockerfile: 'api/Dockerfile'
+        buildContext: '$(Build.SourcesDirectory)'
+        tags: |
+          latest
+          $(Build.BuildId)
+
+    # Build and Push Client Image
+    - task: Docker@2
+      displayName: 'Build and Push Client Image'
+      inputs:
+        command: buildAndPush
+        repository: '$(dockerHubUsername)/$(clientImageName)'
+        dockerfile: 'client/Dockerfile'
+        buildContext: '$(Build.SourcesDirectory)'
+        tags: |
+          latest
+          $(Build.BuildId)
+
+    # Display Image Information
+    - script: |
+        echo "API Image: $(dockerHubUsername)/$(apiImageName):latest"
+        echo "API Image: $(dockerHubUsername)/$(apiImageName):$(Build.BuildId)"
+        echo "Client Image: $(dockerHubUsername)/$(clientImageName):latest"
+        echo "Client Image: $(dockerHubUsername)/$(clientImageName):$(Build.BuildId)"
+      displayName: 'Display Image Tags'
