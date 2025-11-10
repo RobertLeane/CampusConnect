@@ -2,23 +2,13 @@ using CampusConnect.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add configuration sources - works for both local and Azure
 builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 builder.Configuration.AddJsonFile("local.settings.json", optional: true, reloadOnChange: true);
 
-// Configure logging for better diagnostics
+// Logging for better diagnostics
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
-
-// Configure ports: Azure App Service uses PORT env var, local dev uses launch settings
-if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PORT")))
-{
-    // Azure App Service - use the PORT environment variable
-    var port = Environment.GetEnvironmentVariable("PORT");
-    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
-}
-// For local development, let ASP.NET Core use the default ports from launchSettings.json
 
 // Add services to the container
 builder.Services.AddControllersWithViews();
@@ -29,7 +19,7 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new() { Title = "CampusConnect API", Version = "v1" });
 });
 
-// Register your API services (with error handling)
+// Register API services (with error handling)
 try 
 {
     builder.Services.AddScoped<IClubService, ClubService>();
@@ -37,6 +27,7 @@ try
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<IEventParticipantService, EventParticipantService>();
     builder.Services.AddScoped<IMemberService, MemberService>();
+    builder.Services.AddApplicationInsightsTelemetry();
 }
 catch (InvalidOperationException ex)
 {
@@ -62,7 +53,6 @@ var app = builder.Build();
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
 logger.LogInformation("=== CampusConnect API Starting ===");
 logger.LogInformation($"Environment: {app.Environment.EnvironmentName}");
-logger.LogInformation($"Port: {Environment.GetEnvironmentVariable("PORT") ?? "8080"}");
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
@@ -73,19 +63,17 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "CampusConnect API V1");
         c.RoutePrefix = "swagger";
     });
-    // Only use HTTPS redirection in development
     app.UseHttpsRedirection();
 }
 else
 {
-    // In production, serve Swagger at /swagger but don't make it the default
+    // In production, serve Swagger but don't redirect to HTTPS (handled by container)
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "CampusConnect API V1");
         c.RoutePrefix = "swagger";
     });
-    // Don't use HTTPS redirection in production (Azure Container Apps handles this)
 }
 
 app.UseCors("AllowAll");
@@ -106,11 +94,10 @@ app.Use(async (context, next) =>
 // Add a simple health check endpoint
 app.MapGet("/health", () => new { status = "healthy", timestamp = DateTime.UtcNow });
 
-// Add debug endpoints for Azure App Service
+// Add debug endpoints
 app.MapGet("/debug/env", () => new 
 { 
     environment = app.Environment.EnvironmentName,
-    port = Environment.GetEnvironmentVariable("PORT"),
     urls = builder.WebHost.GetSetting("urls"),
     contentRoot = app.Environment.ContentRootPath,
     webRoot = app.Environment.WebRootPath

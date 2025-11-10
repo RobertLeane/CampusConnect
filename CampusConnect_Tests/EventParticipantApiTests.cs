@@ -13,10 +13,6 @@ using System.Collections.Generic;
 
 namespace CampusConnect_Tests;
 
-/// <summary>
-/// Tests for the EventParticipantApi service (client/Services/EventParticipantApi.cs)
-/// Comprehensive tests to achieve 100% code coverage for all API methods
-/// </summary>
 public class EventParticipantApiTests
 {
     private EventParticipantApi CreateApiWithMockHttp(MockHttpMessageHandler mockHttp)
@@ -952,7 +948,7 @@ public class EventParticipantApiTests
     {
         // Arrange
         var mockHttp = new MockHttpMessageHandler();
-        var expectedUserId = memberId * 10; // Predictable response
+        var expectedUserId = memberId * 10;
 
         mockHttp.When($"*/api/eventparticipants/member/{memberId}")
             .Respond("application/json", JsonSerializer.Serialize(expectedUserId));
@@ -1032,7 +1028,7 @@ public class EventParticipantApiTests
     {
         // Arrange
         var mockHttp = new MockHttpMessageHandler();
-        var expectedMemberId = userId + 100; // Predictable response
+        var expectedMemberId = userId + 100;
 
         mockHttp.When($"*/api/eventparticipants/member/user/{userId}")
             .Respond("application/json", JsonSerializer.Serialize(expectedMemberId));

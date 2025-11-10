@@ -109,15 +109,12 @@ public class EventParticipantService : IEventParticipantService
             _logger.LogInformation("Getting events for member ids");
             var eventDetails = new List<EventDto>();
 
-            // If no member ids provided return empty list
             var memberIdList = memberIds?.ToList() ?? new List<int>();
             if (memberIdList.Count == 0) return eventDetails;
 
             var conn = await SqlService.CreateConnectionAsync(_configuration).ConfigureAwait(false);
             await using (conn.ConfigureAwait(false))
             {
-                // Efficient single query: join EventParticipants -> Events
-                // Build parameterized IN clause
                 var paramNames = new List<string>();
                 var cmd = new SqlCommand();
                 for (var i = 0; i < memberIdList.Count; i++)

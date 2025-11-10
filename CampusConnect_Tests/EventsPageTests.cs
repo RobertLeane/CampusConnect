@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Client.Pages;
 using Client.Services;
 using RichardSzalay.MockHttp;
-using MudBlazor.Services;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Linq;
 
@@ -21,7 +20,6 @@ public class EventsPageTests : TestContext
         Services.AddSingleton<UserApi>();
         Services.AddSingleton<EventRegistrationService>();
         Services.AddSingleton<EventParticipantApi>();
-        Services.AddMudServices();
         // Setup mock JSRuntime
         JSInterop.Mode = JSRuntimeMode.Loose;
 
@@ -131,7 +129,7 @@ public class EventsPageTests : TestContext
             Assert.DoesNotContain("Loading events...", markup);
             
             // Should show statistics as 0
-            Assert.Contains("0", markup); // Should show 0 for stats
+            Assert.Contains("0", markup); 
         }, timeout: TimeSpan.FromSeconds(3));
     }
 
@@ -168,7 +166,7 @@ public class EventsPageTests : TestContext
 
     var httpClient = mockHttp.ToHttpClient();
     httpClient.BaseAddress = new Uri("https://localhost:7071/");
-    Services.AddSingleton(httpClient); // only once in this test
+    Services.AddSingleton(httpClient);
 
     // Act
     var component = RenderComponent<Events>();
@@ -209,7 +207,7 @@ public class EventsPageTests : TestContext
     // Mock users count
     mockHttp.When("*/api/users/count").Respond("application/json", "1");
 
-    // Mock all endpoints the page/services hit (note the trailing * for query strings)
+    // Mock all endpoints the page/services hit
     mockHttp.When("*/api/clubs*").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(clubData));
     mockHttp.When("*/api/events*").Respond("application/json", System.Text.Json.JsonSerializer.Serialize(eventData));
     mockHttp.When("*/api/eventparticipants*").Respond("application/json", "[]");
@@ -340,7 +338,7 @@ public class EventsPageTests : TestContext
             Assert.Contains("Basketball Game", markup);
         }, timeout: TimeSpan.FromSeconds(3));
 
-        // Additionally, try clicking the RSVP button and assert the guest alert was invoked
+        // Test clicking the RSVP button and assert the guest alert was invoked
         var rsvpButton = component.FindAll("button").FirstOrDefault(b => (b.TextContent ?? "").Contains("RSVP", StringComparison.OrdinalIgnoreCase));
         Assert.NotNull(rsvpButton);
 
@@ -428,7 +426,7 @@ public class EventsPageTests : TestContext
 
         var httpClient = mockHttp.ToHttpClient();
         httpClient.BaseAddress = new Uri("https://localhost:7071/");
-        Services.RemoveAll<HttpClient>();                // <— ensure replacement
+        Services.RemoveAll<HttpClient>();
         Services.AddSingleton(httpClient);
 
         // Act
@@ -442,17 +440,13 @@ public class EventsPageTests : TestContext
             // 1) Loading gone
             Assert.DoesNotContain("Loading", markup, StringComparison.OrdinalIgnoreCase);
 
-            // 2) Error signal: Mud alert/snackbar or role='alert' OR common error text,
-            //    OR (some apps) show a generic empty-state instead of explicit error.
-            var hasAriaAlert   = component.FindAll("[role='alert']").Any();
-            var hasMudAlert    = component.FindAll(".mud-alert, .mud-snackbar, .mud-snackbar-message").Any();
-
-            var showsEmptyState =
-                markup.Contains("No events", StringComparison.OrdinalIgnoreCase);
+            // 2) Check for error indication or safe empty-state
+            var hasAriaAlert = component.FindAll("[role='alert']").Any();
+            var showsEmptyState = markup.Contains("No events", StringComparison.OrdinalIgnoreCase);
 
             Assert.True(
-                hasAriaAlert || hasMudAlert || showsEmptyState,
-                "Expected an error indication (alert/snackbar/message) or a safe empty-state when the Events API fails."
+                hasAriaAlert || showsEmptyState,
+                "Expected an error indication (alert/message) or a safe empty-state when the Events API fails."
             );
         }, timeout: TimeSpan.FromSeconds(5));
     }

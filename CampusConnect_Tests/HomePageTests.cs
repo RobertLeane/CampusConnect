@@ -19,12 +19,13 @@ public class HomePageTests : TestContext
 
     public HomePageTests()
     {
-        // minimal deps (same pattern as your Events tests)
+        // Register required services for Home page
         Services.AddSingleton<AuthService>();
         Services.AddSingleton<ClubApi>();
         Services.AddSingleton<EventApi>();
         Services.AddSingleton<MemberApi>();
-        Services.AddSingleton<UserApi>();      
+        Services.AddSingleton<UserApi>();
+        // Setup mock JSRuntime
         JSInterop.Mode = JSRuntimeMode.Loose;
 
     }
@@ -54,7 +55,7 @@ public class HomePageTests : TestContext
         // Act
         var component = RenderComponent<Home>();
 
-        // Assert – hero + sections + a CTA
+        // Assert
         component.WaitForAssertion(() =>
         {
             var html = component.Markup;
@@ -68,10 +69,10 @@ public class HomePageTests : TestContext
                 "Expected 'Featured Clubs' or 'Upcoming Events' section."
             );
 
-            // At least one CTA in the “Get Involved” area
+            // At least one call to action
             Assert.True(
                 ContainsAny(html, "View My Dashboard", "Explore Clubs"),
-                "Expected a primary CTA like 'View My Dashboard' or 'Explore Clubs'."
+                "Expected a primary call to action like 'View My Dashboard' or 'Explore Clubs'."
             );
         }, timeout: TimeSpan.FromSeconds(5));
     }
@@ -117,9 +118,7 @@ public class HomePageTests : TestContext
         // Act
         var component = RenderComponent<Home>();
 
-        // Assert – allow for two cases:
-        // (1) Layout present -> navbar has /login
-        // (2) Home-only -> hero CTAs like “Explore Clubs”, “View All …”
+        // Assert – look for login call to action or hero call to actions
         component.WaitForAssertion(() =>
         {
             var html = component.Markup;

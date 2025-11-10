@@ -26,7 +26,6 @@ public class UserApi
                 Console.WriteLine($"UserApi returned count: {count}");
                 
                 // Create a list with the right count for consistency with clubs/events pattern
-                // We don't need actual user data, just the count, so create empty User objects
                 var users = new List<User>();
                 for (int i = 0; i < count; i++)
                 {

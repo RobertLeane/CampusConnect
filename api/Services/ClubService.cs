@@ -17,7 +17,6 @@ public class ClubService : IClubService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         
-        // Try different configuration sources for database settings
         _server = _configuration["Values:Sql__Server"]
                ?? _configuration["Sql__Server"]
                ?? _configuration["Sql:Server"]
@@ -131,12 +130,6 @@ public class ClubService : IClubService
             _logger.LogError(ex, "Error retrieving club {ClubId}", clubId);
             throw new InvalidOperationException($"An error occurred while retrieving club {clubId}: {ex.Message}", ex);
         }
-    }
-
-    public Task<ClubDto> CreateClubAsync(ClubDto club)
-    {
-        // TODO: Implement club creation
-        throw new NotImplementedException("Club creation not yet implemented");
     }
 
     public async Task<List<ClubDto>> GetUserJoinedClubsAsync(int userId)

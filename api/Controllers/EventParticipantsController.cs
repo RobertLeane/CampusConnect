@@ -35,7 +35,7 @@ public class EventParticipantsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error retrieving event participants from database");
-            throw; // Rethrow to let ASP.NET Core handle unexpected exceptions
+            throw;
         }
     }
 
@@ -70,7 +70,6 @@ public class EventParticipantsController : ControllerBase
             _logger.LogInformation("Registering user {UserId} for event {EventId} in club {ClubId}", 
                 request.UserId, request.EventId, request.ClubId);
 
-            // Get the memberId for this user and club
             var memberId = await _eventParticipantService.GetMemberIdByUserIdAndClubIdAsync(request.UserId, request.ClubId).ConfigureAwait(false);
             if (memberId == null)
             {
@@ -79,7 +78,6 @@ public class EventParticipantsController : ControllerBase
 
             await _eventParticipantService.RegisterUserForEventAsync(memberId.Value, request.ClubId, request.EventId).ConfigureAwait(false);
             
-            // Return the created participant in the format the client expects
             var result = new EventParticipantDto
             {
                 MemberId = memberId.Value,
@@ -95,10 +93,8 @@ public class EventParticipantsController : ControllerBase
                 request.UserId, request.EventId);
             return Conflict(ex.Message);
         }
-        // Let ASP.NET Core handle unexpected exceptions by not catching Exception here
     }
 
-    // Simple request model for registering
     public class RegisterEventRequest
     {
         public int UserId { get; set; }

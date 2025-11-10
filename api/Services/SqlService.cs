@@ -8,26 +8,22 @@ namespace CampusConnect.Api.Services;
 
 public static class SqlService
 {
-    // Scope for Azure SQL
     private static readonly string[] SqlScopes = new[] { "https://database.windows.net/.default" };
 
     public static async Task<SqlConnection> OpenTokenConnectionAsync(string server, string database, IConfiguration? configuration = null)
     {
         string? connectionString = null;
 
-        // Priority 1: Standard ASP.NET Core appsettings.json
+        // appsettings.json
         if (configuration != null)
         {
             connectionString = configuration.GetConnectionString("DefaultConnection");
         }
-
-        // Priority 2: Azure App Service connection strings (automatically available as environment variables)
-        connectionString ??= Environment.GetEnvironmentVariable("SQLAZURECONNSTR_DefaultConnection");
         
-        // Priority 3: Custom environment variables
+        // Custom environment variables
         connectionString ??= Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
 
-        // Priority 4: local.settings.json for local development
+        // local.settings.json for local development
         if (configuration != null && string.IsNullOrEmpty(connectionString))
         {
             var localConnectionString = configuration["ConnectionStrings:DefaultConnection"];

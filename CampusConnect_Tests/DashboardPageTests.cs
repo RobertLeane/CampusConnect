@@ -15,9 +15,6 @@ using System.Net.Http;
 
 namespace CampusConnect_Tests;
 
-/// <summary>
-/// Tests for the Dashboard page (client/Pages/Dashboard.razor)
-/// </summary>
 public class DashboardPageTests : TestContext
 {
     public DashboardPageTests()
@@ -36,9 +33,6 @@ public class DashboardPageTests : TestContext
     private static bool ContainsAny(string html, params string[] needles) =>
         needles.Any(n => html.Contains(n, StringComparison.OrdinalIgnoreCase));
 
-    /// <summary>
-    /// Helper method to setup authenticated user with empty API responses
-    /// </summary>
     private void SetupAuthenticatedUser(string email = "test@campus.edu", int userId = 1)
     {
         var mockHttp = new MockHttpMessageHandler();
@@ -59,9 +53,6 @@ public class DashboardPageTests : TestContext
             ?.SetValue(authService, new UserSession { UserId = userId, Email = email, IsAuthenticated = true });
     }
 
-    /// <summary>
-    /// Helper method to setup authentication only (HttpClient must be setup first)
-    /// </summary>
     private void SetupAuthenticationOnly(string email = "test@campus.edu", int userId = 1)
     {
         // Setup authenticated AuthService
@@ -70,9 +61,6 @@ public class DashboardPageTests : TestContext
             ?.SetValue(authService, new UserSession { UserId = userId, Email = email, IsAuthenticated = true });
     }
 
-    /// <summary>
-    /// Helper method to setup authenticated user with custom API responses
-    /// </summary>
     private void SetupAuthenticatedUserWithData(string email, int userId, string clubsJson, string eventsJson)
     {
         var mockHttp = new MockHttpMessageHandler();
@@ -247,7 +235,7 @@ public class DashboardPageTests : TestContext
             var html = component.Markup;
             Assert.Contains("Computer Science Society", html);
             Assert.Contains("Debate Club", html);
-            Assert.Contains("Member", html); // Badge text
+            Assert.Contains("Member", html);
         }, timeout: TimeSpan.FromSeconds(5));
     }
 
@@ -272,7 +260,7 @@ public class DashboardPageTests : TestContext
             var html = component.Markup;
             Assert.Contains("Tech Conference", html);
             Assert.Contains("Networking Mixer", html);
-            Assert.Contains("Nov", html); // Date formatting
+            Assert.Contains("Nov", html);
         }, timeout: TimeSpan.FromSeconds(5));
     }
 
@@ -437,7 +425,7 @@ public class DashboardPageTests : TestContext
         // Act
         var component = RenderComponent<Dashboard>();
 
-        // Assert - page still renders with empty states (graceful degradation)
+        // Assert - page still renders with empty states
         component.WaitForAssertion(() =>
         {
             var html = component.Markup;
@@ -580,8 +568,8 @@ public class DashboardPageTests : TestContext
             var html = component.Markup;
             Assert.Contains("Dashboard", html);
             // Should not crash when CurrentUser email is empty
-            Assert.Contains("Welcome back,", html); // Should still show welcome message
-            Assert.DoesNotContain("@null", html); // Should not render @null in the template
+            Assert.Contains("Welcome back,", html);
+            Assert.DoesNotContain("@null", html);
         }, timeout: TimeSpan.FromSeconds(3));
     }
 
@@ -826,8 +814,8 @@ public class DashboardPageTests : TestContext
         component.WaitForAssertion(() =>
         {
             var html = component.Markup;
-            Assert.Contains("3", html); // 3 clubs
-            Assert.Contains("2", html); // 2 events
+            Assert.Contains("3", html);
+            Assert.Contains("2", html);
             Assert.Contains("Clubs Joined", html);
             Assert.Contains("Events Registered", html);
         }, timeout: TimeSpan.FromSeconds(5));
@@ -872,7 +860,6 @@ public class DashboardPageTests : TestContext
             var html = component.Markup;
             Assert.Contains("Club Without Image", html);
             Assert.Contains("Club With Image", html);
-            // Should use fallback image for club without URL
             Assert.Contains("picsum.photos", html);
         }, timeout: TimeSpan.FromSeconds(5));
     }
@@ -898,8 +885,8 @@ public class DashboardPageTests : TestContext
             var html = component.Markup;
             Assert.Contains("December Event", html);
             Assert.Contains("January Event", html);
-            Assert.Contains("Dec", html); // Month abbreviation
-            Assert.Contains("Jan", html); // Month abbreviation
+            Assert.Contains("Dec", html);
+            Assert.Contains("Jan", html);
         }, timeout: TimeSpan.FromSeconds(5));
     }
 

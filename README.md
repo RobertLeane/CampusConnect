@@ -13,8 +13,8 @@ Campus Connect encompasses 6 Blazor Razor pages: Login, Register, Home, Clubs, E
 - **Database**: Azure SQL Database
 - **Storage**: Azure Blob Storage (for images)
 - **Authentication**: Custom authentication (database-based)
-- **Monitoring**: Azure Application Insights
-- **Deployment**: Docker containers via Docker Hub to Azure
+- **Deployment**: Docker containers on Azure Container Apps
+- **Monitoring**: Application Insights (manual SDK integration)
 - **Testing**: bUnit framework
 
 ### Features
@@ -26,7 +26,7 @@ Campus Connect encompasses 6 Blazor Razor pages: Login, Register, Home, Clubs, E
 
 ## 🚀 Quick Start
 
-### Local Development with Docker
+### Using Docker Compose
 
 ```powershell
 # Build and run locally
@@ -37,40 +37,27 @@ docker-compose up --build
 # API: http://localhost:8080
 ```
 
-### Using Deployment Script
-
-```powershell
-# Run locally
-.\deploy.ps1 -Action local
-
-# Push to Docker Hub
-.\deploy.ps1 -Action dockerhub -DockerHubUsername YOUR_USERNAME
-
-# Deploy to Azure Container Apps
-.\deploy.ps1 -Action azure-containerapp -DockerHubUsername YOUR_USERNAME
-```
-
-## 📚 Documentation
-
-- **[Quick Start Guide](QUICKSTART.md)** - Get started with Docker and Azure deployment
-- **[Detailed Deployment Guide](DOCKER_DEPLOYMENT.md)** - Comprehensive deployment instructions
-- **[GitHub Actions Workflows](.github/workflows/)** - CI/CD pipeline configurations
-
 ## 🏗️ Architecture
 
 ```
 ┌─────────────────┐         ┌──────────────────┐
 │  Blazor WASM    │────────▶│   ASP.NET Core   │
 │   (Client)      │         │   Web API        │
-│   Port: 80      │         │   Port: 8080     │
+│                 │         │                  │
 └─────────────────┘         └──────────────────┘
-                                     │
-                    ┌────────────────┼────────────────┐
-                    ▼                ▼                ▼
-            ┌──────────────┐  ┌──────────┐  ┌─────────────┐
-            │  Azure SQL   │  │  Blob    │  │ Application │
-            │  Database    │  │ Storage  │  │  Insights   │
-            └──────────────┘  └──────────┘  └─────────────┘
+        │                            │
+        └────────────────────────────┘
+                     │
+           ┌─────────┼─────────┐
+           ▼         ▼         ▼
+    ┌──────────┐ ┌─────────┐ ┌──────────────┐
+    │Azure SQL │ │  Blob   │ │ Application  │
+    │Database  │ │Storage  │ │  Insights    │
+    └──────────┘ └─────────┘ └──────────────┘
+
+Azure Container Apps Environment
+├── campusconnect-client (Port 80)
+└── campusconnect-api (Port 8080)
 ```
 
 ## 🐳 Docker Images
@@ -79,36 +66,32 @@ The application is available as two Docker images:
 - `campusconnect-api`: ASP.NET Core Web API backend
 - `campusconnect-client`: Blazor WebAssembly frontend (served via nginx)
 
-## 🌐 Deployment Options
+## 🌐 Deployment
 
-### 1. Azure Container Apps (Recommended)
-- Fully managed container hosting
+### Azure Container Apps (Current)
+- Fully managed container hosting on Azure Container Apps
 - Auto-scaling capabilities
 - Built-in load balancing
-- Easy configuration
+- Integrated with Azure SQL Database
+- Easy configuration via Azure Portal
 
-### 2. Azure App Service (Web App for Containers)
-- Managed web hosting
-- Continuous deployment from Docker Hub
-- Integrated monitoring
-
-### 3. Infrastructure as Code (Bicep)
-- Declarative infrastructure deployment
-- Version-controlled infrastructure
-- Repeatable deployments
+### Development Workflow
+1. **Local Development**: Docker Compose for local testing
+2. **Container Registry**: Push images to Docker Hub or Azure Container Registry
+3. **Deployment**: Deploy containers to Azure Container Apps environment
 
 ## 🔄 CI/CD Pipeline
 
-The project includes two GitHub Actions workflows:
+The project uses Docker containers deployed to Azure Container Apps:
 
-1. **Docker Build and Push** (`.github/workflows/docker-publish.yml`)
-   - Automatically builds and pushes images to Docker Hub on push to main
-   - Tags images with version, SHA, and 'latest'
-
-2. **Azure Deployment** (`.github/workflows/azure-deploy.yml`)
-   - Deploys infrastructure using Bicep
-   - Configures Container Apps
-   - Validates deployment
+1. **Build Process**
+   - Docker images built for API and Client
+   - Images pushed to container registry (Docker Hub or ACR)
+   
+2. **Deployment Process**
+   - Container Apps updated with new image versions
+   - Rolling deployments with zero downtime
+   - Environment variables configured in Azure Portal
 
 ## 🛠️ Development
 
@@ -148,37 +131,56 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ### Environment Variables
 
-**API Container:**
-- `ASPNETCORE_ENVIRONMENT`: Environment name (Development/Production)
+**API Container (in Azure Container Apps):**
+- `ASPNETCORE_ENVIRONMENT`: Environment name (Production)
 - `ConnectionStrings__DefaultConnection`: SQL connection string
-- `APPLICATIONINSIGHTS_CONNECTION_STRING`: Application Insights connection
+- `BlobStorage__ConnectionString`: Azure Blob Storage connection string
+- `APPLICATIONINSIGHTS_CONNECTION_STRING`: Application Insights connection (optional)
 
 **Client Container:**
-- `API_BASE_URL`: Base URL for the API
+- `API_BASE_URL`: Base URL for the API (internal container communication)
 
-### GitHub Secrets
+### Azure Container Apps Configuration
+Configuration is managed through the Azure Portal:
+- Environment variables set in Container App configuration
+- Secrets managed securely in Azure
+- Database connection strings stored as secrets
 
-Required for CI/CD:
-- `DOCKERHUB_USERNAME`: Docker Hub username
-- `DOCKERHUB_TOKEN`: Docker Hub access token
-- `AZURE_CREDENTIALS`: Azure service principal credentials
-- `AZURE_SUBSCRIPTION_ID`: Azure subscription ID
-- `SQL_CONNECTION_STRING`: Database connection string
-- `SQL_ADMIN_LOGIN`: SQL admin username
-- `SQL_ADMIN_PASSWORD`: SQL admin password
+## 📊 Monitoring (Application Insights)
 
-## 📊 Monitoring
+Azure Container Apps doesn't support automatic Application Insights integration. To add monitoring, you need to manually implement the Application Insights SDK:
 
-Application Insights provides:
-- Real-time performance metrics
-- Request/response monitoring
-- Exception tracking
-- Custom telemetry
-
-Access monitoring data in the Azure Portal or via:
-```powershell
-az monitor app-insights metrics show --app campusconnect-insights --metrics requests/count
+### Step 1: Add NuGet Package
+Add to your `api/api.csproj`:
+```xml
+<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
 ```
+
+### Step 2: Update Program.cs
+Add Application Insights to your API's `Program.cs`:
+```csharp
+// Add this after builder.Services.AddControllers()
+builder.Services.AddApplicationInsightsTelemetry();
+```
+
+### Step 3: Configure in Azure Container Apps
+1. Create an Application Insights resource in Azure Portal
+2. Copy the connection string
+3. Add environment variable in your Container App:
+   - `APPLICATIONINSIGHTS_CONNECTION_STRING`: Your Application Insights connection string
+
+### Step 4: Deploy Updated Container
+After making code changes:
+1. Build new Docker image
+2. Push to your container registry
+3. Update Container App with new image
+
+### Monitoring Features You'll Get:
+- Request/response tracking
+- Performance metrics
+- Exception logging
+- Custom telemetry
+- Live metrics dashboard
 
 ## 🤝 Contributing
 

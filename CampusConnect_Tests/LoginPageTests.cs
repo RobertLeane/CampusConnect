@@ -20,7 +20,7 @@ public class LoginPageTests : TestContext
         // Register required services
         Services.AddSingleton<AuthService>();
         
-        // Add mock JSRuntime (bUnit provides this automatically)
+        // Add mock JSRuntime
         JSInterop.Mode = JSRuntimeMode.Loose;
         
         // Setup basic HTTP client

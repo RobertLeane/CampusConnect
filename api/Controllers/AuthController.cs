@@ -55,7 +55,7 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during registration");
-            throw; // Rethrow the exception to let the middleware handle it
+            throw;
         }
     }
 

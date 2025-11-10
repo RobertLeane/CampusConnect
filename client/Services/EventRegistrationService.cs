@@ -26,7 +26,7 @@ public class EventRegistrationService
 
         try 
         {
-            // RSVP through the event system - this handles everything including registration
+            // RSVP through the event system - handles everything including registration
             var resp = await _eventApi.RsvpAsync(eventId, currentUserId).ConfigureAwait(false);
             
             if (!resp.IsSuccessStatusCode)

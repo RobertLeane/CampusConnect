@@ -127,7 +127,6 @@ namespace CampusConnect.Api.Services
         }
         public Task<IEventService.RsvpResult> RsvpToEventAsync(int eventId, int userId)
         {
-            // FIX: call the real worker
             return RsvpAsync(eventId, userId);
         }
 

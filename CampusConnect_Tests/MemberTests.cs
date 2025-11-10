@@ -128,8 +128,8 @@ public class MemberTests
         member.ClubId = 888;
 
         // Assert
-        Assert.Equal(1, member.MemberId); // Unchanged
-        Assert.Equal(999, member.UserId); // Changed
-        Assert.Equal(888, member.ClubId); // Changed
+        Assert.Equal(1, member.MemberId);
+        Assert.Equal(999, member.UserId);
+        Assert.Equal(888, member.ClubId);
     }
 }

@@ -73,7 +73,6 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
             }
             catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
             {
-                // Unique constraint violation (duplicate Email)
                 _logger.LogWarning(ex, "Unique constraint violation for email {Email}", email);
                 throw new InvalidOperationException("Email already exists");
             }
@@ -98,7 +97,7 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
                 if (!await reader.ReadAsync().ConfigureAwait(false))
                 {
                     _logger.LogInformation("Login attempt with non-existent email: {Email}", email);
-                    return null; // User not found
+                    return null;
                 }
 
                 var userId = reader.GetInt32("UserId");
@@ -111,7 +110,7 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
                 if (!BCrypt.Net.BCrypt.Verify(password, passwordHash))
                 {
                     _logger.LogInformation("Invalid password for email: {Email}", email);
-                    return null; // Invalid password
+                    return null; 
                 }
 
                 _logger.LogInformation("Successful login for user: {UserId}", userId);

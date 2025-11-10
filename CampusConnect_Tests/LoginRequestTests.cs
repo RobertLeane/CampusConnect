@@ -91,10 +91,10 @@ public class LoginRequestTests
 
     [Theory]
     [InlineData("valid@email.com", "password123", true)]
-    [InlineData("", "password123", false)] // Empty email
-    [InlineData("plaintext", "password123", false)] // Invalid email format
-    [InlineData("valid@email.com", "", false)] // Empty password
-    [InlineData("", "", false)] // Both empty
+    [InlineData("", "password123", false)]
+    [InlineData("plaintext", "password123", false)]
+    [InlineData("valid@email.com", "", false)]
+    [InlineData("", "", false)]
     public void LoginRequest_Validation_WorksCorrectly(string email, string password, bool expectedValid)
     {
         // Arrange

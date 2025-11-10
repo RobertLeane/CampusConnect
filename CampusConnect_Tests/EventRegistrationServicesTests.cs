@@ -90,7 +90,7 @@ public class EventRegistrationServicesTests
         // Arrange - Negative user IDs are not validated client-side, API will handle
         var mockHttp = new MockHttpMessageHandler();
         mockHttp.When(HttpMethod.Post, "*/api/events/*/rsvp*")
-            .Respond(HttpStatusCode.Unauthorized); // Using Unauthorized instead of BadRequest to avoid duplication
+            .Respond(HttpStatusCode.Unauthorized); 
 
         var service = CreateServiceWithMockHttp(mockHttp);
 

@@ -5,7 +5,7 @@ using Client.Pages;
 using Client.Services;
 using RichardSzalay.MockHttp;
 using Xunit;
-using System.Threading.Tasks; // Add this at the top
+using System.Threading.Tasks;
 
 namespace CampusConnect_Tests;
 
@@ -23,7 +23,7 @@ public class ClubsPageTests : TestContext
         // Setup mock JSRuntime
         JSInterop.Mode = JSRuntimeMode.Loose;
         
-        // Setup basic HTTP client (will be replaced in individual tests as needed)
+        // Setup basic HTTP client
         var httpClient = new HttpClient();
         httpClient.BaseAddress = new Uri("https://localhost:7071/");
         Services.AddSingleton(httpClient);
@@ -37,12 +37,12 @@ public class ClubsPageTests : TestContext
         // Act
         var component = RenderComponent<Clubs>();
 
-        // Assert - Check basic page structure (should render immediately)
+        // Check basic page structure
         Assert.Contains("Discover Your", component.Markup);
         Assert.Contains("Clubs", component.Markup);
         Assert.Contains("Join the clubs that interest you", component.Markup);
         
-        // Check statistics section labels (these should always be present)
+        // Check statistics section labels
         Assert.Contains("Active Clubs", component.Markup);
         Assert.Contains("Events", component.Markup);
         Assert.Contains("Active Members", component.Markup);
@@ -134,7 +134,7 @@ public class ClubsPageTests : TestContext
             Assert.DoesNotContain("Loading clubs...", markup);
             
             // Should show statistics as 0
-            Assert.Contains("0", markup); // Should show 0 for stats
+            Assert.Contains("0", markup);
         }, timeout: TimeSpan.FromSeconds(3));
     }
 
@@ -563,7 +563,6 @@ public class ClubsPageTests : TestContext
 
         // Assert - Stats should be loaded (2 clubs, 3 events, 15 users)
         var markup = component.Markup;
-        // The exact rendering depends on the component template, so we just verify the data was fetched
         Assert.Contains("Club 1", markup);
         Assert.Contains("Club 2", markup);
     }

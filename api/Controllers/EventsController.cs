@@ -69,7 +69,6 @@ public class EventsController : ControllerBase
         try
         {
             _logger.LogInformation($"Getting events for club ID {clubId}");
-            // Verify club exists
             var club = await _clubService.GetClubByIdAsync(clubId).ConfigureAwait(false);
             if (club == null)
             {

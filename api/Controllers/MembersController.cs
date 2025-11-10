@@ -34,7 +34,7 @@ public class MembersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error retrieving members for club {ClubId}", clubId);
-            throw; // Rethrow to let ASP.NET Core handle unexpected exceptions
+            throw;
         }
     }
 
@@ -56,7 +56,7 @@ public class MembersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error retrieving memberships for user {UserId}", userId);
-            throw; // Rethrow to let ASP.NET Core handle unexpected exceptions
+            throw;
         }
     }
 
@@ -73,7 +73,6 @@ public class MembersController : ControllerBase
             _logger.LogInformation($"Adding user {request.UserId} to club {clubId} with role '{request.Role}'");
             var member = await _memberService.AddMemberToClubAsync(request.UserId, clubId, request.Role ?? "Member").ConfigureAwait(false);
             
-            // Use Created instead of CreatedAtAction to avoid route generation issues
             return Created($"/api/members/clubs/{clubId}/members", member);
         }
         catch (InvalidOperationException ex)
@@ -84,11 +83,10 @@ public class MembersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error adding member to club {ClubId}", clubId);
-            throw; // Rethrow to let ASP.NET Core handle unexpected exceptions
+            throw;
         }
     }
 
-    // DTO for adding members
     public class AddMemberRequest
     {
         public int UserId { get; set; }
