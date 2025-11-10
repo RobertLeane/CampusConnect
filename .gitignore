@@ -9,13 +9,17 @@ out/
 **/wwwroot/dist/
 client/obj/
 
-# VS Code
-
 # Secrets and environment files
-secrets.env
 .env
 *.local.json
 local.settings.json
+appsettings.json
+appsettings.*.json
+
+# Configuration files with potential secrets
+api/local.settings.json
+api/appsettings.json
+api/appsettings.*.json
 
 # User-specific files
 *.suo
@@ -23,18 +27,8 @@ local.settings.json
 *.userosscache
 *.sln.docstates
 
-# Rider / JetBrains
-.idea/
-*.iml
-
-# ASP.NET Scaffolding
-ScaffoldingReadMe.txt
-
 # Logs
 *.log
-
-# SWA emulator cache
-.swa/
 
 # Package restore folders
 **/node_modules/
