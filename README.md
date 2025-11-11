@@ -2,9 +2,9 @@
 
 A modern campus club and event management platform built with Blazor WebAssembly and ASP.NET Core.
 
-## 🎯 Overview
+## Overview
 
-Campus Connect encompasses 6 Blazor Razor pages: Login, Register, Home, Clubs, Events, and Dashboard. The application is containerized and deployed to Azure using Docker.
+Campus Connect encompasses 6 Blazor Razor pages: Login, Register, Home, Clubs, Events, and Dashboard. The application is containerised and deployed to Azure Container Apps using Docker and an Azure DevOps pipeline.
 
 ### Technology Stack
 
@@ -12,10 +12,10 @@ Campus Connect encompasses 6 Blazor Razor pages: Login, Register, Home, Clubs, E
 - **Backend**: ASP.NET Core Web API (.NET 8)
 - **Database**: Azure SQL Database
 - **Storage**: Azure Blob Storage (for images)
-- **Authentication**: Custom authentication (database-based)
-- **Deployment**: Docker containers on Azure Container Apps
-- **Monitoring**: Application Insights (manual SDK integration)
-- **Testing**: bUnit framework
+- **Authentication**: Database-based (users table)
+- **Deployment**: Docker container images on Azure Container Apps
+- **Monitoring**: Application Insights
+- **Testing**: bUnit framework and XPlat for code coverage
 
 ### Features
 
@@ -24,7 +24,7 @@ Campus Connect encompasses 6 Blazor Razor pages: Login, Register, Home, Clubs, E
 - **Event Management**: View and register for club events
 - **Dashboard**: Personal overview of memberships and upcoming events
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Using Docker Compose
 
@@ -37,7 +37,7 @@ docker-compose up --build
 # API: http://localhost:8080
 ```
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────┐         ┌──────────────────┐
@@ -60,15 +60,15 @@ Azure Container Apps Environment
 └── campusconnect-api (Port 8080)
 ```
 
-## 🐳 Docker Images
+## Docker Images
 
 The application is available as two Docker images:
 - `campusconnect-api`: ASP.NET Core Web API backend
 - `campusconnect-client`: Blazor WebAssembly frontend (served via nginx)
 
-## 🌐 Deployment
+## Deployment
 
-### Azure Container Apps (Current)
+### Azure Container Apps
 - Fully managed container hosting on Azure Container Apps
 - Auto-scaling capabilities
 - Built-in load balancing
@@ -77,29 +77,29 @@ The application is available as two Docker images:
 
 ### Development Workflow
 1. **Local Development**: Docker Compose for local testing
-2. **Container Registry**: Push images to Docker Hub or Azure Container Registry
+2. **Container Registry**: Push images to Docker Hub
 3. **Deployment**: Deploy containers to Azure Container Apps environment
 
-## 🔄 CI/CD Pipeline
+## CI/CD Pipeline
 
 The project uses Docker containers deployed to Azure Container Apps:
 
 1. **Build Process**
    - Docker images built for API and Client
    - Images pushed to container registry (Docker Hub or ACR)
+   - Build, Test, Code Coverage, Deployment handled in Azure DevOps pipeline
    
 2. **Deployment Process**
    - Container Apps updated with new image versions
    - Rolling deployments with zero downtime
-   - Environment variables configured in Azure Portal
+   - Environment variables configured in Azure Portal for security
 
-## 🛠️ Development
+## Development
 
 ### Prerequisites
 
 - .NET 8 SDK
-- Docker Desktop
-- Azure CLI (for Azure deployments)
+- Azure CLI
 - Visual Studio 2022 or VS Code
 
 ### Local Development (Without Docker)
@@ -127,7 +127,7 @@ dotnet test
 dotnet test --collect:"XPlat Code Coverage"
 ```
 
-## 🔐 Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -135,7 +135,7 @@ dotnet test --collect:"XPlat Code Coverage"
 - `ASPNETCORE_ENVIRONMENT`: Environment name (Production)
 - `ConnectionStrings__DefaultConnection`: SQL connection string
 - `BlobStorage__ConnectionString`: Azure Blob Storage connection string
-- `APPLICATIONINSIGHTS_CONNECTION_STRING`: Application Insights connection (optional)
+- `APPLICATIONINSIGHTS_CONNECTION_STRING`: Application Insights connection
 
 **Client Container:**
 - `API_BASE_URL`: Base URL for the API (internal container communication)
@@ -146,56 +146,20 @@ Configuration is managed through the Azure Portal:
 - Secrets managed securely in Azure
 - Database connection strings stored as secrets
 
-## 📊 Monitoring (Application Insights)
+## Monitoring (Application Insights)
 
-Azure Container Apps doesn't support automatic Application Insights integration. To add monitoring, you need to manually implement the Application Insights SDK:
+Azure Container Apps doesn't support automatic Application Insights integration, so the Application Insights SDK was added to api/Program.cs and envirnoment variable `APPLICATIONINSIGHTS_CONNECTION_STRING` mapped to Application Insights resource connection string
 
-### Step 1: Add NuGet Package
-Add to your `api/api.csproj`:
-```xml
-<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
-```
 
-### Step 2: Update Program.cs
-Add Application Insights to your API's `Program.cs`:
-```csharp
-// Add this after builder.Services.AddControllers()
-builder.Services.AddApplicationInsightsTelemetry();
-```
-
-### Step 3: Configure in Azure Container Apps
-1. Create an Application Insights resource in Azure Portal
-2. Copy the connection string
-3. Add environment variable in your Container App:
-   - `APPLICATIONINSIGHTS_CONNECTION_STRING`: Your Application Insights connection string
-
-### Step 4: Deploy Updated Container
-After making code changes:
-1. Build new Docker image
-2. Push to your container registry
-3. Update Container App with new image
-
-### Monitoring Features You'll Get:
+### Monitoring Features with Application Insights:
 - Request/response tracking
 - Performance metrics
 - Exception logging
 - Custom telemetry
 - Live metrics dashboard
 
-## 🤝 Contributing
+## Links
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests
-5. Submit a pull request
-
-## 📝 License
-
-This project is licensed for educational purposes.
-
-## 🔗 Links
-
-- **Live Site**: [campusconnect-a5gmchaahpf4ajem.uksouth-01.azurewebsites.net](https://campusconnect-a5gmchaahpf4ajem.uksouth-01.azurewebsites.net)
-- **Docker Hub**: [hub.docker.com](https://hub.docker.com)
-- **Azure Portal**: [portal.azure.com](https://portal.azure.com)
+- **Live Site**: [CampusConnectApp-Client](https://campusconnectapp-client.delightfulsky-c3ec110b.uksouth.azurecontainerapps.io)
+- **Docker Hub**: [https://hub.docker.com](https://hub.docker.com/repositories/leanerob)
+- **DevOps Project**: [dev.azure.com](https://dev.azure.com/3rdYearSoftwareTools/ClubsAndEventsPortal)
