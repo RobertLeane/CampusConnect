@@ -19,6 +19,24 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new() { Title = "CampusConnect API", Version = "v1" });
 });
 
+// Configure Application Insights
+var appInsightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+if (!string.IsNullOrEmpty(appInsightsConnectionString))
+{
+    builder.Services.AddApplicationInsightsTelemetry(options =>
+    {
+        options.ConnectionString = appInsightsConnectionString;
+    });
+    builder.Logging.AddApplicationInsights(
+        configureTelemetryConfiguration: (config) => config.ConnectionString = appInsightsConnectionString,
+        configureApplicationInsightsLoggerOptions: (options) => { }
+    );
+}
+else
+{
+    Console.WriteLine("Warning: Application Insights connection string not found. Telemetry will not be sent.");
+}
+
 // Register API services (with error handling)
 try 
 {
@@ -27,7 +45,6 @@ try
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<IEventParticipantService, EventParticipantService>();
     builder.Services.AddScoped<IMemberService, MemberService>();
-    builder.Services.AddApplicationInsightsTelemetry();
 }
 catch (InvalidOperationException ex)
 {
